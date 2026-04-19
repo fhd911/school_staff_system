@@ -33,11 +33,8 @@ def _normalize_national_id(value):
 def _normalize_mobile(value):
     digits = _normalize_digits(value)
 
-    # 9665XXXXXXXX -> 05XXXXXXXX
     if digits.startswith("966") and len(digits) == 12:
         digits = "0" + digits[3:]
-
-    # 5XXXXXXXX -> 05XXXXXXXX
     elif digits.startswith("5") and len(digits) == 9:
         digits = "0" + digits
 
@@ -47,7 +44,6 @@ def _normalize_mobile(value):
 def _get_supervisor_by_national_id(national_id):
     return Supervisor.objects.filter(
         national_id=national_id,
-        is_active=True,
     ).first()
 
 
@@ -176,6 +172,9 @@ def login_view(request):
         if not supervisor:
             error_message = "بيانات الدخول غير صحيحة."
 
+        elif not getattr(supervisor, "is_active", True):
+            error_message = "هذا الحساب غير نشط. يرجى مراجعة الإدارة."
+
         elif not _supervisor_is_activated(supervisor):
             if not _normalize_mobile(supervisor.mobile):
                 error_message = "لا يوجد رقم جوال مسجل لهذا الحساب. يرجى مراجعة الإدارة."
@@ -287,6 +286,10 @@ def forgot_password_start_view(request):
 
         if not supervisor:
             messages.error(request, "لا توجد بيانات مشرف مطابقة لهذا السجل المدني.")
+            return redirect("accounts:forgot_password_start")
+
+        if not getattr(supervisor, "is_active", True):
+            messages.error(request, "هذا الحساب غير نشط حاليًا. يرجى مراجعة الإدارة.")
             return redirect("accounts:forgot_password_start")
 
         if not _supervisor_is_activated(supervisor):

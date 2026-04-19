@@ -339,13 +339,24 @@ def _normalize_mobile_for_import(value):
 
 
 def _normalize_bool_from_excel(value):
+    if value in (None, ""):
+        return None
+
     if value in (True, 1):
         return True
-    if value in (False, 0, None, ""):
+
+    if value in (False, 0):
         return False
 
     value_str = str(value).strip().lower()
-    return value_str in {"1", "true", "yes", "y", "نعم", "نشط", "active"}
+
+    if value_str in {"1", "true", "yes", "y", "نعم", "نشط", "active"}:
+        return True
+
+    if value_str in {"0", "false", "no", "n", "لا", "غير نشط", "inactive"}:
+        return False
+
+    return None
 
 
 def _normalize_import_header(header):
@@ -480,9 +491,11 @@ def admin_import_supervisors_view(request):
             if "sector" in headers:
                 sector = str(row[headers["sector"]] or "").strip()
 
-            is_active = True
+            raw_is_active = None
             if "is_active" in headers:
-                is_active = _normalize_bool_from_excel(row[headers["is_active"]])
+                raw_is_active = _normalize_bool_from_excel(row[headers["is_active"]])
+
+            is_active = True if raw_is_active is None else raw_is_active
 
             if not full_name or not national_id or not mobile:
                 skipped_count += 1
@@ -551,8 +564,12 @@ def admin_import_supervisors_view(request):
                 supervisor.sector = sector
                 update_fields.append("sector")
 
-            if _model_has_field(Supervisor, "is_active") and getattr(supervisor, "is_active", True) != is_active:
-                supervisor.is_active = is_active
+            if (
+                _model_has_field(Supervisor, "is_active")
+                and raw_is_active is not None
+                and getattr(supervisor, "is_active", True) != raw_is_active
+            ):
+                supervisor.is_active = raw_is_active
                 update_fields.append("is_active")
 
             if update_fields:
