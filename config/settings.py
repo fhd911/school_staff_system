@@ -7,7 +7,17 @@ SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "dev-only-change-me")
 
 DEBUG = os.environ.get("DJANGO_DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+ALLOWED_HOSTS = os.environ.get(
+    "DJANGO_ALLOWED_HOSTS",
+    "127.0.0.1,localhost"
+).split(",")
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://shaghili.com",
+    "http://www.shaghili.com",
+    "https://shaghili.com",
+    "https://www.shaghili.com",
+]
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -16,7 +26,6 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-
     "accounts",
     "staffdata",
 ]
@@ -78,7 +87,7 @@ TIME_ZONE = "Asia/Riyadh"
 USE_I18N = True
 USE_TZ = True
 
-STATIC_URL = "static/"
+STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR / "staticfiles"
 
