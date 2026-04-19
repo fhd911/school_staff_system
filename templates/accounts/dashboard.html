@@ -1,0 +1,698 @@
+{% extends "base.html" %}
+{% block title %}لوحة المشرف{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dashboard-page{
+        display:flex;
+        flex-direction:column;
+        gap:16px;
+    }
+
+    /* =========================
+       HERO
+    ========================= */
+    .dashboard-page .hero{
+        padding:22px 24px 18px;
+        margin-bottom:0;
+        border-radius:28px;
+    }
+
+    .dash-hero{
+        display:flex;
+        flex-direction:column;
+        gap:16px;
+    }
+
+    .hero-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:20px;
+    }
+
+    .hero-copy{
+        max-width:820px;
+    }
+
+    .hero-kicker{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.90);
+        font-size:12px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .dashboard-page .hero-title{
+        font-size:28px;
+        font-weight:700;
+        line-height:1.35;
+        margin:0 0 6px;
+        color:#fff;
+        letter-spacing:-0.2px;
+    }
+
+    .dashboard-page .hero-text{
+        margin:0;
+        font-size:13.5px;
+        line-height:2;
+        max-width:760px;
+        color:rgba(255,255,255,.88);
+        font-weight:400;
+    }
+
+    .hero-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px !important;
+        margin-top:14px !important;
+    }
+
+    .hero-actions .btn{
+        min-height:40px;
+        padding:0 15px;
+        font-size:13px;
+        border-radius:12px;
+    }
+
+    .hero-metrics{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .hero-metric{
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.11);
+        border-radius:16px;
+        padding:14px 15px;
+        min-height:88px;
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        backdrop-filter:blur(4px);
+    }
+
+    .hero-metric-label{
+        font-size:12px;
+        line-height:1.8;
+        color:rgba(255,255,255,.78);
+        font-weight:400;
+    }
+
+    .hero-metric-value{
+        font-size:26px;
+        line-height:1;
+        color:#fff;
+        font-weight:700;
+        margin-top:8px;
+    }
+
+    /* =========================
+       SECTION
+    ========================= */
+    .dashboard-page .section{
+        padding:18px 18px 16px;
+        margin-bottom:0;
+    }
+
+    .dashboard-page .section-head{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:18px;
+        margin-bottom:14px;
+    }
+
+    .dashboard-page .section-title{
+        margin:0;
+        font-size:22px;
+        line-height:1.3;
+        padding-bottom:8px;
+    }
+
+    .dashboard-page .section-subtitle{
+        margin:0;
+        font-size:13px;
+        line-height:1.9;
+    }
+
+    /* =========================
+       STATS
+    ========================= */
+    .dashboard-stats{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:12px;
+    }
+
+    .dashboard-stat{
+        position:relative;
+        overflow:hidden;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        border:1px solid var(--line);
+        border-radius:18px;
+        padding:16px;
+        box-shadow:var(--shadow-sm);
+        min-height:132px;
+    }
+
+    .dashboard-stat::after{
+        content:"";
+        position:absolute;
+        left:-12px;
+        bottom:-14px;
+        width:66px;
+        height:66px;
+        border-radius:50%;
+        background:radial-gradient(circle, rgba(21,71,52,.05), transparent 72%);
+        pointer-events:none;
+    }
+
+    .dashboard-stat-label{
+        font-size:12.5px;
+        color:var(--muted);
+        margin-bottom:10px;
+        line-height:1.8;
+        font-weight:500;
+    }
+
+    .dashboard-stat-value{
+        font-size:30px;
+        line-height:1;
+        color:var(--primary);
+        font-weight:700;
+        margin-bottom:8px;
+    }
+
+    .dashboard-stat-note{
+        font-size:12px;
+        color:var(--muted);
+        line-height:1.85;
+        font-weight:400;
+    }
+
+    /* =========================
+       QUICK ACTIONS
+    ========================= */
+    .quick-grid{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:12px;
+    }
+
+    .quick-card{
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        gap:12px;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        border:1px solid var(--line);
+        border-radius:18px;
+        padding:16px;
+        box-shadow:var(--shadow-sm);
+        transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+        min-height:148px;
+        text-decoration:none;
+    }
+
+    .quick-card:hover{
+        transform:translateY(-2px);
+        box-shadow:var(--shadow-md);
+        border-color:rgba(21,71,52,.16);
+    }
+
+    .quick-card-body{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .quick-card-title{
+        font-size:15px;
+        font-weight:700;
+        color:var(--ink);
+        line-height:1.6;
+        margin:0;
+    }
+
+    .quick-card-desc{
+        font-size:12.5px;
+        color:var(--muted);
+        line-height:1.9;
+        margin:0;
+        font-weight:400;
+    }
+
+    .quick-card-link{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        align-self:flex-start;
+        min-height:34px;
+        padding:0 13px;
+        border-radius:999px;
+        background:#eef4f0;
+        color:var(--primary);
+        border:1px solid var(--line-2);
+        font-size:12px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    /* =========================
+       TABLE
+    ========================= */
+    .records-shell{
+        border:1px solid var(--line);
+        border-radius:18px;
+        overflow:hidden;
+        background:#fff;
+        box-shadow:var(--shadow-sm);
+    }
+
+    .recent-table{
+        width:100%;
+        border-collapse:collapse;
+    }
+
+    .recent-table thead th{
+        background:#f8faf8;
+        color:var(--ink-2);
+        font-size:12px;
+        font-weight:700;
+        padding:13px 14px;
+        border-bottom:1px solid var(--line);
+        white-space:nowrap;
+    }
+
+    .recent-table tbody td{
+        padding:13px 14px;
+        border-bottom:1px solid #edf1ee;
+        font-size:13px;
+        color:var(--ink-2);
+        vertical-align:middle;
+    }
+
+    .recent-table tbody tr:last-child td{
+        border-bottom:none;
+    }
+
+    .recent-table td strong{
+        color:var(--ink);
+        font-weight:700;
+    }
+
+    .activity-type{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:27px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid #e1e8e4;
+        color:var(--ink-2);
+        font-size:11px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .recent-table .btn{
+        min-height:34px;
+        padding:0 13px;
+        font-size:12px;
+        border-radius:10px;
+    }
+
+    .recent-meta{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-top:10px;
+        color:var(--muted);
+        font-size:12px;
+    }
+
+    /* =========================
+       STATUS
+    ========================= */
+    .status-grid{
+        display:grid;
+        grid-template-columns:1.05fr .95fr;
+        gap:12px;
+    }
+
+    .status-card{
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        border:1px solid var(--line);
+        border-radius:18px;
+        padding:16px;
+        box-shadow:var(--shadow-sm);
+    }
+
+    .status-title{
+        font-size:15px;
+        font-weight:700;
+        margin:0 0 8px;
+        color:var(--ink);
+        line-height:1.6;
+    }
+
+    .status-text{
+        font-size:13px;
+        color:var(--muted);
+        line-height:2;
+        font-weight:400;
+        margin:0;
+    }
+
+    .status-text strong{
+        color:var(--primary);
+        font-weight:700;
+    }
+
+    .status-list{
+        margin:0;
+        padding-right:18px;
+        color:var(--muted);
+        line-height:2;
+        font-size:13px;
+        font-weight:400;
+    }
+
+    .status-list li + li{
+        margin-top:4px;
+    }
+
+    /* =========================
+       EMPTY
+    ========================= */
+    .empty-state{
+        border:1px dashed #d8e2dc;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f8faf8 100%);
+        border-radius:18px;
+        padding:28px 18px;
+        text-align:center;
+        color:var(--muted);
+        font-size:13px;
+        line-height:2;
+    }
+
+    /* =========================
+       RESPONSIVE
+    ========================= */
+    @media (max-width: 1100px){
+        .hero-metrics,
+        .dashboard-stats,
+        .quick-grid{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+
+        .status-grid{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width: 760px){
+        .dashboard-page .hero{
+            padding:20px 18px 16px;
+            border-radius:22px;
+        }
+
+        .dashboard-page .hero-title{
+            font-size:24px;
+        }
+
+        .hero-head{
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .hero-metrics,
+        .dashboard-stats,
+        .quick-grid{
+            grid-template-columns:1fr;
+        }
+
+        .dashboard-page .section{
+            padding:16px;
+        }
+
+        .dashboard-page .section-title{
+            font-size:20px;
+        }
+
+        .recent-table{
+            min-width:760px;
+        }
+
+        .records-shell{
+            overflow-x:auto;
+        }
+
+        .recent-meta{
+            flex-direction:column;
+            align-items:flex-start;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="dash-hero">
+        <div class="hero-head">
+            <div class="hero-copy">
+                <span class="hero-kicker">لوحة العمل اليومية</span>
+                <h1 class="hero-title">مرحبًا {{ supervisor.full_name }}</h1>
+                <p class="hero-text">
+                    من خلال هذه اللوحة يمكنك إدارة بيانات المديرين والمديرات والوكلاء والوكيلات،
+                    ومراجعة أحدث السجلات، والتنقل السريع إلى صفحات الإضافة والمتابعة بصورة واضحة ومنظمة.
+                </p>
+
+                <div class="action-bar hero-actions">
+                    <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">إضافة مدير/مديرة</a>
+                    <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">إضافة وكيل/وكيلة</a>
+                    <a href="{% url 'staffdata:records_list' %}" class="btn btn-soft">عرض السجلات</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-metrics">
+            <div class="hero-metric">
+                <div class="hero-metric-label">إجمالي السجلات</div>
+                <div class="hero-metric-value">{{ total_count }}</div>
+            </div>
+
+            <div class="hero-metric">
+                <div class="hero-metric-label">استمارات الأداء المرفوعة</div>
+                <div class="hero-metric-value">{{ attachments_count }}</div>
+            </div>
+
+            <div class="hero-metric">
+                <div class="hero-metric-label">سجلات المديرين/المديرات</div>
+                <div class="hero-metric-value">{{ principal_count }}</div>
+            </div>
+
+            <div class="hero-metric">
+                <div class="hero-metric-label">سجلات الوكلاء/الوكيلات</div>
+                <div class="hero-metric-value">{{ vice_count }}</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">ملخص المؤشرات</h2>
+                <p class="section-subtitle">قراءة سريعة لوضع الإدخال من خلال حسابك دون ازدحام بصري.</p>
+            </div>
+        </div>
+
+        <div class="dashboard-stats">
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-label">سجلات المديرين/المديرات</div>
+                <div class="dashboard-stat-value">{{ principal_count }}</div>
+                <div class="dashboard-stat-note">السجلات الخاصة بالمديرين والمديرات التي أدخلتها حتى الآن.</div>
+            </div>
+
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-label">سجلات الوكلاء/الوكيلات</div>
+                <div class="dashboard-stat-value">{{ vice_count }}</div>
+                <div class="dashboard-stat-note">عدد السجلات المدخلة للوكلاء والوكيلات ضمن حسابك الحالي.</div>
+            </div>
+
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-label">إجمالي السجلات</div>
+                <div class="dashboard-stat-value">{{ total_count }}</div>
+                <div class="dashboard-stat-note">مجموع جميع السجلات المسجلة من خلالك داخل النظام.</div>
+            </div>
+
+            <div class="dashboard-stat">
+                <div class="dashboard-stat-label">الاستمارات المرفوعة</div>
+                <div class="dashboard-stat-value">{{ attachments_count }}</div>
+                <div class="dashboard-stat-note">عدد الاستمارات المرفوعة والمرفقة ضمن سجلات المديرين والمديرات.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">الإجراءات السريعة</h2>
+                <p class="section-subtitle">اختصارات العمل الأكثر استخدامًا داخل النظام بشكل أكثر اتزانًا ووضوحًا.</p>
+            </div>
+        </div>
+
+        <div class="quick-grid">
+            <a href="{% url 'staffdata:principal_add' %}" class="quick-card">
+                <div class="quick-card-body">
+                    <h3 class="quick-card-title">إضافة مدير/مديرة</h3>
+                    <p class="quick-card-desc">
+                        إنشاء سجل جديد للمدير أو المديرة مع رفع استمارة الأداء الوظيفي.
+                    </p>
+                </div>
+                <span class="quick-card-link">فتح الصفحة</span>
+            </a>
+
+            <a href="{% url 'staffdata:vice_add' %}" class="quick-card">
+                <div class="quick-card-body">
+                    <h3 class="quick-card-title">إضافة وكيل/وكيلة</h3>
+                    <p class="quick-card-desc">
+                        إنشاء سجل جديد للوكيل أو الوكيلة بالبيانات الأساسية المعتمدة.
+                    </p>
+                </div>
+                <span class="quick-card-link">فتح الصفحة</span>
+            </a>
+
+            <a href="{% url 'staffdata:records_list' %}" class="quick-card">
+                <div class="quick-card-body">
+                    <h3 class="quick-card-title">مراجعة السجلات</h3>
+                    <p class="quick-card-desc">
+                        استعراض جميع السجلات التي أضفتها ورفع طلبات التصحيح عند الحاجة من خلال المسار المعتمد.
+                    </p>
+                </div>
+                <span class="quick-card-link">عرض السجلات</span>
+            </a>
+
+            {% if request.user.is_authenticated and request.user.is_staff %}
+            <a href="{% url 'staffdata:admin_overview' %}" class="quick-card">
+                <div class="quick-card-body">
+                    <h3 class="quick-card-title">الإدارة العامة</h3>
+                    <p class="quick-card-desc">
+                        متابعة شاملة لجميع المدخلات وسحب البيانات والاستمارات على مستوى النظام.
+                    </p>
+                </div>
+                <span class="quick-card-link">فتح اللوحة</span>
+            </a>
+            {% else %}
+<div class="quick-card">
+    <div class="quick-card-body">
+        <h3 class="quick-card-title">الصفحة الحالية</h3>
+        <p class="quick-card-desc">
+            هذه اللوحة تعرض مؤشراتك وأحدث المدخلات وتساعدك على متابعة العمل اليومي.
+        </p>
+    </div>
+    <span class="quick-card-link">أنت هنا</span>
+</div>
+{% endif %}
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">آخر المدخلات</h2>
+                <p class="section-subtitle">آخر السجلات المدخلة من خلال حسابك مع وصول سريع إلى صفحة السجلات.</p>
+            </div>
+        </div>
+
+        {% if recent_items %}
+            <div class="records-shell">
+                <table class="recent-table">
+                    <thead>
+                        <tr>
+                            <th>النوع</th>
+                            <th>الاسم</th>
+                            <th>المدرسة</th>
+                            <th>القطاع</th>
+                            <th>الصفة</th>
+                            <th>تاريخ الإضافة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in recent_items %}
+                        <tr>
+                            <td><span class="activity-type">{{ item.type }}</span></td>
+                            <td><strong>{{ item.name }}</strong></td>
+                            <td>{{ item.school }}</td>
+                            <td>{{ item.sector }}</td>
+                            <td><span class="badge badge-primary">{{ item.role }}</span></td>
+                            <td class="muted">{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'staffdata:records_list' %}" class="btn btn-soft">عرض السجلات</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="recent-meta">
+                <span>إجمالي السجلات الحالية: {{ total_count }}</span>
+                <span>يمكنك الانتقال إلى صفحة السجلات لعرض التفاصيل الكاملة وطلبات التصحيح.</span>
+            </div>
+        {% else %}
+            <div class="empty-state">
+                لا توجد أي مدخلات حتى الآن. ابدأ بإضافة أول سجل من خلال قسم الإجراءات السريعة أعلاه.
+            </div>
+        {% endif %}
+    </section>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">حالة التشغيل</h2>
+                <p class="section-subtitle">ملاحظات عملية مختصرة تساعدك على مواصلة الإدخال بصورة منظمة.</p>
+            </div>
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card">
+                <h3 class="status-title">الوضع الحالي</h3>
+                <p class="status-text">
+                    لديك حاليًا <strong>{{ total_count }}</strong> سجلًا داخل النظام،
+                    منها <strong>{{ principal_count }}</strong> للمديرين والمديرات،
+                    و<strong>{{ vice_count }}</strong> للوكلاء والوكيلات،
+                    مع <strong>{{ attachments_count }}</strong> استمارة مرفوعة.
+                </p>
+            </div>
+
+            <div class="status-card">
+                <h3 class="status-title">إرشادات العمل</h3>
+                <ul class="status-list">
+                    <li>وحّد كتابة اسم المدرسة والقطاع لتظهر التقارير بصورة أدق.</li>
+                    <li>ارفع استمارة الأداء مباشرة عند إدخال بيانات المدير أو المديرة.</li>
+                    <li>عند وجود خطأ في سجل محفوظ استخدم طلب التصحيح عبر المسار المعتمد.</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

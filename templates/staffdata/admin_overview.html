@@ -1,0 +1,1235 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-board{
+        --ao-surface:#ffffff;
+        --ao-surface-2:#fbfcfb;
+        --ao-surface-3:#f7faf8;
+
+        --ao-line:#d9e3dc;
+        --ao-line-2:#e8eeea;
+
+        --ao-ink:#1c2f27;
+        --ao-ink-2:#496055;
+        --ao-muted:#7a8b82;
+
+        --ao-primary:#164736;
+        --ao-primary-2:#235943;
+        --ao-primary-3:#2e6d54;
+
+        --ao-gold:#c6a25c;
+        --ao-gold-soft:#efe2bf;
+
+        --ao-good:#1f6a42;
+        --ao-good-bg:#edf7f0;
+
+        --ao-warn:#8a6421;
+        --ao-warn-bg:#fcf5e7;
+
+        --ao-danger:#8c3a3a;
+        --ao-danger-bg:#fff2f2;
+
+        --ao-shadow-sm:0 8px 18px rgba(18,34,27,.035);
+        --ao-shadow-md:0 18px 38px rgba(18,34,27,.08);
+
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .admin-board .hero{
+        position:relative;
+        overflow:hidden;
+        padding:20px 22px 18px;
+        margin-bottom:0;
+        border-radius:26px;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 26%),
+            linear-gradient(135deg, var(--ao-primary) 0%, var(--ao-primary-2) 56%, var(--ao-primary-3) 100%);
+        box-shadow:var(--ao-shadow-md);
+        color:#fff;
+    }
+
+    .admin-board .hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:22px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.18) 18%,
+            rgba(221,196,144,.7) 50%,
+            rgba(221,196,144,.18) 82%,
+            transparent 100%
+        );
+    }
+
+    .exec-hero{
+        position:relative;
+        z-index:1;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .exec-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:18px;
+    }
+
+    .exec-copy{
+        max-width:980px;
+    }
+
+    .exec-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.9px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .admin-board .hero-title{
+        margin:0 0 7px;
+        font-size:26px;
+        line-height:1.28;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .admin-board .hero-text{
+        margin:0;
+        max-width:860px;
+        font-size:12.45px;
+        line-height:1.9;
+        color:rgba(255,255,255,.88);
+        font-weight:400;
+    }
+
+    .exec-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .exec-actions .btn{
+        min-height:38px;
+        padding:0 14px;
+        border-radius:11px;
+        font-size:11.9px;
+        font-weight:600;
+    }
+
+    .exec-grid{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .exec-kpi{
+        min-height:92px;
+        padding:14px 14px 13px;
+        border-radius:16px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.11);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        backdrop-filter:blur(4px);
+    }
+
+    .exec-kpi.priority{
+        background:rgba(255,255,255,.12);
+        border-color:rgba(255,255,255,.18);
+    }
+
+    .exec-kpi-label{
+        font-size:11px;
+        line-height:1.75;
+        color:rgba(255,255,255,.8);
+        font-weight:500;
+    }
+
+    .exec-kpi-value{
+        font-size:25px;
+        line-height:1;
+        color:#fff;
+        font-weight:700;
+        margin-top:8px;
+    }
+
+    .section{
+        padding:14px;
+        border-radius:22px;
+        background:linear-gradient(180deg, var(--ao-surface) 0%, var(--ao-surface-2) 100%);
+        border:1px solid var(--ao-line);
+        box-shadow:var(--ao-shadow-sm);
+    }
+
+    .section-head{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:16px;
+        margin-bottom:12px;
+    }
+
+    .section-title{
+        margin:0;
+        font-size:18px;
+        line-height:1.28;
+        color:var(--ao-ink);
+        font-weight:700;
+    }
+
+    .section-subtitle{
+        margin:0;
+        font-size:11.2px;
+        line-height:1.8;
+        color:var(--ao-muted);
+        font-weight:400;
+    }
+
+    .section-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:26px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--ao-line-2);
+        color:var(--ao-ink-2);
+        font-size:10.1px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .summary-grid{
+        display:grid;
+        grid-template-columns:1.45fr .9fr .9fr;
+        gap:12px;
+    }
+
+    .summary-card{
+        min-height:122px;
+        padding:14px;
+        border-radius:18px;
+        border:1px solid var(--ao-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .summary-card-title{
+        margin:0 0 10px;
+        font-size:13.4px;
+        line-height:1.5;
+        color:var(--ao-ink);
+        font-weight:700;
+    }
+
+    .summary-points{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:8px 10px;
+    }
+
+    .summary-point{
+        min-height:44px;
+        padding:8px 10px;
+        border-radius:12px;
+        border:1px solid var(--ao-line-2);
+        background:var(--ao-surface-3);
+    }
+
+    .summary-point-label{
+        font-size:10.2px;
+        line-height:1.6;
+        color:var(--ao-muted);
+        font-weight:600;
+    }
+
+    .summary-point-value{
+        font-size:16px;
+        line-height:1.2;
+        color:var(--ao-primary);
+        font-weight:700;
+        margin-top:3px;
+    }
+
+    .priority-box{
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        gap:10px;
+        text-align:center;
+    }
+
+    .priority-figure{
+        font-size:30px;
+        line-height:1;
+        font-weight:700;
+        color:var(--ao-primary);
+        margin-top:4px;
+    }
+
+    .priority-copy{
+        font-size:10.8px;
+        line-height:1.8;
+        color:var(--ao-muted);
+        margin:0;
+    }
+
+    .priority-tags{
+        display:flex;
+        flex-wrap:wrap;
+        justify-content:center;
+        gap:6px;
+    }
+
+    .priority-tag{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:24px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--ao-line-2);
+        color:var(--ao-ink-2);
+        font-size:9.6px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .workspace{
+        display:grid;
+        grid-template-columns:minmax(0, 1.55fr) minmax(300px, .9fr);
+        gap:12px;
+        align-items:start;
+    }
+
+    .follow-list{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .follow-row{
+        display:grid;
+        grid-template-columns:minmax(0, 1fr) auto auto;
+        gap:10px;
+        align-items:center;
+        padding:10px 11px;
+        border:1px solid var(--ao-line);
+        border-radius:15px;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        transition:border-color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    .follow-row:hover{
+        border-color:rgba(22,71,54,.16);
+        box-shadow:var(--ao-shadow-sm);
+        transform:translateY(-1px);
+    }
+
+    .follow-info{
+        min-width:0;
+        display:flex;
+        flex-direction:column;
+        gap:2px;
+    }
+
+    .follow-name{
+        margin:0;
+        font-size:14.3px;
+        line-height:1.35;
+        font-weight:700;
+        color:var(--ao-ink);
+    }
+
+    .follow-meta{
+        margin:0;
+        font-size:10.3px;
+        line-height:1.75;
+        color:var(--ao-muted);
+        font-weight:400;
+        word-break:break-word;
+    }
+
+    .follow-meta strong{
+        color:var(--ao-ink-2);
+        font-weight:600;
+    }
+
+    .follow-note{
+        margin:0;
+        font-size:9.9px;
+        line-height:1.65;
+        color:var(--ao-muted);
+    }
+
+    .follow-note strong{
+        color:var(--ao-primary);
+        font-weight:700;
+    }
+
+    .follow-stats{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+    }
+
+    .follow-stat{
+        width:64px;
+        min-height:46px;
+        padding:5px 6px;
+        border-radius:11px;
+        border:1px solid var(--ao-line);
+        background:#fff;
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+    }
+
+    .follow-stat-value{
+        font-size:14px;
+        line-height:1;
+        font-weight:700;
+        color:var(--ao-primary);
+        margin-bottom:3px;
+    }
+
+    .follow-stat-label{
+        font-size:8.3px;
+        line-height:1.1;
+        color:var(--ao-muted);
+        font-weight:600;
+    }
+
+    .follow-side{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+    }
+
+    .follow-state{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:86px;
+        min-height:29px;
+        padding:0 10px;
+        border-radius:999px;
+        font-size:9.9px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .follow-state.good{
+        background:var(--ao-good-bg);
+        color:var(--ao-good);
+        border:1px solid #d8eadd;
+    }
+
+    .follow-state.warn{
+        background:var(--ao-warn-bg);
+        color:var(--ao-warn);
+        border:1px solid #ead8b0;
+    }
+
+    .follow-link{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:29px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid var(--ao-line-2);
+        color:var(--ao-primary);
+        font-size:10px;
+        font-weight:600;
+        text-decoration:none;
+        white-space:nowrap;
+    }
+
+    .follow-link:hover{
+        background:#edf3ef;
+        color:var(--ao-primary);
+    }
+
+    .follow-link.is-disabled{
+        opacity:.55;
+        cursor:default;
+        pointer-events:none;
+    }
+
+    .follow-strip{
+        margin-top:9px;
+        min-height:46px;
+        padding:9px 12px;
+        border-radius:13px;
+        border:1px solid var(--ao-line);
+        background:linear-gradient(180deg, #fcfdfc 0%, #f8faf8 100%);
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+    }
+
+    .follow-strip-text{
+        font-size:10.8px;
+        line-height:1.75;
+        color:var(--ao-ink-2);
+        font-weight:500;
+    }
+
+    .follow-strip-text strong{
+        color:var(--ao-primary);
+        font-weight:700;
+    }
+
+    .side-stack{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .side-card{
+        padding:12px;
+        border-radius:17px;
+        border:1px solid var(--ao-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--ao-shadow-sm);
+    }
+
+    .side-card-title{
+        margin:0 0 8px;
+        font-size:13px;
+        line-height:1.45;
+        font-weight:700;
+        color:var(--ao-ink);
+    }
+
+    .mini-actions{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:7px;
+    }
+
+    .mini-action{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        min-height:36px;
+        padding:0 11px;
+        border-radius:11px;
+        border:1px solid var(--ao-line);
+        background:#fff;
+        text-decoration:none;
+        color:var(--ao-ink);
+        font-size:10.7px;
+        font-weight:600;
+    }
+
+    .mini-action:hover{
+        border-color:rgba(22,71,54,.16);
+        color:var(--ao-primary);
+    }
+
+    .mini-bars{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .mini-bar{
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+    }
+
+    .mini-bar-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:8px;
+        font-size:10.2px;
+        color:var(--ao-ink-2);
+        font-weight:600;
+    }
+
+    .mini-bar-track{
+        width:100%;
+        height:8px;
+        border-radius:999px;
+        background:#edf2ef;
+        overflow:hidden;
+    }
+
+    .mini-bar-fill{
+        height:100%;
+        border-radius:999px;
+        background:linear-gradient(90deg, var(--ao-primary) 0%, #3b7a61 100%);
+    }
+
+    .analytics-grid{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:12px;
+    }
+
+    .analytic-list{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .analytic-row{
+        display:grid;
+        grid-template-columns:minmax(0, 1fr) auto auto;
+        gap:10px;
+        align-items:center;
+        min-height:46px;
+        padding:9px 10px;
+        border-radius:13px;
+        border:1px solid var(--ao-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .analytic-name{
+        font-size:11.4px;
+        font-weight:700;
+        color:var(--ao-ink);
+        line-height:1.55;
+    }
+
+    .analytic-sub{
+        font-size:9.8px;
+        color:var(--ao-muted);
+        line-height:1.6;
+    }
+
+    .analytic-count{
+        font-size:14px;
+        font-weight:700;
+        color:var(--ao-primary);
+        min-width:34px;
+        text-align:center;
+    }
+
+    .analytic-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:24px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--ao-line-2);
+        color:var(--ao-ink-2);
+        font-size:9.4px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .records-shell{
+        border:1px solid var(--ao-line);
+        border-radius:17px;
+        overflow:hidden;
+        background:#fff;
+        box-shadow:var(--ao-shadow-sm);
+    }
+
+    .recent-table{
+        width:100%;
+        border-collapse:collapse;
+    }
+
+    .recent-table thead th{
+        background:#f8faf8;
+        color:var(--ao-ink-2);
+        font-size:11px;
+        font-weight:700;
+        padding:11px 12px;
+        border-bottom:1px solid var(--ao-line);
+        white-space:nowrap;
+    }
+
+    .recent-table tbody td{
+        padding:11px 12px;
+        border-bottom:1px solid #edf1ee;
+        font-size:11.8px;
+        color:var(--ao-ink-2);
+        vertical-align:middle;
+    }
+
+    .recent-table tbody tr:last-child td{
+        border-bottom:none;
+    }
+
+    .recent-table td strong{
+        color:var(--ao-ink);
+        font-weight:700;
+    }
+
+    .activity-type{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:24px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid #e1e8e4;
+        color:var(--ao-ink-2);
+        font-size:9.8px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .request-status{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:25px;
+        padding:0 9px;
+        border-radius:999px;
+        font-size:9.5px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .request-status.pending{
+        color:#8a641d;
+        background:#fcf4e5;
+        border:1px solid #ead5a7;
+    }
+
+    .request-status.approved{
+        color:#1f6a42;
+        background:#edf7f0;
+        border:1px solid #d9eadf;
+    }
+
+    .request-status.returned{
+        color:#7f5b1e;
+        background:#fff6e8;
+        border:1px solid #ecd8b5;
+    }
+
+    .request-status.rejected{
+        color:#8a3131;
+        background:#fff1f1;
+        border:1px solid #efcdcd;
+    }
+
+    .table-link{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:29px;
+        padding:0 10px;
+        border-radius:10px;
+        border:1px solid var(--ao-line);
+        background:#fff;
+        color:var(--ao-primary);
+        font-size:10.4px;
+        font-weight:600;
+        text-decoration:none;
+    }
+
+    .table-link:hover{
+        border-color:rgba(22,71,54,.16);
+        color:var(--ao-primary);
+        background:#f8fbf9;
+    }
+
+    .empty-strip{
+        border:1px dashed #d8e2dc;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f8faf8 100%);
+        border-radius:14px;
+        padding:12px 13px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        min-height:48px;
+        color:var(--ao-muted);
+        font-size:10.9px;
+        line-height:1.75;
+        text-align:center;
+    }
+
+    @media (max-width: 1160px){
+        .exec-grid,
+        .summary-grid,
+        .analytics-grid{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+
+        .workspace{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width: 980px){
+        .follow-row{
+            grid-template-columns:1fr;
+            align-items:flex-start;
+        }
+
+        .follow-stats,
+        .follow-side{
+            justify-content:flex-start;
+        }
+    }
+
+    @media (max-width: 760px){
+        .admin-board .hero{
+            padding:16px;
+            border-radius:21px;
+        }
+
+        .admin-board .hero-title{
+            font-size:22px;
+        }
+
+        .admin-board .hero-text{
+            font-size:11.6px;
+        }
+
+        .exec-grid,
+        .summary-grid,
+        .analytics-grid{
+            grid-template-columns:1fr;
+        }
+
+        .section{
+            padding:12px;
+        }
+
+        .section-title{
+            font-size:16.5px;
+        }
+
+        .recent-table{
+            min-width:860px;
+        }
+
+        .records-shell{
+            overflow-x:auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="exec-hero">
+        <div class="exec-head">
+            <div class="exec-copy">
+                <span class="exec-kicker">لوحة الإدارة العامة</span>
+                <h1 class="hero-title">{{ page_title }}</h1>
+                <p class="hero-text">
+                    واجهة تنفيذية لقراءة مؤشرات السجلات والاستمارات وطلبات التصحيح، مع إبراز العناصر الأعلى أولوية
+                    لتسهيل المتابعة السريعة واتخاذ القرار الإداري بصورة أكثر وضوحًا وثباتًا.
+                </p>
+
+                <div class="exec-actions">
+                    <a href="{% url 'staffdata:admin_principals_list' %}" class="btn btn-primary">سجلات المديرين</a>
+                    <a href="{% url 'staffdata:admin_vices_list' %}" class="btn btn-secondary">سجلات الوكلاء</a>
+                    <a href="{% url 'staffdata:admin_supervisors_list' %}" class="btn btn-soft">استعراض المشرفين</a>
+                    <a href="{% url 'staffdata:admin_correction_requests' %}" class="btn btn-soft">طلبات التصحيح</a>
+                    <a href="{% url 'staffdata:admin_export_principals_csv' %}" class="btn btn-soft">تصدير المديرين Excel</a>
+                    <a href="{% url 'staffdata:admin_export_vice_csv' %}" class="btn btn-soft">تصدير الوكلاء Excel</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="exec-grid">
+            <div class="exec-kpi priority">
+                <div class="exec-kpi-label">طلبات التصحيح المفتوحة</div>
+                <div class="exec-kpi-value">{{ stats.pending_corrections_count|default:"0" }}</div>
+            </div>
+
+            <div class="exec-kpi priority">
+                <div class="exec-kpi-label">النواقص في المرفقات</div>
+                <div class="exec-kpi-value">{{ stats.missing_attachments|default:"0" }}</div>
+            </div>
+
+            <div class="exec-kpi">
+                <div class="exec-kpi-label">إجمالي السجلات</div>
+                <div class="exec-kpi-value">{{ stats.total_records|default:"0" }}</div>
+            </div>
+
+            <div class="exec-kpi">
+                <div class="exec-kpi-label">المشرفون</div>
+                <div class="exec-kpi-value">{{ stats.supervisors_count|default:"0" }}</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="admin-board">
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">الملخص التنفيذي</h2>
+                <p class="section-subtitle">قراءة إدارية مختصرة لمشهد البيانات الحالي على مستوى النظام.</p>
+            </div>
+            <span class="section-badge">تحديث لحظي</span>
+        </div>
+
+        <div class="summary-grid">
+            <div class="summary-card">
+                <h3 class="summary-card-title">مؤشرات السجلات</h3>
+                <div class="summary-points">
+                    <div class="summary-point">
+                        <div class="summary-point-label">إجمالي السجلات</div>
+                        <div class="summary-point-value">{{ stats.total_records|default:"0" }}</div>
+                    </div>
+                    <div class="summary-point">
+                        <div class="summary-point-label">سجلات المديرين/المديرات</div>
+                        <div class="summary-point-value">{{ stats.total_principals|default:"0" }}</div>
+                    </div>
+                    <div class="summary-point">
+                        <div class="summary-point-label">سجلات الوكلاء/الوكيلات</div>
+                        <div class="summary-point-value">{{ stats.total_vices|default:"0" }}</div>
+                    </div>
+                    <div class="summary-point">
+                        <div class="summary-point-label">إجمالي المدارس</div>
+                        <div class="summary-point-value">{{ stats.schools_total|default:"0" }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="summary-card priority-box">
+                <div>
+                    <h3 class="summary-card-title">الحالة التشغيلية</h3>
+                    <div class="priority-figure">{{ stats.active_records|default:"0" }}</div>
+                    <p class="priority-copy">عدد السجلات النشطة حاليًا ضمن المشهد العام للنظام.</p>
+                </div>
+                <div class="priority-tags">
+                    <span class="priority-tag">غير نشط: {{ stats.inactive_records|default:"0" }}</span>
+                    <span class="priority-tag">المشرفون: {{ stats.supervisors_count|default:"0" }}</span>
+                </div>
+            </div>
+
+            <div class="summary-card priority-box">
+                <div>
+                    <h3 class="summary-card-title">سلامة الملفات</h3>
+                    <div class="priority-figure">{{ stats.attached_records|default:"0" }}</div>
+                    <p class="priority-copy">عدد السجلات المرتبطة بملفات الأداء المرفوعة وفق البيانات الحالية.</p>
+                </div>
+                <div class="priority-tags">
+                    <span class="priority-tag">نواقص: {{ stats.missing_attachments|default:"0" }}</span>
+                    <span class="priority-tag">تصحيح مفتوح: {{ stats.pending_corrections_count|default:"0" }}</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="workspace">
+        <div class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">قائمة المتابعة المختصرة</h2>
+                    <p class="section-subtitle">أعلى المشرفين احتياجًا للمتابعة بحسب النواقص ثم حجم النشاط.</p>
+                </div>
+                <span class="section-badge">أعلى 10</span>
+            </div>
+
+            {% if supervisor_rows %}
+                <div class="follow-list">
+                    {% for row in supervisor_rows|slice:":10" %}
+                    <div class="follow-row">
+                        <div class="follow-info">
+                            <p class="follow-name">{{ row.supervisor_name }}</p>
+                            <p class="follow-meta">
+                                <strong>الهوية:</strong> {{ row.national_id|default:"—" }}
+                                <span> - </span>
+                                <strong>القطاع:</strong> {{ row.sector|default:"—" }}
+                                <span> - </span>
+                                <strong>الجوال:</strong> {{ row.mobile|default:"—" }}
+                            </p>
+                            <p class="follow-note">
+                                {% if row.missing_attachments > 0 %}
+                                    <strong>سبب الظهور:</strong> توجد نواقص في المرفقات وتحتاج إلى متابعة.
+                                {% elif row.total > 0 %}
+                                    <strong>سبب الظهور:</strong> حجم نشاط مرتفع ويستحق مراجعة اكتمال البيانات.
+                                {% else %}
+                                    <strong>سبب الظهور:</strong> لا توجد ملاحظة حرجة حاليًا.
+                                {% endif %}
+                            </p>
+                        </div>
+
+                        <div class="follow-stats">
+                            <div class="follow-stat">
+                                <div class="follow-stat-value">{{ row.principals }}</div>
+                                <div class="follow-stat-label">المديرون</div>
+                            </div>
+
+                            <div class="follow-stat">
+                                <div class="follow-stat-value">{{ row.vices }}</div>
+                                <div class="follow-stat-label">الوكلاء</div>
+                            </div>
+
+                            <div class="follow-stat">
+                                <div class="follow-stat-value">{{ row.total }}</div>
+                                <div class="follow-stat-label">الإجمالي</div>
+                            </div>
+
+                            <div class="follow-stat">
+                                <div class="follow-stat-value">{{ row.missing_attachments }}</div>
+                                <div class="follow-stat-label">النواقص</div>
+                            </div>
+                        </div>
+
+                        <div class="follow-side">
+                            {% if row.missing_attachments > 0 %}
+                                <span class="follow-state warn">يحتاج متابعة</span>
+                            {% else %}
+                                <span class="follow-state good">مستقر</span>
+                            {% endif %}
+
+                            {% if row.supervisor_id %}
+                                <a href="{% url 'staffdata:admin_supervisor_detail' row.supervisor_id %}" class="follow-link">بطاقة المشرف</a>
+                            {% else %}
+                                <span class="follow-link is-disabled">بطاقة غير متاحة</span>
+                            {% endif %}
+
+                            <a href="{% url 'staffdata:admin_principals_list' %}?supervisor={{ row.supervisor_name|urlencode }}" class="follow-link">المديرون</a>
+                            <a href="{% url 'staffdata:admin_vices_list' %}?supervisor={{ row.supervisor_name|urlencode }}" class="follow-link">الوكلاء</a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="follow-strip">
+                    <div class="follow-strip-text">
+                        {% if stats.pending_corrections_count|default:0 > 0 %}
+                            <strong>تنبيه إداري:</strong> توجد طلبات تصحيح مفتوحة تستحق المراجعة العاجلة.
+                        {% elif stats.missing_attachments|default:0 > 0 %}
+                            <strong>تنبيه إداري:</strong> لا تزال بعض السجلات بحاجة إلى استكمال المرفقات.
+                        {% else %}
+                            <strong>تنبيه إداري:</strong> الحالة العامة مستقرة حاليًا ويمكن توجيه الجهد للمتابعة الوقائية.
+                        {% endif %}
+                    </div>
+                    <span class="section-badge">مراجعة تنفيذية</span>
+                </div>
+            {% else %}
+                <div class="empty-strip">
+                    لا توجد بيانات متابعة متاحة للمشرفين حاليًا.
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="side-stack">
+            <div class="side-card">
+                <h3 class="side-card-title">تنفيذ مباشر</h3>
+                <div class="mini-actions">
+                    <a href="{% url 'staffdata:admin_correction_requests' %}" class="mini-action">
+                        <span>فتح طلبات التصحيح</span>
+                        <span>↗</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_download_performance_zip' %}" class="mini-action">
+                        <span>تحميل الاستمارات</span>
+                        <span>↗</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_supervisors_list' %}" class="mini-action">
+                        <span>استعراض المشرفين</span>
+                        <span>↗</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_principals_list' %}" class="mini-action">
+                        <span>فتح سجلات المديرين</span>
+                        <span>↗</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_vices_list' %}" class="mini-action">
+                        <span>فتح سجلات الوكلاء</span>
+                        <span>↗</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <h3 class="side-card-title">التصدير</h3>
+                <div class="mini-actions">
+                    <a href="{% url 'staffdata:admin_export_principals_csv' %}" class="mini-action">
+                        <span>تصدير بيانات المديرين Excel</span>
+                        <span>⬇</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_export_vice_csv' %}" class="mini-action">
+                        <span>تصدير بيانات الوكلاء Excel</span>
+                        <span>⬇</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_download_performance_zip' %}" class="mini-action">
+                        <span>تحميل الاستمارات Zip</span>
+                        <span>⬇</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="side-card">
+                <h3 class="side-card-title">ميزان السلامة</h3>
+                <div class="mini-bars">
+                    <div class="mini-bar">
+                        <div class="mini-bar-head">
+                            <span>السجلات النشطة</span>
+                            <span>{{ stats.active_records|default:"0" }}</span>
+                        </div>
+                        <div class="mini-bar-track">
+                            <div class="mini-bar-fill" style="width:{% widthratio stats.active_records|default:0 stats.total_records|default:1 100 %}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="mini-bar">
+                        <div class="mini-bar-head">
+                            <span>المرفقات المكتملة</span>
+                            <span>{{ stats.attached_records|default:"0" }}</span>
+                        </div>
+                        <div class="mini-bar-track">
+                            <div class="mini-bar-fill" style="width:{% widthratio stats.attached_records|default:0 stats.total_principals|default:1 100 %}%;"></div>
+                        </div>
+                    </div>
+
+                    <div class="mini-bar">
+                        <div class="mini-bar-head">
+                            <span>طلبات التصحيح المفتوحة</span>
+                            <span>{{ stats.pending_corrections_count|default:"0" }}</span>
+                        </div>
+                        <div class="mini-bar-track">
+                            <div class="mini-bar-fill" style="width:{% widthratio stats.pending_corrections_count|default:0 stats.total_records|default:1 100 %}%;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">التحليل القطاعي والمرحلي</h2>
+                <p class="section-subtitle">تلخيص مرتب للقطاعات والمراحل الأعلى حضورًا في البيانات الحالية.</p>
+            </div>
+        </div>
+
+        <div class="analytics-grid">
+            <div class="side-card">
+                <h3 class="side-card-title">القطاعات الأعلى</h3>
+                {% if sector_rows %}
+                    <div class="analytic-list">
+                        {% for row in sector_rows|slice:":8" %}
+                        <div class="analytic-row">
+                            <div>
+                                <div class="analytic-name">{{ row.label|default:"غير محدد" }}</div>
+                                <div class="analytic-sub">إجمالي السجلات داخل هذا القطاع</div>
+                            </div>
+                            <div class="analytic-count">{{ row.count|default:"0" }}</div>
+                            <div class="analytic-badge">قطاع</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-strip">لا توجد بيانات قطاعات متاحة حاليًا.</div>
+                {% endif %}
+            </div>
+
+            <div class="side-card">
+                <h3 class="side-card-title">المراحل الأعلى</h3>
+                {% if stage_rows %}
+                    <div class="analytic-list">
+                        {% for row in stage_rows|slice:":8" %}
+                        <div class="analytic-row">
+                            <div>
+                                <div class="analytic-name">{{ row.label|default:"غير محدد" }}</div>
+                                <div class="analytic-sub">إجمالي السجلات داخل هذه المرحلة</div>
+                            </div>
+                            <div class="analytic-count">{{ row.count|default:"0" }}</div>
+                            <div class="analytic-badge">مرحلة</div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="empty-strip">لا توجد بيانات مراحل متاحة حاليًا.</div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">آخر طلبات التصحيح</h2>
+                <p class="section-subtitle">أحدث الطلبات التي دخلت مسار المعالجة الإدارية.</p>
+            </div>
+            <span class="section-badge">آخر 8 طلبات</span>
+        </div>
+
+        {% if latest_correction_requests %}
+            <div class="records-shell">
+                <table class="recent-table">
+                    <thead>
+                        <tr>
+                            <th>النوع</th>
+                            <th>المشرف</th>
+                            <th>الاسم المقترح</th>
+                            <th>الحالة</th>
+                            <th>تاريخ الطلب</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for correction in latest_correction_requests %}
+                        <tr>
+                            <td><span class="activity-type">{{ correction.get_target_type_display }}</span></td>
+                            <td><strong>{{ correction.supervisor.full_name }}</strong></td>
+                            <td>{{ correction.requested_full_name }}</td>
+                            <td>
+                                <span class="request-status {{ correction.status }}">
+                                    {{ correction.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ correction.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'staffdata:admin_correction_request_review' correction.pk %}" class="table-link">مراجعة</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="empty-strip">
+                لا توجد طلبات تصحيح دخلت مسار المعالجة الإدارية حاليًا.
+            </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}

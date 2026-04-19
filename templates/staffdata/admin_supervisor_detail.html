@@ -1,0 +1,1271 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .supervisor-detail-page{
+        --sd-surface:#ffffff;
+        --sd-surface-2:#fbfcfb;
+        --sd-surface-3:#f7faf8;
+
+        --sd-line:#d9e3dc;
+        --sd-line-2:#e7ede9;
+
+        --sd-ink:#1c2f27;
+        --sd-ink-2:#4c6358;
+        --sd-muted:#7e8d84;
+
+        --sd-primary:#184838;
+        --sd-primary-2:#245a44;
+        --sd-primary-3:#2f7055;
+
+        --sd-good:#1f6a42;
+        --sd-good-bg:#edf7f0;
+
+        --sd-warn:#8a6520;
+        --sd-warn-bg:#fcf5e8;
+
+        --sd-idle:#64756b;
+        --sd-idle-bg:#f3f6f4;
+
+        --sd-shadow-sm:0 8px 18px rgba(18,34,27,.035);
+        --sd-shadow-md:0 18px 38px rgba(18,34,27,.08);
+
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .supervisor-detail-page .hero{
+        position:relative;
+        overflow:hidden;
+        padding:20px 22px 18px;
+        margin-bottom:0;
+        border-radius:26px;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 26%),
+            linear-gradient(135deg, var(--sd-primary) 0%, var(--sd-primary-2) 56%, var(--sd-primary-3) 100%);
+        box-shadow:var(--sd-shadow-md);
+        color:#fff;
+    }
+
+    .supervisor-detail-page .hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:22px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.18) 18%,
+            rgba(221,196,144,.7) 50%,
+            rgba(221,196,144,.18) 82%,
+            transparent 100%
+        );
+    }
+
+    .sd-hero{
+        position:relative;
+        z-index:1;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .sd-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.8px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .supervisor-detail-page .hero-title{
+        margin:0 0 7px;
+        font-size:26px;
+        line-height:1.28;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .supervisor-detail-page .hero-text{
+        margin:0;
+        max-width:860px;
+        font-size:12.4px;
+        line-height:1.9;
+        color:rgba(255,255,255,.88);
+        font-weight:400;
+    }
+
+    .sd-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .sd-actions .btn{
+        min-height:38px;
+        padding:0 14px;
+        border-radius:11px;
+        font-size:11.9px;
+        font-weight:600;
+    }
+
+    .sd-kpis{
+        display:grid;
+        grid-template-columns:repeat(7, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .sd-kpi{
+        min-height:86px;
+        padding:13px 14px;
+        border-radius:16px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.11);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        backdrop-filter:blur(4px);
+    }
+
+    .sd-kpi-label{
+        font-size:10.8px;
+        line-height:1.7;
+        color:rgba(255,255,255,.8);
+        font-weight:500;
+    }
+
+    .sd-kpi-value{
+        font-size:23px;
+        line-height:1;
+        color:#fff;
+        font-weight:700;
+        margin-top:8px;
+    }
+
+    .section{
+        padding:14px;
+        border-radius:22px;
+        background:linear-gradient(180deg, var(--sd-surface) 0%, var(--sd-surface-2) 100%);
+        border:1px solid var(--sd-line);
+        box-shadow:var(--sd-shadow-sm);
+    }
+
+    .section-head{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:16px;
+        margin-bottom:12px;
+    }
+
+    .section-title{
+        margin:0;
+        font-size:18px;
+        line-height:1.3;
+        color:var(--sd-ink);
+        font-weight:700;
+    }
+
+    .section-subtitle{
+        margin:0;
+        font-size:11.2px;
+        line-height:1.8;
+        color:var(--sd-muted);
+        font-weight:400;
+    }
+
+    .section-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:26px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--sd-line-2);
+        color:var(--sd-ink-2);
+        font-size:10px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .profile-grid{
+        display:grid;
+        grid-template-columns:1.2fr .8fr;
+        gap:12px;
+    }
+
+    .profile-card{
+        padding:14px;
+        border-radius:17px;
+        border:1px solid var(--sd-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--sd-shadow-sm);
+    }
+
+    .profile-list{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .profile-item{
+        min-height:56px;
+        padding:10px 11px;
+        border-radius:13px;
+        border:1px solid var(--sd-line-2);
+        background:var(--sd-surface-3);
+    }
+
+    .profile-item-label{
+        font-size:10.3px;
+        line-height:1.6;
+        color:var(--sd-muted);
+        font-weight:600;
+    }
+
+    .profile-item-value{
+        font-size:12.7px;
+        line-height:1.55;
+        color:var(--sd-ink);
+        font-weight:700;
+        margin-top:4px;
+        word-break:break-word;
+    }
+
+    .status-box{
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        gap:10px;
+        text-align:center;
+        min-height:100%;
+    }
+
+    .status-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:10.2px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .status-chip.good{
+        background:var(--sd-good-bg);
+        color:var(--sd-good);
+        border:1px solid #d8eadf;
+    }
+
+    .status-chip.warn{
+        background:var(--sd-warn-bg);
+        color:var(--sd-warn);
+        border:1px solid #ead8b0;
+    }
+
+    .status-chip.idle{
+        background:var(--sd-idle-bg);
+        color:var(--sd-idle);
+        border:1px solid #dde5df;
+    }
+
+    .status-figure{
+        font-size:28px;
+        line-height:1;
+        font-weight:700;
+        color:var(--sd-primary);
+    }
+
+    .status-copy{
+        font-size:10.8px;
+        line-height:1.8;
+        color:var(--sd-muted);
+        margin:0;
+    }
+
+    .two-col{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:12px;
+    }
+
+    .records-shell{
+        border:1px solid var(--sd-line);
+        border-radius:18px;
+        overflow:hidden;
+        background:#fff;
+        box-shadow:var(--sd-shadow-sm);
+    }
+
+    .records-table{
+        width:100%;
+        border-collapse:collapse;
+    }
+
+    .records-table thead th{
+        background:#f8faf8;
+        color:var(--sd-ink-2);
+        font-size:10.8px;
+        font-weight:700;
+        padding:11px 12px;
+        border-bottom:1px solid var(--sd-line);
+        white-space:nowrap;
+    }
+
+    .records-table tbody td{
+        padding:11px 12px;
+        border-bottom:1px solid #edf1ee;
+        font-size:11.7px;
+        color:var(--sd-ink-2);
+        vertical-align:middle;
+    }
+
+    .records-table tbody tr:last-child td{
+        border-bottom:none;
+    }
+
+    .records-table td strong{
+        color:var(--sd-ink);
+        font-weight:700;
+    }
+
+    .mini-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:25px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid #e1e8e4;
+        color:var(--sd-ink-2);
+        font-size:9.7px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .file-chip.ok{
+        background:var(--sd-good-bg);
+        color:var(--sd-good);
+        border:1px solid #d9eadf;
+    }
+
+    .file-chip.no{
+        background:var(--sd-warn-bg);
+        color:var(--sd-warn);
+        border:1px solid #ead9b5;
+    }
+
+    .request-status,
+    .reset-request-status{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:25px;
+        padding:0 9px;
+        border-radius:999px;
+        font-size:9.5px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .request-status.pending,
+    .reset-request-status.pending{
+        color:#8a641d;
+        background:#fcf4e5;
+        border:1px solid #ead5a7;
+    }
+
+    .request-status.approved{
+        color:#1f6a42;
+        background:#edf7f0;
+        border:1px solid #d9eadf;
+    }
+
+    .request-status.returned{
+        color:#7f5b1e;
+        background:#fff6e8;
+        border:1px solid #ecd8b5;
+    }
+
+    .request-status.rejected{
+        color:#8a3131;
+        background:#fff1f1;
+        border:1px solid #efcdcd;
+    }
+
+    .reset-request-status.processed{
+        color:#1f6a42;
+        background:#edf7f0;
+        border:1px solid #d9eadf;
+    }
+
+    .reset-request-status.cancelled{
+        color:#6b756f;
+        background:#f2f5f3;
+        border:1px solid #dde4df;
+    }
+
+    .activity-list{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .activity-row{
+        display:grid;
+        grid-template-columns:auto minmax(0, 1fr) auto;
+        gap:10px;
+        align-items:center;
+        min-height:56px;
+        padding:10px 11px;
+        border-radius:14px;
+        border:1px solid var(--sd-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .activity-type{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:78px;
+        min-height:28px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid #e1e8e4;
+        color:var(--sd-ink-2);
+        font-size:9.8px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .activity-main{
+        min-width:0;
+    }
+
+    .activity-title{
+        font-size:12px;
+        font-weight:700;
+        color:var(--sd-ink);
+        line-height:1.55;
+        margin:0;
+    }
+
+    .activity-sub{
+        font-size:10px;
+        color:var(--sd-muted);
+        line-height:1.7;
+        margin:2px 0 0;
+    }
+
+    .activity-date{
+        font-size:10px;
+        color:var(--sd-muted);
+        white-space:nowrap;
+    }
+
+    .account-box{
+        padding:14px;
+        border-radius:17px;
+        border:1px solid var(--sd-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--sd-shadow-sm);
+    }
+
+    .account-box + .account-box{
+        margin-top:10px;
+    }
+
+    .account-box-title{
+        margin:0 0 6px;
+        font-size:13px;
+        font-weight:700;
+        color:var(--sd-ink);
+    }
+
+    .account-box-text{
+        margin:0;
+        font-size:11.5px;
+        line-height:1.9;
+        color:var(--sd-muted);
+    }
+
+    .account-actions{
+        margin-top:12px;
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .account-actions .btn{
+        min-height:38px;
+        padding:0 14px;
+        border-radius:11px;
+        font-size:11.8px;
+        font-weight:600;
+    }
+
+    .empty-state{
+        border:1px dashed #d8e2dc;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f8faf8 100%);
+        border-radius:16px;
+        padding:22px 16px;
+        text-align:center;
+        color:var(--sd-muted);
+        font-size:12px;
+        line-height:1.9;
+    }
+
+    .custom-modal-backdrop{
+        position:fixed;
+        inset:0;
+        background:rgba(15, 27, 22, .42);
+        backdrop-filter:blur(4px);
+        display:none;
+        align-items:center;
+        justify-content:center;
+        padding:20px;
+        z-index:3000;
+    }
+
+    .custom-modal-backdrop.is-open{
+        display:flex;
+    }
+
+    .custom-modal{
+        width:min(560px, 100%);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        border:1px solid var(--sd-line);
+        border-radius:26px;
+        box-shadow:0 28px 60px rgba(13, 27, 21, .22);
+        overflow:hidden;
+        transform:translateY(8px) scale(.985);
+        opacity:0;
+        transition:transform .18s ease, opacity .18s ease;
+    }
+
+    .custom-modal-backdrop.is-open .custom-modal{
+        transform:translateY(0) scale(1);
+        opacity:1;
+    }
+
+    .custom-modal-head{
+        padding:18px 20px 14px;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 24%),
+            linear-gradient(135deg, var(--sd-primary) 0%, var(--sd-primary-2) 55%, var(--sd-primary-3) 100%);
+        color:#fff;
+        position:relative;
+    }
+
+    .custom-modal-head::after{
+        content:"";
+        position:absolute;
+        inset-inline:20px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.16) 18%,
+            rgba(221,196,144,.68) 50%,
+            rgba(221,196,144,.16) 82%,
+            transparent 100%
+        );
+    }
+
+    .custom-modal-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.7px;
+        font-weight:700;
+        margin-bottom:10px;
+    }
+
+    .custom-modal-title{
+        margin:0;
+        font-size:22px;
+        line-height:1.35;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .custom-modal-body{
+        padding:20px;
+    }
+
+    .custom-modal-text{
+        margin:0;
+        color:var(--sd-ink);
+        font-size:13px;
+        line-height:2;
+        font-weight:500;
+    }
+
+    .custom-modal-text strong{
+        color:var(--sd-primary);
+        font-weight:700;
+    }
+
+    .custom-modal-note{
+        margin-top:14px;
+        padding:14px 15px;
+        border-radius:16px;
+        background:linear-gradient(180deg, #faf8f2 0%, #fffdf8 100%);
+        border:1px solid #eadcbf;
+        color:#715923;
+        font-size:11.8px;
+        line-height:1.95;
+    }
+
+    .custom-modal-actions{
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:18px;
+    }
+
+    .custom-modal-actions .btn{
+        min-width:132px;
+        min-height:42px;
+        border-radius:12px;
+        font-size:12.2px;
+        font-weight:700;
+    }
+
+    .custom-modal-close{
+        position:absolute;
+        top:14px;
+        inset-inline-end:14px;
+        width:34px;
+        height:34px;
+        border:none;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:#fff;
+        font-size:18px;
+        line-height:1;
+        cursor:pointer;
+        transition:background .18s ease, transform .18s ease;
+    }
+
+    .custom-modal-close:hover{
+        background:rgba(255,255,255,.18);
+        transform:translateY(-1px);
+    }
+
+    @media (max-width: 1180px){
+        .sd-kpis{
+            grid-template-columns:repeat(3, minmax(0, 1fr));
+        }
+
+        .profile-grid,
+        .two-col{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width: 760px){
+        .supervisor-detail-page .hero{
+            padding:16px;
+            border-radius:22px;
+        }
+
+        .supervisor-detail-page .hero-title{
+            font-size:22px;
+        }
+
+        .sd-kpis,
+        .profile-list{
+            grid-template-columns:1fr;
+        }
+
+        .section{
+            padding:12px;
+        }
+
+        .records-shell{
+            overflow-x:auto;
+        }
+
+        .records-table{
+            min-width:880px;
+        }
+
+        .activity-row{
+            grid-template-columns:1fr;
+            align-items:flex-start;
+        }
+
+        .custom-modal{
+            border-radius:22px;
+        }
+
+        .custom-modal-head{
+            padding:16px 16px 13px;
+        }
+
+        .custom-modal-body{
+            padding:16px;
+        }
+
+        .custom-modal-title{
+            font-size:20px;
+        }
+
+        .custom-modal-actions{
+            flex-direction:column;
+        }
+
+        .custom-modal-actions .btn{
+            width:100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="sd-hero">
+        <div>
+            <span class="sd-kicker">بطاقة المشرف</span>
+            <h1 class="hero-title">{{ supervisor_info.full_name }}</h1>
+            <p class="hero-text">
+                عرض تفصيلي لبيانات المشرف، مؤشرات نشاطه، السجلات التي أدخلها، النواقص في المرفقات،
+                وطلبات التصحيح وطلبات إعادة التهيئة المرتبطة به لتيسير المتابعة الإدارية الدقيقة.
+            </p>
+
+            <div class="sd-actions">
+                <a href="{% url 'staffdata:admin_supervisors_list' %}" class="btn btn-secondary">العودة لقائمة المشرفين</a>
+                <a href="{% url 'staffdata:admin_principals_list' %}?supervisor={{ supervisor_info.full_name|urlencode }}" class="btn btn-soft">سجلات المديرين</a>
+                <a href="{% url 'staffdata:admin_vices_list' %}?supervisor={{ supervisor_info.full_name|urlencode }}" class="btn btn-soft">سجلات الوكلاء</a>
+            </div>
+        </div>
+
+        <div class="sd-kpis">
+            <div class="sd-kpi">
+                <div class="sd-kpi-label">المديرون/المديرات</div>
+                <div class="sd-kpi-value">{{ stats.principal_count }}</div>
+            </div>
+            <div class="sd-kpi">
+                <div class="sd-kpi-label">الوكلاء/الوكيلات</div>
+                <div class="sd-kpi-value">{{ stats.vice_count }}</div>
+            </div>
+            <div class="sd-kpi">
+                <div class="sd-kpi-label">إجمالي السجلات</div>
+                <div class="sd-kpi-value">{{ stats.total_count }}</div>
+            </div>
+            <div class="sd-kpi">
+                <div class="sd-kpi-label">المرفقات المكتملة</div>
+                <div class="sd-kpi-value">{{ stats.attachments_count }}</div>
+            </div>
+            <div class="sd-kpi">
+                <div class="sd-kpi-label">النواقص</div>
+                <div class="sd-kpi-value">{{ stats.missing_attachments }}</div>
+            </div>
+            <div class="sd-kpi">
+                <div class="sd-kpi-label">طلبات التصحيح المفتوحة</div>
+                <div class="sd-kpi-value">{{ stats.pending_corrections_count }}</div>
+            </div>
+            <div class="sd-kpi">
+                <div class="sd-kpi-label">طلبات إعادة التهيئة المفتوحة</div>
+                <div class="sd-kpi-value">{{ stats.pending_reset_requests_count }}</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="supervisor-detail-page">
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">البيانات الأساسية</h2>
+                <p class="section-subtitle">بطاقة تعريف مختصرة للمشرف مع الحالة وآخر نشاط.</p>
+            </div>
+            <span class="section-badge">معلومات أساسية</span>
+        </div>
+
+        <div class="profile-grid">
+            <div class="profile-card">
+                <div class="profile-list">
+                    <div class="profile-item">
+                        <div class="profile-item-label">الاسم الكامل</div>
+                        <div class="profile-item-value">{{ supervisor_info.full_name }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">السجل المدني</div>
+                        <div class="profile-item-value">{{ supervisor_info.national_id }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">الجوال</div>
+                        <div class="profile-item-value">{{ supervisor_info.mobile }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">البريد الإلكتروني</div>
+                        <div class="profile-item-value">{{ supervisor_info.email }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">القطاع</div>
+                        <div class="profile-item-value">{{ supervisor_info.sector }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">آخر نشاط</div>
+                        <div class="profile-item-value">
+                            {% if supervisor_info.last_activity %}
+                                {{ supervisor_info.last_activity|date:"Y-m-d H:i" }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <div class="status-box">
+                    <div>
+                        <span class="status-chip {{ supervisor_info.status_class }}">
+                            {{ supervisor_info.status_label }}
+                        </span>
+                    </div>
+
+                    <div class="status-figure">
+                        {% if supervisor_info.is_active %}
+                            نشط
+                        {% else %}
+                            غير نشط
+                        {% endif %}
+                    </div>
+
+                    <p class="status-copy">
+                        تمثل هذه البطاقة الوضع العام للمشرف استنادًا إلى حجم المدخلات، النواقص، طلبات التصحيح، وطلبات إعادة التهيئة المفتوحة.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="two-col">
+        <div class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">سجلات المديرين/المديرات</h2>
+                    <p class="section-subtitle">آخر السجلات المرتبطة بالمشرف.</p>
+                </div>
+                <span class="section-badge">{{ stats.principal_count }}</span>
+            </div>
+
+            {% if principal_records %}
+                <div class="records-shell">
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>المدرسة</th>
+                                <th>القطاع</th>
+                                <th>المرحلة</th>
+                                <th>المرفق</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in principal_records %}
+                            <tr>
+                                <td><strong>{{ item.full_name }}</strong></td>
+                                <td>{{ item.school_name }}</td>
+                                <td>{{ item.sector }}</td>
+                                <td>{{ item.stage }}</td>
+                                <td>
+                                    {% if item.performance_file %}
+                                        <span class="mini-chip file-chip ok">مرفوع</span>
+                                    {% else %}
+                                        <span class="mini-chip file-chip no">ناقص</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">لا توجد سجلات مديرين/مديرات لهذا المشرف.</div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">سجلات الوكلاء/الوكيلات</h2>
+                    <p class="section-subtitle">آخر سجلات الوكلاء المرتبطة بالمشرف.</p>
+                </div>
+                <span class="section-badge">{{ stats.vice_count }}</span>
+            </div>
+
+            {% if vice_records %}
+                <div class="records-shell">
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>المدرسة</th>
+                                <th>القطاع</th>
+                                <th>المرحلة</th>
+                                <th>الصفة</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in vice_records %}
+                            <tr>
+                                <td><strong>{{ item.full_name }}</strong></td>
+                                <td>{{ item.school_name }}</td>
+                                <td>{{ item.sector }}</td>
+                                <td>{{ item.stage }}</td>
+                                <td><span class="mini-chip">{{ item.role }}</span></td>
+                                <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">لا توجد سجلات وكلاء/وكيلات لهذا المشرف.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="two-col">
+        <div class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">السجلات الناقصة في المرفقات</h2>
+                    <p class="section-subtitle">سجلات المديرين التي لم تُرفق معها استمارة الأداء.</p>
+                </div>
+                <span class="section-badge">{{ stats.missing_attachments }}</span>
+            </div>
+
+            {% if missing_principal_records %}
+                <div class="records-shell">
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>المدرسة</th>
+                                <th>القطاع</th>
+                                <th>المرحلة</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in missing_principal_records %}
+                            <tr>
+                                <td><strong>{{ item.full_name }}</strong></td>
+                                <td>{{ item.school_name }}</td>
+                                <td>{{ item.sector }}</td>
+                                <td>{{ item.stage }}</td>
+                                <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">لا توجد نواقص في مرفقات المديرين لهذا المشرف.</div>
+            {% endif %}
+        </div>
+
+        <div class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">طلبات التصحيح</h2>
+                    <p class="section-subtitle">آخر طلبات التصحيح المرتبطة بالمشرف.</p>
+                </div>
+                <span class="section-badge">{{ correction_requests|length }}</span>
+            </div>
+
+            {% if correction_requests %}
+                <div class="records-shell">
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>النوع</th>
+                                <th>الاسم المقترح</th>
+                                <th>الحالة</th>
+                                <th>التاريخ</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in correction_requests %}
+                            <tr>
+                                <td><span class="mini-chip">{{ item.get_target_type_display }}</span></td>
+                                <td><strong>{{ item.requested_full_name }}</strong></td>
+                                <td>
+                                    <span class="request-status {{ item.status }}">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">لا توجد طلبات تصحيح مرتبطة بهذا المشرف.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="two-col">
+        <div class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">إجراءات الحساب</h2>
+                    <p class="section-subtitle">إدارة طلبات إعادة التهيئة ومعالجة الحساب عند الحاجة.</p>
+                </div>
+                <span class="section-badge">{{ stats.pending_reset_requests_count }}</span>
+            </div>
+
+            <div class="account-box">
+                <h3 class="account-box-title">الحالة الحالية</h3>
+                <p class="account-box-text">
+                    {% if pending_account_reset_request %}
+                        يوجد حاليًا طلب إعادة تهيئة مفتوح لهذا المشرف، ويمكن للإدارة معالجته من الزر أدناه.
+                    {% else %}
+                        لا يوجد حاليًا طلب إعادة تهيئة مفتوح لهذا المشرف.
+                    {% endif %}
+                </p>
+
+                {% if pending_account_reset_request %}
+                <div class="account-actions">
+                    <form method="post"
+                          id="reset-account-form-{{ supervisor.id }}"
+                          action="{% url 'staffdata:admin_reset_supervisor_account' supervisor.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <button type="button"
+                                class="btn btn-danger js-open-reset-modal"
+                                data-form-id="reset-account-form-{{ supervisor.id }}"
+                                data-supervisor-name="{{ supervisor_info.full_name }}">
+                            إعادة تهيئة الحساب ومعالجة الطلب
+                        </button>
+                    </form>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-head">
+                <div>
+                    <h2 class="section-title">طلبات إعادة التهيئة</h2>
+                    <p class="section-subtitle">آخر الطلبات المرتبطة بحساب المشرف.</p>
+                </div>
+                <span class="section-badge">{{ account_reset_requests|length }}</span>
+            </div>
+
+            {% if account_reset_requests %}
+                <div class="records-shell">
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>الحالة</th>
+                                <th>تاريخ الطلب</th>
+                                <th>تاريخ المعالجة</th>
+                                <th>تمت بواسطة</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in account_reset_requests %}
+                            <tr>
+                                <td>
+                                    <span class="reset-request-status {{ item.status }}">
+                                        {{ item.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                                <td>
+                                    {% if item.processed_at %}
+                                        {{ item.processed_at|date:"Y-m-d H:i" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.processed_by %}
+                                        {{ item.processed_by.get_full_name|default:item.processed_by.username }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">لا توجد طلبات إعادة تهيئة مرتبطة بهذا المشرف.</div>
+            {% endif %}
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">آخر النشاطات</h2>
+                <p class="section-subtitle">ملخص سريع لأحدث ما تم على حساب المشرف من إدخالات أو طلبات.</p>
+            </div>
+            <span class="section-badge">{{ recent_activity|length }} عناصر</span>
+        </div>
+
+        {% if recent_activity %}
+            <div class="activity-list">
+                {% for item in recent_activity %}
+                <div class="activity-row">
+                    <span class="activity-type">{{ item.type }}</span>
+
+                    <div class="activity-main">
+                        <p class="activity-title">{{ item.title }}</p>
+                        <p class="activity-sub">{{ item.subtitle }}{% if item.meta %} - {{ item.meta }}{% endif %}</p>
+                    </div>
+
+                    <div class="activity-date">{{ item.created_at|date:"Y-m-d H:i" }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">لا توجد نشاطات حديثة متاحة لهذا المشرف.</div>
+        {% endif %}
+    </section>
+
+</div>
+
+<div class="custom-modal-backdrop" id="resetConfirmModal" aria-hidden="true">
+    <div class="custom-modal" role="dialog" aria-modal="true" aria-labelledby="resetConfirmTitle">
+        <div class="custom-modal-head">
+            <button type="button" class="custom-modal-close" id="resetConfirmClose" aria-label="إغلاق">×</button>
+            <span class="custom-modal-kicker">تأكيد الإجراء الإداري</span>
+            <h3 class="custom-modal-title" id="resetConfirmTitle">إعادة تهيئة حساب المشرف</h3>
+        </div>
+
+        <div class="custom-modal-body">
+            <p class="custom-modal-text">
+                هل أنت متأكد من إعادة تهيئة حساب المشرف
+                <strong id="resetSupervisorName">—</strong>؟
+                سيتم إلغاء كلمة المرور الحالية، وإرجاع الحساب إلى حالة الدخول الأول،
+                ومعالجة طلب إعادة التهيئة المفتوح لهذا الحساب.
+            </p>
+
+            <div class="custom-modal-note">
+                بعد تنفيذ هذا الإجراء سيتمكن المشرف من الدخول باستخدام السجل المدني
+                ورقم الجوال المسجل، ثم إنشاء كلمة مرور جديدة.
+            </div>
+
+            <div class="custom-modal-actions">
+                <button type="button" class="btn btn-secondary" id="resetConfirmCancel">إلغاء</button>
+                <button type="button" class="btn btn-danger" id="resetConfirmSubmit">نعم، تنفيذ الإجراء</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal = document.getElementById("resetConfirmModal");
+    const closeBtn = document.getElementById("resetConfirmClose");
+    const cancelBtn = document.getElementById("resetConfirmCancel");
+    const submitBtn = document.getElementById("resetConfirmSubmit");
+    const supervisorNameEl = document.getElementById("resetSupervisorName");
+
+    let currentForm = null;
+
+    function openModal(button) {
+        const formId = button.getAttribute("data-form-id");
+        const supervisorName = button.getAttribute("data-supervisor-name") || "هذا المشرف";
+
+        currentForm = document.getElementById(formId);
+        supervisorNameEl.textContent = supervisorName;
+
+        modal.classList.add("is-open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.style.overflow = "hidden";
+    }
+
+    function closeModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.style.overflow = "";
+        currentForm = null;
+    }
+
+    document.querySelectorAll(".js-open-reset-modal").forEach((button) => {
+        button.addEventListener("click", function () {
+            openModal(this);
+        });
+    });
+
+    if (closeBtn) {
+        closeBtn.addEventListener("click", closeModal);
+    }
+
+    if (cancelBtn) {
+        cancelBtn.addEventListener("click", closeModal);
+    }
+
+    if (submitBtn) {
+        submitBtn.addEventListener("click", function () {
+            if (currentForm) {
+                currentForm.submit();
+            }
+        });
+    }
+
+    if (modal) {
+        modal.addEventListener("click", function (event) {
+            if (event.target === modal) {
+                closeModal();
+            }
+        });
+    }
+
+    document.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && modal && modal.classList.contains("is-open")) {
+            closeModal();
+        }
+    });
+})();
+</script>
+{% endblock %}

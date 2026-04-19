@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .delete-wrap{
+        max-width:760px;
+        margin:0 auto;
+    }
+
+    .delete-panel{
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        border:1px solid var(--line);
+        border-radius:22px;
+        box-shadow:var(--shadow-sm);
+        overflow:hidden;
+    }
+
+    .delete-head{
+        padding:18px 22px 14px;
+        border-bottom:1px solid #e7eeea;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f6f9f7 100%);
+    }
+
+    .delete-title{
+        margin:0;
+        font-size:22px;
+        font-weight:700;
+        color:var(--ink);
+        line-height:1.6;
+    }
+
+    .delete-subtitle{
+        margin:8px 0 0;
+        font-size:13.5px;
+        color:var(--muted);
+        line-height:1.95;
+    }
+
+    .delete-body{
+        padding:22px;
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <h1 class="hero-title">{{ title }}</h1>
+    <p class="hero-text">
+        هذه العملية ستؤدي إلى حذف السجل المحدد من قاعدة البيانات. تأكد من صحة الإجراء قبل المتابعة.
+    </p>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="delete-wrap">
+    <section class="delete-panel">
+        <div class="delete-head">
+            <h2 class="delete-title">{{ title }}</h2>
+            <p class="delete-subtitle">يرجى تأكيد العملية قبل حذف السجل نهائيًا.</p>
+        </div>
+
+        <div class="delete-body">
+            <div class="danger-box">
+                هل أنت متأكد من حذف السجل الخاص بـ <strong>{{ object_name }}</strong>؟
+                لا يمكن التراجع عن هذه العملية بعد التنفيذ.
+            </div>
+
+            <div class="action-bar" style="margin-top:18px;">
+                <form method="post" style="margin:0;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">نعم، احذف السجل</button>
+                </form>
+
+                <a href="{% url 'staffdata:records_list' %}" class="btn btn-secondary">إلغاء</a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

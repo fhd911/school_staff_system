@@ -1,0 +1,634 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .arl-page{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .arl-panel{
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        border:1px solid var(--line);
+        border-radius:20px;
+        box-shadow:var(--shadow-sm);
+        overflow:hidden;
+    }
+
+    .arl-topbar{
+        padding:16px 18px;
+    }
+
+    .arl-topbar-main{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        flex-wrap:wrap;
+        margin-bottom:12px;
+    }
+
+    .arl-topbar-copy{
+        min-width:0;
+    }
+
+    .arl-topbar-title{
+        margin:0;
+        font-size:22px;
+        font-weight:700;
+        line-height:1.35;
+        color:var(--ink);
+    }
+
+    .arl-topbar-subtitle{
+        margin:5px 0 0;
+        font-size:12.2px;
+        line-height:1.8;
+        color:var(--muted);
+    }
+
+    .arl-topbar-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .arl-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:32px;
+        padding:0 12px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid #dde5e0;
+        color:var(--ink-2);
+        font-size:11.6px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .arl-chip strong{
+        color:var(--primary);
+        font-weight:700;
+        margin-inline-start:6px;
+    }
+
+    .arl-head{
+        padding:14px 18px 10px;
+        border-bottom:1px solid #e8eeea;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f7faf8 100%);
+    }
+
+    .arl-title{
+        margin:0;
+        font-size:18px;
+        font-weight:700;
+        line-height:1.45;
+        color:var(--ink);
+    }
+
+    .arl-subtitle{
+        margin:5px 0 0;
+        font-size:11.8px;
+        line-height:1.8;
+        color:var(--muted);
+    }
+
+    .arl-body{
+        padding:16px 18px 18px;
+    }
+
+    .arl-note{
+        margin-bottom:12px;
+        padding:10px 12px;
+        border-radius:12px;
+        background:linear-gradient(180deg, #faf8f2 0%, #fffdf8 100%);
+        border:1px solid var(--gold-soft);
+        color:#6d5930;
+        font-size:11.8px;
+        line-height:1.8;
+    }
+
+    .arl-filter-form{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .arl-filter-primary{
+        display:grid;
+        grid-template-columns:minmax(0, 2fr) repeat(3, minmax(160px, 1fr));
+        gap:12px;
+    }
+
+    .arl-filter-secondary{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:12px;
+        padding-top:2px;
+    }
+
+    .arl-field{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+        min-width:0;
+    }
+
+    .arl-field label{
+        margin:0;
+        font-size:11.8px;
+        font-weight:600;
+        line-height:1.5;
+        color:var(--ink-2);
+    }
+
+    .arl-field input,
+    .arl-field select{
+        min-height:44px;
+    }
+
+    .arl-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        padding-top:2px;
+    }
+
+    .arl-actions .btn{
+        min-width:145px;
+    }
+
+    .arl-results-meta{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+        margin-bottom:14px;
+    }
+
+    .arl-results-meta-group{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .arl-results-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:31px;
+        padding:0 12px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid #dde5e0;
+        color:var(--ink-2);
+        font-size:11.4px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .arl-results-chip strong{
+        color:var(--primary);
+        margin-inline-start:6px;
+        font-weight:700;
+    }
+
+    .arl-table-wrap{
+        width:100%;
+        overflow:auto;
+        border:1px solid var(--line);
+        border-radius:16px;
+        background:#fff;
+    }
+
+    .arl-table{
+        width:100%;
+        min-width:1080px;
+        border-collapse:collapse;
+    }
+
+    .arl-table thead th{
+        position:sticky;
+        top:0;
+        z-index:2;
+        background:linear-gradient(180deg, #f7faf8, #eff5f1);
+        color:var(--ink-2);
+        font-size:11.8px;
+        font-weight:700;
+        white-space:nowrap;
+        padding:12px 13px;
+        border-bottom:1px solid var(--line);
+        text-align:right;
+    }
+
+    .arl-table tbody td{
+        padding:12px 13px;
+        border-bottom:1px solid #e9efeb;
+        vertical-align:top;
+        font-size:12.2px;
+        color:var(--ink-2);
+        line-height:1.7;
+    }
+
+    .arl-table tbody tr:last-child td{
+        border-bottom:none;
+    }
+
+    .arl-table tbody tr:hover td{
+        background:#fbfdfc;
+    }
+
+    .arl-name{
+        font-weight:700;
+        color:var(--ink);
+        margin-bottom:2px;
+    }
+
+    .arl-sub{
+        font-size:11.2px;
+        color:var(--muted);
+        line-height:1.7;
+    }
+
+    .arl-actions-cell{
+        min-width:150px;
+    }
+
+    .arl-row-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .arl-row-actions .btn{
+        min-height:34px;
+        padding:0 12px;
+        font-size:11.5px;
+        font-weight:600;
+    }
+
+    .arl-pagination{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+        margin-top:14px;
+    }
+
+    .arl-page-summary{
+        color:var(--muted);
+        font-size:11.8px;
+        line-height:1.8;
+    }
+
+    .arl-page-summary strong{
+        color:var(--primary);
+        font-weight:700;
+    }
+
+    .arl-pagination-links{
+        display:flex;
+        align-items:center;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .arl-pagination-links a,
+    .arl-pagination-links span{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:40px;
+        height:36px;
+        padding:0 12px;
+        border-radius:10px;
+        border:1px solid var(--line);
+        background:#fff;
+        color:var(--ink);
+        font-size:11.8px;
+        font-weight:600;
+        text-decoration:none;
+        white-space:nowrap;
+    }
+
+    .arl-pagination-links .current{
+        background:linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+        color:#fff;
+        border-color:transparent;
+    }
+
+    .arl-empty{
+        padding:24px 18px;
+        text-align:center;
+        border-radius:16px;
+        border:1px dashed #d3ddd7;
+        background:linear-gradient(180deg, #fbfcfb, #f7f9f8);
+        color:var(--muted);
+        line-height:1.9;
+        font-size:12.2px;
+    }
+
+    .arl-empty strong{
+        color:var(--ink);
+    }
+
+    .arl-empty-actions{
+        display:flex;
+        justify-content:center;
+        flex-wrap:wrap;
+        gap:10px;
+        margin-top:12px;
+    }
+
+    @media (max-width: 1080px){
+        .arl-filter-primary{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+
+        .arl-filter-secondary{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 720px){
+        .arl-filter-primary,
+        .arl-filter-secondary{
+            grid-template-columns:1fr;
+        }
+
+        .arl-actions .btn{
+            width:100%;
+            min-width:auto;
+        }
+
+        .arl-pagination{
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .arl-pagination-links{
+            justify-content:center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="arl-page">
+
+    {% if record_type == "principal" %}
+        {% url 'staffdata:admin_principals_list' as reset_url %}
+    {% else %}
+        {% url 'staffdata:admin_vices_list' as reset_url %}
+    {% endif %}
+
+    {% url export_url_name as export_url %}
+
+    <section class="arl-panel arl-topbar">
+        <div class="arl-topbar-main">
+            <div class="arl-topbar-copy">
+                <h1 class="arl-topbar-title">{{ page_title }}</h1>
+                <p class="arl-topbar-subtitle">
+                    مساحة عمل تفصيلية لاستعراض السجلات، وتطبيق الفلاتر، ومتابعة النتائج، وتنفيذ التصدير المباشر.
+                </p>
+            </div>
+
+            <div class="arl-topbar-meta">
+                <span class="arl-chip">نوع السجل <strong>{% if record_type == "principal" %}مدير/مديرة{% else %}وكيل/وكيلة{% endif %}</strong></span>
+                <span class="arl-chip">إجمالي النتائج <strong>{{ total_count }}</strong></span>
+                <span class="arl-chip">المعروض الآن <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong></span>
+            </div>
+        </div>
+    </section>
+
+    <section class="arl-panel">
+        <div class="arl-head">
+            <h2 class="arl-title">التصفية والبحث</h2>
+            <p class="arl-subtitle">طبّق الفلاتر الأساسية أولًا، ثم استخدم الفلاتر الإضافية للوصول إلى النتائج بدقة أكبر.</p>
+        </div>
+
+        <div class="arl-body">
+            <div class="arl-note">
+                هذه الصفحة مخصصة للسجلات التفصيلية فقط، بينما تبقى لوحة الإدارة العامة مخصصة للمؤشرات المختصرة والتنقل السريع.
+            </div>
+
+            <form method="get" class="arl-filter-form">
+                <div class="arl-filter-primary">
+                    <div class="arl-field">
+                        <label for="id_q">بحث عام</label>
+                        <input
+                            id="id_q"
+                            type="text"
+                            name="q"
+                            value="{{ current_filters.q }}"
+                            class="form-control"
+                            placeholder="ابحث بالاسم أو السجل المدني أو اسم المدرسة أو القطاع"
+                        >
+                    </div>
+
+                    <div class="arl-field">
+                        <label for="id_sector">القطاع</label>
+                        <select id="id_sector" name="sector" class="form-select">
+                            <option value="">الكل</option>
+                            {% for sector in filter_choices.sectors %}
+                                <option value="{{ sector }}" {% if current_filters.sector == sector %}selected{% endif %}>{{ sector }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="arl-field">
+                        <label for="id_supervisor">المشرف</label>
+                        <select id="id_supervisor" name="supervisor" class="form-select">
+                            <option value="">الكل</option>
+                            {% for supervisor in filter_choices.supervisors %}
+                                <option value="{{ supervisor.id }}" {% if current_filters.supervisor == supervisor.id|stringformat:"s" %}selected{% endif %}>{{ supervisor.label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="arl-field">
+                        <label for="id_is_active">الحالة</label>
+                        <select id="id_is_active" name="is_active" class="form-select">
+                            <option value="">الكل</option>
+                            <option value="1" {% if current_filters.is_active == "1" %}selected{% endif %}>نشط</option>
+                            <option value="0" {% if current_filters.is_active == "0" %}selected{% endif %}>غير نشط</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="arl-filter-secondary">
+                    <div class="arl-field">
+                        <label for="id_stage">المرحلة الدراسية</label>
+                        <select id="id_stage" name="stage" class="form-select">
+                            <option value="">الكل</option>
+                            {% for value, label in stage_options %}
+                                <option value="{{ value }}" {% if current_filters.stage == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="arl-field">
+                        <label for="id_school_gender">نوع المدرسة</label>
+                        <select id="id_school_gender" name="school_gender" class="form-select">
+                            <option value="">الكل</option>
+                            {% for value, label in school_gender_options %}
+                                <option value="{{ value }}" {% if current_filters.school_gender == value %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    {% if record_type == "principal" %}
+                    <div class="arl-field">
+                        <label for="id_has_attachment">المرفق</label>
+                        <select id="id_has_attachment" name="has_attachment" class="form-select">
+                            <option value="">الكل</option>
+                            <option value="1" {% if current_filters.has_attachment == "1" %}selected{% endif %}>يوجد مرفق</option>
+                            <option value="0" {% if current_filters.has_attachment == "0" %}selected{% endif %}>لا يوجد مرفق</option>
+                        </select>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="arl-actions">
+                    <button type="submit" class="btn btn-primary">تطبيق التصفية</button>
+
+                    <a href="{{ reset_url }}" class="btn btn-secondary">إعادة التهيئة</a>
+
+                    <a href="{{ export_url }}?q={{ current_filters.q }}&sector={{ current_filters.sector }}&stage={{ current_filters.stage }}&school_gender={{ current_filters.school_gender }}&supervisor={{ current_filters.supervisor }}&is_active={{ current_filters.is_active }}{% if record_type == 'principal' %}&has_attachment={{ current_filters.has_attachment }}{% endif %}"
+                       class="btn btn-soft">
+                        تصدير النتائج Excel
+                    </a>
+
+                    <a href="{% url 'staffdata:admin_overview' %}" class="btn btn-soft">
+                        العودة إلى اللوحة العامة
+                    </a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="arl-panel">
+        <div class="arl-head">
+            <h2 class="arl-title">{{ page_title }}</h2>
+            <p class="arl-subtitle">نتائج تفصيلية مرتبة على صفحات لتسهيل الاستعراض والمتابعة اليومية.</p>
+        </div>
+
+        <div class="arl-body">
+            <div class="arl-results-meta">
+                <div class="arl-results-meta-group">
+                    <span class="arl-results-chip">إجمالي النتائج <strong>{{ total_count }}</strong></span>
+                    <span class="arl-results-chip">المعروض الآن <strong>{{ records|length }}</strong></span>
+                    <span class="arl-results-chip">النطاق الحالي <strong>{{ page_obj.start_index }}–{{ page_obj.end_index }}</strong></span>
+                </div>
+
+                <div class="arl-results-meta-group">
+                    <span class="arl-results-chip">الصفحة <strong>{{ page_obj.number }}</strong></span>
+                    <span class="arl-results-chip">من أصل <strong>{{ page_obj.paginator.num_pages }}</strong></span>
+                </div>
+            </div>
+
+            {% if records %}
+                <div class="arl-table-wrap">
+                    <table class="arl-table">
+                        <thead>
+                            <tr>
+                                <th>الاسم</th>
+                                <th>السجل المدني</th>
+                                <th>رقم الجوال</th>
+                                <th>المدرسة</th>
+                                <th>المرحلة</th>
+                                <th>الصفة</th>
+                                <th>المشرف</th>
+                                <th>الحالة</th>
+                                <th>تاريخ الإضافة</th>
+                                <th>إجراءات</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in records %}
+                            <tr>
+                                <td>
+                                    <div class="arl-name">{{ item.full_name }}</div>
+                                </td>
+
+                                <td>{{ item.national_id }}</td>
+
+                                <td>{{ item.mobile|default:"—" }}</td>
+
+                                <td>
+                                    <div class="arl-name">{{ item.school_name }}</div>
+                                    <div class="arl-sub">{{ item.sector }} — {{ item.school_gender }}</div>
+                                </td>
+
+                                <td><span class="badge badge-muted">{{ item.stage }}</span></td>
+
+                                <td><span class="badge badge-primary">{{ item.role }}</span></td>
+
+                                <td>{{ item.supervisor.full_name }}</td>
+
+                                <td>
+                                    {% if item.is_active %}
+                                        <span class="badge badge-primary">نشط</span>
+                                    {% else %}
+                                        <span class="badge badge-muted">غير نشط</span>
+                                    {% endif %}
+                                </td>
+
+                                <td>{{ item.created_at|date:"Y-m-d H:i" }}</td>
+
+                                <td class="arl-actions-cell">
+                                    <div class="arl-row-actions">
+                                        {% if record_type == "principal" and item.performance_file %}
+                                            <a href="{{ item.performance_file.url }}" target="_blank" class="btn btn-soft">استمارة الأداء</a>
+                                        {% else %}
+                                            <span class="muted">—</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="arl-pagination">
+                    <div class="arl-page-summary">
+                        عرض <strong>{{ page_obj.start_index }}</strong> إلى <strong>{{ page_obj.end_index }}</strong>
+                        من أصل <strong>{{ total_count }}</strong> نتيجة.
+                    </div>
+
+                    <div class="arl-pagination-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?{{ request.GET.urlencode }}&page=1">الأولى</a>
+                            <a href="?{{ request.GET.urlencode }}&page={{ page_obj.previous_page_number }}">السابق</a>
+                        {% endif %}
+
+                        <span class="current">{{ page_obj.number }}</span>
+
+                        {% if page_obj.has_next %}
+                            <a href="?{{ request.GET.urlencode }}&page={{ page_obj.next_page_number }}">التالي</a>
+                            <a href="?{{ request.GET.urlencode }}&page={{ page_obj.paginator.num_pages }}">الأخيرة</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="arl-empty">
+                    <strong>لا توجد سجلات مطابقة للتصفية الحالية.</strong>
+                    <br>
+                    جرّب تقليل عدد الفلاتر أو إعادة تهيئة البحث للوصول إلى نتائج أوسع.
+                    <div class="arl-empty-actions">
+                        <a href="{{ reset_url }}" class="btn btn-secondary">إعادة التهيئة</a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+
+</div>
+{% endblock %}

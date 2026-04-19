@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}دخول المشرف{% endblock %}
+
+{% block extra_css %}
+<style>
+    .login-page{
+        min-height:calc(100vh - 220px);
+        display:flex;
+        align-items:flex-start;
+        justify-content:center;
+        padding:26px 0 10px;
+    }
+
+    .login-shell{
+        width:min(620px, 100%);
+    }
+
+    .login-card{
+        position:relative;
+        overflow:hidden;
+        background:linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+        border:1px solid var(--line);
+        border-radius:22px;
+        box-shadow:var(--shadow-md);
+        padding:26px 24px 22px;
+    }
+
+    .login-card::before{
+        content:"";
+        position:absolute;
+        inset:0 0 auto 0;
+        height:3px;
+        background:linear-gradient(90deg, var(--gold), var(--gold-2));
+    }
+
+    .login-head{
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        text-align:center;
+        gap:8px;
+        margin-bottom:18px;
+    }
+
+    .login-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid var(--line-2);
+        color:var(--ink-2);
+        font-size:11px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .login-title{
+        margin:0;
+        font-size:28px;
+        line-height:1.35;
+        font-weight:700;
+        color:var(--ink);
+    }
+
+    .login-subtitle{
+        margin:0;
+        font-size:13px;
+        line-height:1.9;
+        color:var(--muted);
+        max-width:500px;
+    }
+
+    .login-subtitle strong{
+        color:var(--ink);
+        font-weight:700;
+    }
+
+    .login-error{
+        margin-bottom:14px;
+        padding:12px 14px;
+        border-radius:12px;
+        background:var(--danger-bg);
+        border:1px solid #f0caca;
+        color:#8b2e2e;
+        font-size:12.5px;
+        line-height:1.8;
+        text-align:right;
+    }
+
+    .login-form{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        margin-top:4px;
+    }
+
+    .login-form .form-row{
+        gap:7px;
+    }
+
+    .login-form label{
+        font-size:12.5px;
+        font-weight:600;
+        color:var(--ink-2);
+    }
+
+    .login-form input{
+        min-height:48px;
+        border-radius:12px;
+        font-size:13px;
+    }
+
+    .login-actions{
+        display:flex;
+        justify-content:center;
+        margin-top:6px;
+    }
+
+    .login-actions .btn{
+        min-width:170px;
+        min-height:44px;
+        border-radius:12px;
+        font-size:13px;
+        font-weight:700;
+    }
+
+    .login-links{
+        margin-top:14px;
+        display:flex;
+        justify-content:center;
+    }
+
+    .login-link{
+        color:var(--primary-2);
+        font-size:12.25px;
+        font-weight:700;
+        transition:.18s ease;
+    }
+
+    .login-link:hover{
+        color:var(--primary);
+        text-decoration:underline;
+    }
+
+    .login-help{
+        margin-top:16px;
+        padding:13px 14px;
+        border-radius:14px;
+        background:linear-gradient(180deg, #faf8f2 0%, #fffdf8 100%);
+        border:1px solid var(--gold-soft);
+        color:#6a5830;
+        font-size:12px;
+        line-height:1.9;
+        text-align:center;
+    }
+
+    .login-help strong{
+        color:#5d4a22;
+        font-weight:700;
+    }
+
+    .login-note{
+        margin-top:16px;
+        padding-top:14px;
+        border-top:1px solid var(--line-3);
+        text-align:center;
+        color:var(--muted);
+        font-size:11.75px;
+        line-height:1.9;
+    }
+
+    .errorlist{
+        margin-top:4px;
+    }
+
+    @media (max-width: 640px){
+        .login-page{
+            padding-top:18px;
+        }
+
+        .login-card{
+            padding:22px 16px 18px;
+            border-radius:18px;
+        }
+
+        .login-title{
+            font-size:24px;
+        }
+
+        .login-subtitle{
+            font-size:12.5px;
+        }
+
+        .login-actions .btn{
+            width:100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="login-page">
+    <div class="login-shell">
+        <div class="login-card">
+            <div class="login-head">
+                <span class="login-badge">بوابة دخول المشرف</span>
+                <h2 class="login-title">دخول المشرف التربوي</h2>
+                <p class="login-subtitle">
+                    يتم الدخول إلى النظام عبر السجل المدني وكلمة المرور.
+                    وفي <strong>أول دخول</strong> تكون كلمة المرور هي
+                    <strong>رقم الجوال المسجل في النظام</strong>،
+                    ثم يلزم إنشاء كلمة مرور جديدة.
+                </p>
+            </div>
+
+            {% if error_message %}
+                <div class="login-error">{{ error_message }}</div>
+            {% endif %}
+
+            <form method="post" class="login-form" novalidate>
+                {% csrf_token %}
+
+                <div class="form-row">
+                    <label for="{{ form.national_id.id_for_label }}">{{ form.national_id.label }}</label>
+                    {{ form.national_id }}
+                    {{ form.national_id.errors }}
+                </div>
+
+                <div class="form-row">
+                    <label for="{{ form.password.id_for_label }}">{{ form.password.label }}</label>
+                    {{ form.password }}
+                    {{ form.password.errors }}
+                </div>
+
+                <div class="login-actions">
+                    <button type="submit" class="btn btn-primary">دخول</button>
+                </div>
+            </form>
+
+            <div class="login-links">
+                <a href="{% url 'accounts:forgot_password_start' %}" class="login-link">نسيت كلمة المرور؟</a>
+            </div>
+
+            <div class="login-help">
+                <strong>إرشاد مهم:</strong>
+                إذا كانت هذه أول مرة تستخدم فيها النظام،
+                فأدخل <strong>رقم الجوال المسجل</strong> في خانة كلمة المرور.
+            </div>
+
+            <div class="login-note">
+                بعد أول دخول وإنشاء كلمة المرور الجديدة، لن يعود رقم الجوال صالحًا للدخول إلى النظام.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

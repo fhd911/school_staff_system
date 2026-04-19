@@ -1,0 +1,753 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-corrections-page,
+    .admin-corrections-page *{
+        font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+    }
+
+    :root{
+        --ac-paper:#fffefb;
+        --ac-paper-2:#fbfcfa;
+        --ac-line:#d5dfd8;
+        --ac-line-soft:#e5ece7;
+        --ac-ink:#1f3128;
+        --ac-ink-soft:#5a6d63;
+        --ac-green:#1f4d3a;
+        --ac-green-2:#28684a;
+        --ac-gold-soft:#e9ddc2;
+        --ac-gold-bg:#fbf7ef;
+        --ac-danger:#a64646;
+        --ac-danger-bg:#fff6f6;
+        --ac-warning:#8b6b1d;
+        --ac-warning-bg:#fffaf0;
+        --ac-info:#2f5f4b;
+        --ac-info-bg:#f4f8f5;
+        --ac-success:#1f6b42;
+        --ac-success-bg:#eef8f1;
+    }
+
+    .page-hero{
+        position:relative;
+        overflow:hidden;
+        margin-bottom:18px;
+        border-radius:22px;
+        color:#fff;
+        background:
+            radial-gradient(circle at 18% 24%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 24%),
+            linear-gradient(135deg, #1d5a42 0%, #23684a 52%, #2b7354 100%);
+        box-shadow:0 14px 30px rgba(18, 47, 35, .10);
+        border:1px solid rgba(255,255,255,.05);
+    }
+
+    .page-hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:24px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.20) 18%,
+            rgba(221,196,144,.74) 50%,
+            rgba(221,196,144,.20) 82%,
+            transparent 100%
+        );
+    }
+
+    .page-hero-inner{
+        position:relative;
+        z-index:1;
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        min-height:108px;
+        padding:20px 24px 18px;
+    }
+
+    .page-hero-main{
+        min-width:0;
+    }
+
+    .page-hero-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        margin-bottom:10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .page-hero-title{
+        margin:0;
+        font-size:19px;
+        font-weight:700;
+        line-height:1.6;
+        color:#fff;
+    }
+
+    .page-hero-text{
+        margin:7px 0 0;
+        max-width:860px;
+        font-size:12.35px;
+        font-weight:400;
+        line-height:1.9;
+        color:rgba(255,255,255,.91);
+    }
+
+    .page-hero-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:11px;
+    }
+
+    .page-hero-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:27px;
+        padding:0 10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .page-hero-action{
+        flex:0 0 auto;
+        padding-top:2px;
+    }
+
+    .page-hero-back{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:11px;
+        border:1px solid rgba(255,255,255,.14);
+        background:rgba(255,255,255,.06);
+        color:#fff;
+        font-size:12.35px;
+        font-weight:500;
+        transition:.2s ease;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+        backdrop-filter:blur(4px);
+    }
+
+    .page-hero-back:hover{
+        background:rgba(255,255,255,.10);
+        border-color:rgba(255,255,255,.20);
+        color:#fff;
+        transform:translateY(-1px);
+    }
+
+    .admin-corrections-page{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        color:var(--ac-ink);
+    }
+
+    .panel{
+        background:linear-gradient(180deg, var(--ac-paper) 0%, var(--ac-paper-2) 100%);
+        border:1px solid var(--ac-line);
+        border-radius:20px;
+        box-shadow:var(--shadow-sm);
+        overflow:hidden;
+    }
+
+    .panel-head{
+        padding:16px 20px 12px;
+        border-bottom:1px solid var(--ac-line-soft);
+        background:linear-gradient(180deg, #fcfdfc 0%, #f7faf8 100%);
+    }
+
+    .panel-title{
+        margin:0;
+        font-size:18px;
+        font-weight:700;
+        line-height:1.55;
+        color:var(--ac-ink);
+    }
+
+    .panel-subtitle{
+        margin:5px 0 0;
+        font-size:12.15px;
+        line-height:1.8;
+        color:var(--ac-ink-soft);
+    }
+
+    .panel-body{
+        padding:16px 20px 20px;
+    }
+
+    .filter-note{
+        display:flex;
+        align-items:flex-start;
+        gap:10px;
+        padding:11px 13px;
+        border-radius:12px;
+        border:1px solid var(--ac-gold-soft);
+        background:linear-gradient(180deg, var(--ac-gold-bg) 0%, #fffdfa 100%);
+        color:#6a5932;
+        font-size:11.9px;
+        line-height:1.82;
+        margin-bottom:14px;
+    }
+
+    .filter-note-icon{
+        width:22px;
+        height:22px;
+        flex:0 0 22px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:#fff8eb;
+        border:1px solid #ead9b4;
+        color:#8a703b;
+        font-size:11.2px;
+        font-weight:700;
+        margin-top:1px;
+    }
+
+    .filter-grid{
+        display:grid;
+        grid-template-columns:repeat(12, minmax(0, 1fr));
+        gap:12px 14px;
+    }
+
+    .filter-field{
+        grid-column:span 4;
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+        min-width:0;
+    }
+
+    .filter-field.full{
+        grid-column:1 / -1;
+    }
+
+    .filter-field label{
+        margin:0;
+        font-size:12.1px;
+        font-weight:600;
+        color:var(--ac-ink);
+        line-height:1.6;
+    }
+
+    .filter-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        margin-top:14px;
+    }
+
+    .filter-actions .btn{
+        min-width:145px;
+    }
+
+    .summary-bar{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-bottom:14px;
+    }
+
+    .summary-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        background:#f3f7f4;
+        border:1px solid #dde7e0;
+        color:#486156;
+        font-size:11.5px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .requests-list{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .request-card{
+        border:1px solid #d9e3dc;
+        border-radius:18px;
+        background:linear-gradient(180deg, #fffefc 0%, #fbfcfa 100%);
+        overflow:hidden;
+        box-shadow:0 2px 8px rgba(19,39,30,.012);
+    }
+
+    .request-card-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:12px;
+        padding:14px 16px 12px;
+        border-bottom:1px solid var(--ac-line-soft);
+        background:linear-gradient(180deg, #fcfdfc 0%, #f8faf8 100%);
+    }
+
+    .request-card-title{
+        margin:0;
+        font-size:15px;
+        font-weight:700;
+        line-height:1.65;
+        color:var(--ac-ink);
+    }
+
+    .request-card-subtitle{
+        margin:3px 0 0;
+        font-size:11.5px;
+        color:var(--ac-ink-soft);
+        line-height:1.75;
+    }
+
+    .request-card-body{
+        padding:15px 16px 16px;
+    }
+
+    .request-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-bottom:14px;
+    }
+
+    .request-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        font-size:11.2px;
+        font-weight:500;
+        white-space:nowrap;
+        border:1px solid transparent;
+    }
+
+    .request-chip.default{
+        background:#f3f7f4;
+        border-color:#dde7e0;
+        color:#486156;
+    }
+
+    .request-chip.pending{
+        background:var(--ac-info-bg);
+        border-color:#dbe9e0;
+        color:var(--ac-info);
+    }
+
+    .request-chip.approved{
+        background:var(--ac-success-bg);
+        border-color:#d7eadc;
+        color:var(--ac-success);
+    }
+
+    .request-chip.returned{
+        background:var(--ac-warning-bg);
+        border-color:#eadfbc;
+        color:var(--ac-warning);
+    }
+
+    .request-chip.rejected{
+        background:var(--ac-danger-bg);
+        border-color:#f0d0d0;
+        color:var(--ac-danger);
+    }
+
+    .request-grid{
+        display:grid;
+        grid-template-columns:repeat(12, minmax(0, 1fr));
+        gap:12px 14px;
+    }
+
+    .request-box{
+        grid-column:span 6;
+        border:1px solid #dfe7e1;
+        border-radius:12px;
+        background:linear-gradient(180deg, #fdfefd 0%, #f8faf8 100%);
+        padding:12px;
+    }
+
+    .request-box.full{
+        grid-column:1 / -1;
+    }
+
+    .request-box-label{
+        margin:0 0 5px;
+        font-size:11.15px;
+        color:var(--ac-ink-soft);
+        line-height:1.6;
+    }
+
+    .request-box-value{
+        margin:0;
+        font-size:12.65px;
+        color:var(--ac-ink);
+        line-height:1.85;
+        font-weight:500;
+    }
+
+    .request-actions{
+        display:flex;
+        justify-content:flex-end;
+        gap:10px;
+        margin-top:14px;
+        padding-top:12px;
+        border-top:1px solid var(--ac-line-soft);
+    }
+
+    .request-actions .btn{
+        min-height:40px;
+        padding:0 15px;
+    }
+
+    .pagination-bar{
+        display:flex;
+        justify-content:center;
+        align-items:center;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:18px;
+    }
+
+    .pagination-bar a,
+    .pagination-bar span{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:40px;
+        height:38px;
+        padding:0 12px;
+        border-radius:10px;
+        border:1px solid var(--ac-line);
+        background:#fff;
+        color:var(--ac-ink);
+        font-size:12.2px;
+        font-weight:500;
+        text-decoration:none;
+    }
+
+    .pagination-bar .current{
+        background:linear-gradient(135deg, var(--ac-green) 0%, var(--ac-green-2) 100%);
+        color:#fff;
+        border-color:transparent;
+    }
+
+    .empty-state{
+        padding:24px 18px;
+        text-align:center;
+        border-radius:14px;
+        border:1px dashed #d4ddd7;
+        background:linear-gradient(180deg, #fbfcfb 0%, #f7f9f8 100%);
+        color:var(--ac-ink-soft);
+        font-size:12.2px;
+        line-height:1.9;
+    }
+
+    .empty-state strong{
+        color:var(--ac-ink);
+    }
+
+    @media (max-width: 980px){
+        .filter-field,
+        .request-box{
+            grid-column:1 / -1;
+        }
+    }
+
+    @media (max-width: 860px){
+        .page-hero-inner{
+            flex-direction:column;
+            align-items:flex-start;
+            min-height:auto;
+            padding:16px;
+            gap:11px;
+        }
+
+        .page-hero::after{
+            inset-inline:16px;
+        }
+
+        .page-hero-title{
+            font-size:17.2px;
+        }
+
+        .page-hero-text{
+            font-size:11.85px;
+        }
+
+        .panel-body{
+            padding:14px;
+        }
+
+        .request-card-head,
+        .request-card-body{
+            padding:13px;
+        }
+
+        .filter-actions .btn,
+        .request-actions .btn{
+            width:100%;
+        }
+
+        .request-actions{
+            flex-direction:column;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="page-hero">
+    <div class="page-hero-inner">
+        <div class="page-hero-main">
+            <div class="page-hero-kicker">الإدارة العامة</div>
+            <h1 class="page-hero-title">{{ page_title }}</h1>
+            <p class="page-hero-text">
+                من هذه الصفحة يمكنك متابعة جميع طلبات التصحيح الواردة من المشرفين، وتصفية الطلبات حسب حالتها أو نوع السجل، ثم الانتقال إلى صفحة المراجعة لاتخاذ القرار المناسب.
+            </p>
+
+            <div class="page-hero-meta">
+                <span class="page-hero-chip">طلبات جميع المشرفين</span>
+                <span class="page-hero-chip">تصفية ومراجعة</span>
+                <span class="page-hero-chip">اعتماد أو رفض أو إرجاع</span>
+            </div>
+        </div>
+
+        <div class="page-hero-action">
+            <a href="{% url 'staffdata:admin_overview' %}" class="page-hero-back">العودة إلى لوحة الإدارة</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="admin-corrections-page">
+
+    <section class="panel">
+        <div class="panel-head">
+            <h2 class="panel-title">التصفية والبحث</h2>
+            <p class="panel-subtitle">استخدم هذه الأدوات للوصول السريع إلى الطلبات المفتوحة أو المعتمدة أو المستهدفة حسب نوع السجل.</p>
+        </div>
+
+        <div class="panel-body">
+            <div class="filter-note">
+                <div class="filter-note-icon">!</div>
+                <div>
+                    <strong>تنبيه إداري:</strong>
+                    يفضل متابعة الطلبات ذات الحالة <strong>قيد المراجعة</strong> أولًا، لأنها تمثل الأعمال التي تحتاج إلى قرار إداري مباشر.
+                </div>
+            </div>
+
+            <form method="get">
+                <div class="filter-grid">
+                    <div class="filter-field full">
+                        <label for="id_q">بحث عام</label>
+                        <input
+                            id="id_q"
+                            type="text"
+                            name="q"
+                            value="{{ current_q }}"
+                            class="form-control"
+                            placeholder="ابحث بالاسم المقترح أو السجل المدني المقترح"
+                        >
+                    </div>
+
+                    <div class="filter-field">
+                        <label for="id_status">الحالة</label>
+                        <select id="id_status" name="status" class="form-select">
+                            <option value="">الكل</option>
+                            {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="filter-field">
+                        <label for="id_target_type">نوع السجل</label>
+                        <select id="id_target_type" name="target_type" class="form-select">
+                            <option value="">الكل</option>
+                            {% for value, label in target_type_choices %}
+                                <option value="{{ value }}" {% if current_target_type == value %}selected{% endif %}>
+                                    {{ label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">تطبيق التصفية</button>
+                    <a href="{% url 'staffdata:admin_correction_requests' %}" class="btn btn-secondary">إعادة التهيئة</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="panel">
+        <div class="panel-head">
+            <h2 class="panel-title">قائمة طلبات التصحيح</h2>
+            <p class="panel-subtitle">استعراض شامل للطلبات الواردة مع إمكانية الانتقال إلى صفحة المراجعة لكل طلب على حدة.</p>
+        </div>
+
+        <div class="panel-body">
+            <div class="summary-bar">
+                <span class="summary-chip">إجمالي النتائج: {{ page_obj.paginator.count }}</span>
+                <span class="summary-chip">الصفحة الحالية: {{ page_obj.number }}</span>
+                <span class="summary-chip">عدد الصفحات: {{ page_obj.paginator.num_pages }}</span>
+                <span class="summary-chip">المعروض في هذه الصفحة: {{ requests|length }}</span>
+            </div>
+
+            {% if requests %}
+                <div class="requests-list">
+                    {% for req in requests %}
+                    <article class="request-card">
+                        <div class="request-card-head">
+                            <div>
+                                <h3 class="request-card-title">
+                                    طلب تصحيح رقم #{{ req.id }} — {{ req.get_target_type_display }}
+                                </h3>
+                                <p class="request-card-subtitle">
+                                    المشرف: {{ req.supervisor.full_name|default:req.supervisor }}
+                                    {% if req.created_at %}
+                                        — تاريخ الرفع: {{ req.created_at|date:"Y-m-d H:i" }}
+                                    {% endif %}
+                                </p>
+                            </div>
+
+                            {% if req.status == "pending" %}
+                                <span class="request-chip pending">{{ req.get_status_display }}</span>
+                            {% elif req.status == "approved" %}
+                                <span class="request-chip approved">{{ req.get_status_display }}</span>
+                            {% elif req.status == "returned" %}
+                                <span class="request-chip returned">{{ req.get_status_display }}</span>
+                            {% elif req.status == "rejected" %}
+                                <span class="request-chip rejected">{{ req.get_status_display }}</span>
+                            {% else %}
+                                <span class="request-chip default">{{ req.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="request-card-body">
+                            <div class="request-meta">
+                                <span class="request-chip default">نوع السجل: {{ req.get_target_type_display }}</span>
+
+                                {% if req.target_record %}
+                                    <span class="request-chip default">السجل الحالي: {{ req.target_record.full_name }}</span>
+                                {% endif %}
+
+                                {% if req.reviewed_by %}
+                                    <span class="request-chip default">تمت المراجعة بواسطة: {{ req.reviewed_by }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="request-grid">
+                                <div class="request-box">
+                                    <p class="request-box-label">الاسم المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_full_name }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">السجل المدني المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_national_id }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">الصفة المقترحة</p>
+                                    <p class="request-box-value">{{ req.requested_role }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">المرحلة المقترحة</p>
+                                    <p class="request-box-value">{{ req.requested_stage }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">القطاع المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_sector }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">نوع المدرسة المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_school_gender }}</p>
+                                </div>
+
+                                <div class="request-box full">
+                                    <p class="request-box-label">اسم المدرسة المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_school_name }}</p>
+                                </div>
+
+                                <div class="request-box full">
+                                    <p class="request-box-label">سبب طلب التصحيح</p>
+                                    <p class="request-box-value">{{ req.reason|linebreaksbr }}</p>
+                                </div>
+
+                                {% if req.admin_note %}
+                                <div class="request-box full">
+                                    <p class="request-box-label">ملاحظة الإدارة</p>
+                                    <p class="request-box-value">{{ req.admin_note|linebreaksbr }}</p>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="request-actions">
+                                <a href="{% url 'staffdata:admin_correction_request_review' req.pk %}" class="btn btn-primary">
+                                    مراجعة الطلب
+                                </a>
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+
+                <div class="pagination-bar">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1&status={{ current_status }}&target_type={{ current_target_type }}&q={{ current_q }}">الأولى</a>
+                        <a href="?page={{ page_obj.previous_page_number }}&status={{ current_status }}&target_type={{ current_target_type }}&q={{ current_q }}">السابق</a>
+                    {% endif %}
+
+                    <span class="current">{{ page_obj.number }}</span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&status={{ current_status }}&target_type={{ current_target_type }}&q={{ current_q }}">التالي</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}&status={{ current_status }}&target_type={{ current_target_type }}&q={{ current_q }}">الأخيرة</a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    لا توجد طلبات تصحيح مطابقة للتصفية الحالية. يمكنك العودة إلى
+                    <strong>الكل</strong>
+                    أو تغيير معايير البحث للوصول إلى الطلبات المطلوبة.
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

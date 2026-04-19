@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}نظام بيانات شاغلي المدارس{% endblock %}</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root{
+            --bg:#f3f5f3;
+            --bg-soft:#eef2ef;
+
+            --paper:#fffefb;
+            --paper-2:#fbfcfa;
+            --paper-3:#f7f9f7;
+
+            --ink:#1f3128;
+            --ink-2:#33493f;
+            --muted:#6f8076;
+
+            --primary:#184a37;
+            --primary-2:#1f5b43;
+            --primary-3:#2a6f52;
+
+            --gold:#c29f5a;
+            --gold-2:#dbc795;
+            --gold-soft:#f2e8d2;
+
+            --line:#d5ddd8;
+            --line-2:#c8d2cc;
+            --line-3:#e4ebe6;
+
+            --success:#1f6b42;
+            --success-bg:#edf8f1;
+
+            --danger:#9f3d3d;
+            --danger-bg:#fff3f3;
+
+            --warning:#786124;
+            --warning-bg:#fff9eb;
+
+            --info:#28577f;
+            --info-bg:#eef5fb;
+
+            --shadow-sm:0 6px 18px rgba(17,34,27,.04);
+            --shadow-md:0 12px 30px rgba(17,34,27,.06);
+            --shadow-lg:0 14px 34px rgba(10,27,20,.10);
+
+            --radius-xl:22px;
+            --radius-lg:16px;
+            --radius-md:12px;
+            --radius-sm:10px;
+        }
+
+        *{
+            box-sizing:border-box;
+            font-family:"Cairo","Segoe UI",Tahoma,Arial,sans-serif !important;
+        }
+
+        html, body{
+            margin:0;
+            padding:0;
+        }
+
+        body{
+            min-height:100vh;
+            background:
+                radial-gradient(circle at top right, rgba(194,159,90,.06), transparent 18%),
+                linear-gradient(180deg, #f2f5f3 0%, #f7f9f8 100%);
+            color:var(--ink);
+            font-weight:400;
+        }
+
+        body, input, select, textarea, button, table, th, td, a, label, span, div, p, h1, h2, h3, h4, h5, h6{
+            font-family:"Cairo","Segoe UI",Tahoma,Arial,sans-serif !important;
+        }
+
+        a{
+            text-decoration:none;
+            color:inherit;
+        }
+
+        /* =========================
+           Header
+           ========================= */
+        .site-header{
+            position:sticky;
+            top:0;
+            z-index:1000;
+            background:linear-gradient(135deg, #113729 0%, #184735 56%, #1e5941 100%);
+            color:#fff;
+            box-shadow:0 10px 24px rgba(12,26,20,.12);
+            border-bottom:2px solid rgba(194,159,90,.52);
+        }
+
+        .site-header-inner{
+            width:min(1380px, 96%);
+            margin:0 auto;
+            padding:12px 0 11px;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            gap:18px;
+        }
+
+        .brand{
+            display:flex;
+            flex-direction:column;
+            gap:4px;
+            min-width:260px;
+        }
+
+        .brand-title{
+            margin:0;
+            font-size:23px;
+            font-weight:700;
+            line-height:1.25;
+            letter-spacing:0;
+        }
+
+        .brand-subtitle{
+            margin:0;
+            color:rgba(255,255,255,.82);
+            font-size:12px;
+            line-height:1.8;
+            font-weight:400;
+        }
+
+        .nav-side{
+            display:flex;
+            align-items:center;
+            gap:8px;
+            flex-wrap:wrap;
+            justify-content:flex-end;
+        }
+
+        .nav-user{
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            padding:8px 13px;
+            border-radius:12px;
+            background:rgba(255,255,255,.07);
+            border:1px solid rgba(255,255,255,.10);
+            color:#fff2d3;
+            font-size:12.75px;
+            font-weight:600;
+            min-height:38px;
+        }
+
+        .nav-link{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:38px;
+            padding:0 13px;
+            border-radius:11px;
+            background:rgba(255,255,255,.05);
+            border:1px solid rgba(255,255,255,.08);
+            color:#fff;
+            font-size:12.75px;
+            font-weight:600;
+            transition:.18s ease;
+            white-space:nowrap;
+        }
+
+        .nav-link:hover{
+            background:rgba(255,255,255,.11);
+            transform:translateY(-1px);
+        }
+
+        .nav-link.active{
+            background:rgba(255,255,255,.13);
+            border-color:rgba(255,255,255,.18);
+        }
+
+        .nav-link.admin{
+            background:rgba(194,159,90,.14);
+            border-color:rgba(219,199,149,.24);
+            color:#fff8eb;
+        }
+
+        .nav-link.logout{
+            background:rgba(159,61,61,.16);
+            border-color:rgba(255,255,255,.08);
+        }
+
+        /* =========================
+           Main shell
+           ========================= */
+        .page-shell{
+            width:min(1220px, 94%);
+            margin:20px auto 38px;
+        }
+
+        /* =========================
+           Hero
+           ========================= */
+        .hero{
+            position:relative;
+            overflow:hidden;
+            margin-bottom:18px;
+            padding:20px 22px;
+            border-radius:22px;
+            color:#fff;
+            background:linear-gradient(135deg, rgba(24,74,55,.98) 0%, rgba(31,91,67,.95) 58%, rgba(42,111,82,.92) 100%);
+            border:1px solid rgba(255,255,255,.06);
+            box-shadow:var(--shadow-md);
+        }
+
+        .hero::before{
+            content:"";
+            position:absolute;
+            left:-56px;
+            bottom:-72px;
+            width:190px;
+            height:190px;
+            border-radius:50%;
+            background:radial-gradient(circle, rgba(255,255,255,.045), transparent 66%);
+        }
+
+        .hero::after{
+            content:"";
+            position:absolute;
+            right:-62px;
+            top:-82px;
+            width:210px;
+            height:210px;
+            border-radius:50%;
+            background:radial-gradient(circle, rgba(194,159,90,.11), transparent 64%);
+        }
+
+        .hero > *{
+            position:relative;
+            z-index:1;
+        }
+
+        .hero-title{
+            margin:0 0 6px;
+            font-size:22px;
+            font-weight:700;
+            line-height:1.45;
+        }
+
+        .hero-text{
+            margin:0;
+            max-width:860px;
+            font-size:12.75px;
+            line-height:1.9;
+            color:rgba(255,255,255,.90);
+            font-weight:400;
+        }
+
+        /* =========================
+           Generic sections
+           ========================= */
+        .section{
+            background:var(--paper);
+            border:1px solid var(--line);
+            border-radius:var(--radius-lg);
+            box-shadow:var(--shadow-sm);
+            padding:20px;
+            margin-bottom:18px;
+        }
+
+        .section-head{
+            display:flex;
+            align-items:flex-start;
+            justify-content:space-between;
+            gap:14px;
+            flex-wrap:wrap;
+            margin-bottom:14px;
+        }
+
+        .section-title{
+            margin:0;
+            font-size:20px;
+            font-weight:700;
+            color:var(--ink);
+            position:relative;
+            padding-bottom:10px;
+            line-height:1.45;
+        }
+
+        .section-title::after{
+            content:"";
+            position:absolute;
+            right:0;
+            bottom:0;
+            width:58px;
+            height:2px;
+            border-radius:999px;
+            background:linear-gradient(90deg, var(--gold), var(--gold-2));
+        }
+
+        .section-subtitle{
+            margin:6px 0 0;
+            color:var(--muted);
+            font-size:12.5px;
+            line-height:1.85;
+            font-weight:400;
+        }
+
+        /* =========================
+           Stats
+           ========================= */
+        .stats-grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+            gap:14px;
+        }
+
+        .stat-card{
+            background:linear-gradient(180deg, var(--paper) 0%, var(--paper-3) 100%);
+            border:1px solid var(--line);
+            border-radius:14px;
+            padding:18px;
+            box-shadow:var(--shadow-sm);
+        }
+
+        .stat-label{
+            margin-bottom:8px;
+            font-size:12.75px;
+            color:var(--muted);
+            font-weight:400;
+        }
+
+        .stat-value{
+            color:var(--primary);
+            font-size:30px;
+            font-weight:700;
+            line-height:1;
+        }
+
+        /* =========================
+           Buttons
+           ========================= */
+        .action-bar{
+            display:flex;
+            flex-wrap:wrap;
+            gap:10px;
+        }
+
+        .btn{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            gap:8px;
+            min-height:41px;
+            padding:0 16px;
+            border:none;
+            border-radius:10px;
+            font-size:12.75px;
+            font-weight:600;
+            cursor:pointer;
+            transition:.18s ease;
+            text-decoration:none;
+        }
+
+        .btn:hover{
+            transform:translateY(-1px);
+        }
+
+        .btn-primary{
+            background:linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+            color:#fff;
+            box-shadow:0 8px 18px rgba(21,71,52,.12);
+        }
+
+        .btn-secondary{
+            background:#f4f7f5;
+            color:var(--ink);
+            border:1px solid var(--line-2);
+        }
+
+        .btn-soft{
+            background:#f8faf9;
+            color:var(--primary);
+            border:1px solid #dde7e0;
+        }
+
+        .btn-danger{
+            background:linear-gradient(135deg, #9c3939 0%, #b44a4a 100%);
+            color:#fff;
+        }
+
+        /* =========================
+           Forms
+           ========================= */
+        .form-grid{
+            display:grid;
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+            gap:14px 16px;
+        }
+
+        .form-row{
+            display:flex;
+            flex-direction:column;
+            gap:6px;
+        }
+
+        .form-row.full{
+            grid-column:1 / -1;
+        }
+
+        label{
+            display:block;
+            font-size:12.5px;
+            font-weight:600;
+            color:var(--ink-2);
+            line-height:1.65;
+        }
+
+        .form-control,
+        .form-select,
+        input[type="file"],
+        input[type="text"],
+        input[type="number"],
+        input[type="email"],
+        input[type="password"],
+        input[type="search"],
+        select,
+        textarea{
+            width:100%;
+            min-height:44px;
+            padding:10px 12px;
+            border:1px solid #c7d2cb;
+            border-radius:10px;
+            background:#fff;
+            font-size:12.85px;
+            color:var(--ink);
+            transition:.18s ease;
+            outline:none;
+            font-weight:400;
+            box-shadow:0 1px 1px rgba(12,23,18,.012);
+        }
+
+        textarea{
+            min-height:104px;
+            resize:vertical;
+        }
+
+        .form-control:focus,
+        .form-select:focus,
+        input:focus,
+        select:focus,
+        textarea:focus{
+            border-color:#9db5a8;
+            box-shadow:0 0 0 4px rgba(35,105,76,.07);
+        }
+
+        /* =========================
+           Utility boxes
+           ========================= */
+        .help-box{
+            padding:12px 14px;
+            border-radius:12px;
+            background:linear-gradient(180deg, #faf8f2, #fffdf8);
+            border:1px solid var(--gold-soft);
+            color:#6a5830;
+            font-size:12.5px;
+            line-height:1.85;
+            font-weight:400;
+        }
+
+        .danger-box{
+            padding:14px 16px;
+            border-radius:12px;
+            background:var(--danger-bg);
+            border:1px solid #f0caca;
+            color:#7d2d2d;
+            line-height:1.85;
+            font-size:12.5px;
+            font-weight:400;
+        }
+
+        /* =========================
+           Tables
+           ========================= */
+        .table-wrap{
+            width:100%;
+            overflow:auto;
+            border:1px solid var(--line);
+            border-radius:14px;
+            background:#fff;
+        }
+
+        table{
+            width:100%;
+            min-width:840px;
+            border-collapse:collapse;
+        }
+
+        th, td{
+            padding:13px 14px;
+            text-align:right;
+            vertical-align:top;
+            border-bottom:1px solid #e7eeea;
+            font-size:12.75px;
+        }
+
+        th{
+            white-space:nowrap;
+            font-weight:700;
+            color:var(--ink-2);
+            background:linear-gradient(180deg, #f7faf8, #eff5f1);
+        }
+
+        td{
+            font-weight:400;
+        }
+
+        tr:hover td{
+            background:#fbfdfc;
+        }
+
+        /* =========================
+           Badges and misc
+           ========================= */
+        .badge{
+            display:inline-flex;
+            align-items:center;
+            justify-content:center;
+            min-height:26px;
+            padding:0 11px;
+            border-radius:999px;
+            font-size:11px;
+            font-weight:600;
+            white-space:nowrap;
+        }
+
+        .badge-primary{
+            background:#eef6f1;
+            color:#1f6546;
+            border:1px solid #d4e6da;
+        }
+
+        .badge-muted{
+            background:#f4f6f5;
+            color:#6c7d74;
+            border:1px solid #e2e8e4;
+        }
+
+        .empty-state{
+            padding:26px 18px;
+            text-align:center;
+            border-radius:14px;
+            border:1px dashed #d3ddd7;
+            background:linear-gradient(180deg, #fbfcfb, #f7f9f8);
+            color:var(--muted);
+            line-height:1.85;
+            font-size:12.5px;
+            font-weight:400;
+        }
+
+        .file-link{
+            color:var(--primary-2);
+            font-weight:600;
+        }
+
+        .stack{
+            display:flex;
+            flex-wrap:wrap;
+            gap:8px;
+        }
+
+        .muted{
+            color:var(--muted);
+        }
+
+        .errorlist{
+            margin:0;
+            padding:0;
+            list-style:none;
+            color:#a23b3b;
+            font-size:12px;
+            line-height:1.75;
+            font-weight:400;
+        }
+
+        /* =========================
+           Messages
+           ========================= */
+        .messages{
+            display:flex;
+            flex-direction:column;
+            gap:10px;
+            margin-bottom:16px;
+        }
+
+        .message{
+            padding:12px 14px;
+            border-radius:12px;
+            font-size:12.5px;
+            line-height:1.75;
+            border:1px solid transparent;
+            font-weight:400;
+        }
+
+        .message.success{
+            background:var(--success-bg);
+            border-color:#cfe6d7;
+            color:var(--success);
+        }
+
+        .message.error{
+            background:var(--danger-bg);
+            border-color:#f0caca;
+            color:#8b2e2e;
+        }
+
+        .message.warning{
+            background:var(--warning-bg);
+            border-color:#eadba8;
+            color:var(--warning);
+        }
+
+        .message.info{
+            background:var(--info-bg);
+            border-color:#d2e3f5;
+            color:var(--info);
+        }
+
+        /* =========================
+           Footer
+           ========================= */
+        .site-footer{
+            width:min(1220px, 94%);
+            margin:0 auto 20px;
+            padding-top:6px;
+            color:var(--muted);
+            font-size:12px;
+            text-align:center;
+            font-weight:400;
+        }
+
+        /* =========================
+           Responsive
+           ========================= */
+        @media (max-width: 980px){
+            .site-header-inner{
+                flex-direction:column;
+                align-items:flex-start;
+            }
+
+            .nav-side{
+                justify-content:flex-start;
+            }
+
+            .form-grid{
+                grid-template-columns:1fr;
+            }
+
+            .hero-title{
+                font-size:20px;
+            }
+
+            .section-title{
+                font-size:18px;
+            }
+        }
+
+        @media (max-width: 640px){
+            .brand-title{
+                font-size:20px;
+            }
+
+            .page-shell{
+                width:min(95%, 95%);
+                margin:16px auto 30px;
+            }
+
+            .hero{
+                padding:18px 16px;
+                border-radius:18px;
+            }
+
+            .section{
+                padding:16px;
+                border-radius:14px;
+            }
+
+            .nav-link,
+            .nav-user{
+                width:100%;
+                justify-content:center;
+            }
+
+            .nav-side{
+                width:100%;
+            }
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+
+    <header class="site-header">
+        <div class="site-header-inner">
+            <div class="brand">
+                <h1 class="brand-title">نظام بيانات شاغلي المدارس</h1>
+                <p class="brand-subtitle">منصة موحدة لإدخال ومتابعة بيانات المديرين والمديرات والوكلاء والوكيلات</p>
+            </div>
+
+            <nav class="nav-side">
+                {% if request.session.supervisor_id %}
+                    <span class="nav-user">{{ request.session.supervisor_name }}</span>
+
+                    <a href="{% url 'staffdata:dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        الرئيسية
+                    </a>
+
+                    <a href="{% url 'staffdata:records_list' %}" class="nav-link {% if request.resolver_match.url_name == 'records_list' %}active{% endif %}">
+                        السجلات
+                    </a>
+
+                    <a href="{% url 'staffdata:principal_add' %}" class="nav-link {% if request.resolver_match.url_name == 'principal_add' %}active{% endif %}">
+                        إضافة مدير/مديرة
+                    </a>
+
+                    <a href="{% url 'staffdata:vice_add' %}" class="nav-link {% if request.resolver_match.url_name == 'vice_add' %}active{% endif %}">
+                        إضافة وكيل/وكيلة
+                    </a>
+
+                    <a href="{% url 'accounts:profile' %}" class="nav-link {% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                        الملف الشخصي
+                    </a>
+
+                    <a href="{% url 'accounts:logout' %}" class="nav-link logout">
+                        تسجيل الخروج
+                    </a>
+                {% endif %}
+
+                {% if request.user.is_authenticated and request.user.is_staff %}
+                    <a href="{% url 'staffdata:admin_overview' %}" class="nav-link admin {% if request.resolver_match.url_name == 'admin_overview' %}active{% endif %}">
+                        الإدارة العامة
+                    </a>
+
+                    <a href="/admin/" class="nav-link admin">
+                        لوحة Django
+                    </a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-shell">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="message {{ message.tags|default:'info' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% block hero %}{% endblock %}
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        جميع البيانات المدخلة تخضع للمتابعة والمراجعة الإدارية داخل النظام.
+    </footer>
+
+</body>
+</html>

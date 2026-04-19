@@ -1,0 +1,386 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root{
+        --sr-bg:#f4f5f2;
+        --sr-paper:#fffdfa;
+        --sr-paper-2:#fbfcf9;
+        --sr-line:#dde4de;
+        --sr-line-soft:#e9eeea;
+        --sr-ink:#1f2f28;
+        --sr-ink-soft:#64766d;
+        --sr-green:#153b30;
+        --sr-green-2:#1d4a3c;
+        --sr-green-3:#2b624f;
+        --sr-gold:#c5a15f;
+        --sr-shadow:0 10px 24px rgba(17,34,27,.05);
+    }
+
+    .sr-wrap{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .sr-head{
+        border:1px solid var(--sr-line);
+        border-radius:16px;
+        background:linear-gradient(180deg, #fffefb 0%, #fafcf9 100%);
+        box-shadow:var(--sr-shadow);
+        overflow:hidden;
+    }
+
+    .sr-head-top{
+        padding:16px 18px 12px;
+        border-bottom:1px solid var(--sr-line-soft);
+        background:linear-gradient(180deg, #fcfdfb 0%, #f7faf8 100%);
+    }
+
+    .sr-title{
+        margin:0;
+        font-size:22px;
+        font-weight:700;
+        line-height:1.3;
+        color:var(--sr-ink);
+    }
+
+    .sr-subtitle{
+        margin:6px 0 0;
+        font-size:12px;
+        color:var(--sr-ink-soft);
+        line-height:1.8;
+    }
+
+    .sr-supervisor{
+        padding:14px 16px 16px;
+    }
+
+    .sr-supervisor-grid{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .sr-card{
+        border:1px solid var(--sr-line);
+        border-radius:12px;
+        background:linear-gradient(180deg, var(--sr-paper) 0%, var(--sr-paper-2) 100%);
+        padding:12px 13px;
+        min-height:78px;
+    }
+
+    .sr-card-label{
+        margin:0;
+        font-size:10px;
+        color:var(--sr-ink-soft);
+        line-height:1.5;
+        font-weight:600;
+    }
+
+    .sr-card-value{
+        margin:8px 0 0;
+        font-size:16px;
+        font-weight:700;
+        color:var(--sr-ink);
+        line-height:1.4;
+        word-break:break-word;
+    }
+
+    .sr-form-box{
+        border:1px solid var(--sr-line);
+        border-radius:16px;
+        background:linear-gradient(180deg, #fffefb 0%, #fbfcfa 100%);
+        box-shadow:var(--sr-shadow);
+        overflow:hidden;
+    }
+
+    .sr-form-head{
+        padding:14px 16px 10px;
+        border-bottom:1px solid var(--sr-line-soft);
+        background:linear-gradient(180deg, #fcfdfb 0%, #f8faf8 100%);
+    }
+
+    .sr-form-title{
+        margin:0;
+        font-size:16px;
+        font-weight:700;
+        color:var(--sr-ink);
+    }
+
+    .sr-form-body{
+        padding:16px;
+    }
+
+    .sr-grid{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:12px 14px;
+    }
+
+    .sr-field{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+    }
+
+    .sr-field.full{
+        grid-column:1 / -1;
+    }
+
+    .sr-label{
+        font-size:11px;
+        font-weight:700;
+        color:var(--sr-ink);
+        line-height:1.5;
+    }
+
+    .sr-form-body input[type="text"],
+    .sr-form-body input[type="email"],
+    .sr-form-body input[type="password"],
+    .sr-form-body input[type="number"],
+    .sr-form-body input[type="file"],
+    .sr-form-body select,
+    .sr-form-body textarea{
+        width:100%;
+        min-height:42px;
+        border:1px solid #d7dfd8;
+        border-radius:10px;
+        background:#fff;
+        padding:0 12px;
+        font-size:13px;
+        color:var(--sr-ink);
+        outline:none;
+        box-sizing:border-box;
+        transition:.18s ease;
+    }
+
+    .sr-form-body textarea{
+        min-height:110px;
+        padding:12px;
+        resize:vertical;
+    }
+
+    .sr-form-body input:focus,
+    .sr-form-body select:focus,
+    .sr-form-body textarea:focus{
+        border-color:#afc2b5;
+        box-shadow:0 0 0 3px rgba(21,59,48,.06);
+    }
+
+    .sr-check{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        min-height:42px;
+        padding-top:22px;
+    }
+
+    .sr-check input{
+        width:16px;
+        height:16px;
+    }
+
+    .sr-file-note{
+        margin-top:6px;
+        font-size:10px;
+        color:var(--sr-ink-soft);
+        line-height:1.6;
+    }
+
+    .sr-actions{
+        display:flex;
+        justify-content:flex-end;
+        gap:8px;
+        padding:14px 16px;
+        border-top:1px solid var(--sr-line-soft);
+        background:#fafbf9;
+    }
+
+    .sr-btn{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border:none;
+        border-radius:10px;
+        font-size:12px;
+        font-weight:700;
+        cursor:pointer;
+        text-decoration:none;
+        transition:.18s ease;
+    }
+
+    .sr-btn-primary{
+        background:var(--sr-green-2);
+        color:#fff;
+    }
+
+    .sr-btn-primary:hover{
+        background:var(--sr-green);
+    }
+
+    .sr-btn-soft{
+        background:#eef3ef;
+        color:var(--sr-ink);
+        border:1px solid #d9e1db;
+    }
+
+    .sr-btn-soft:hover{
+        background:#e7eee9;
+    }
+
+    .sr-errors{
+        margin-bottom:12px;
+        border:1px solid #f1cfcf;
+        background:#fff7f7;
+        color:#7d2e2e;
+        border-radius:10px;
+        padding:10px 12px;
+        font-size:12px;
+        line-height:1.8;
+    }
+
+    @media (max-width: 980px){
+        .sr-supervisor-grid,
+        .sr-grid{
+            grid-template-columns:1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sr-wrap">
+
+    <section class="sr-head">
+        <div class="sr-head-top">
+            <h1 class="sr-title">{{ page_title }}</h1>
+            <p class="sr-subtitle">مراجعة بيانات السجل مع إظهار بيانات المشرف التربوي المرتبط بصورة واضحة ومنظمة.</p>
+        </div>
+
+        {% if form.instance.pk and form.instance.supervisor %}
+        <div class="sr-supervisor">
+            <div class="sr-supervisor-grid">
+                <div class="sr-card">
+                    <p class="sr-card-label">المشرف التربوي المرتبط</p>
+                    <p class="sr-card-value">{{ form.instance.supervisor_name_display|default:"—" }}</p>
+                </div>
+
+                <div class="sr-card">
+                    <p class="sr-card-label">القطاع</p>
+                    <p class="sr-card-value">{{ form.instance.supervisor_sector_display|default:"—" }}</p>
+                </div>
+
+                <div class="sr-card">
+                    <p class="sr-card-label">السجل المدني للمشرف التربوي</p>
+                    <p class="sr-card-value">{{ form.instance.supervisor_national_id_display|default:"—" }}</p>
+                </div>
+
+                <div class="sr-card">
+                    <p class="sr-card-label">جوال المشرف التربوي</p>
+                    <p class="sr-card-value">{{ form.instance.supervisor_mobile_display|default:"—" }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </section>
+
+    <section class="sr-form-box">
+        <div class="sr-form-head">
+            <h2 class="sr-form-title">بيانات السجل</h2>
+        </div>
+
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+
+            <div class="sr-form-body">
+                {% if form.errors %}
+                    <div class="sr-errors">
+                        يرجى مراجعة الحقول المدخلة والتأكد من صحتها.
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="sr-grid">
+
+                    <div class="sr-field">
+                        <label class="sr-label" for="{{ form.supervisor.id_for_label }}">المشرف</label>
+                        {{ form.supervisor }}
+                    </div>
+
+                    <div class="sr-field">
+                        <label class="sr-label" for="{{ form.full_name.id_for_label }}">الاسم الرباعي</label>
+                        {{ form.full_name }}
+                    </div>
+
+                    <div class="sr-field">
+                        <label class="sr-label" for="{{ form.national_id.id_for_label }}">السجل المدني</label>
+                        {{ form.national_id }}
+                    </div>
+
+                    <div class="sr-field">
+                        <label class="sr-label" for="{{ form.school_name.id_for_label }}">اسم المدرسة</label>
+                        {{ form.school_name }}
+                    </div>
+
+                    <div class="sr-field">
+                        <label class="sr-label" for="{{ form.sector.id_for_label }}">القطاع</label>
+                        {{ form.sector }}
+                    </div>
+
+                    <div class="sr-field">
+                        <label class="sr-label" for="{{ form.stage.id_for_label }}">المرحلة الدراسية</label>
+                        {{ form.stage }}
+                    </div>
+
+                    <div class="sr-field">
+                        <label class="sr-label" for="{{ form.school_gender.id_for_label }}">نوع المدرسة</label>
+                        {{ form.school_gender }}
+                    </div>
+
+                    <div class="sr-field">
+                        <label class="sr-label" for="{{ form.role.id_for_label }}">الصفة</label>
+                        {{ form.role }}
+                    </div>
+
+                    {% if form.performance_file %}
+                    <div class="sr-field full">
+                        <label class="sr-label" for="{{ form.performance_file.id_for_label }}">استمارة الأداء الوظيفي</label>
+                        {{ form.performance_file }}
+                        {% if form.instance.pk and form.instance.performance_file %}
+                            <div class="sr-file-note">
+                                المرفق الحالي:
+                                <a href="{{ form.instance.performance_file.url }}" target="_blank">عرض الملف الحالي</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <div class="sr-field full">
+                        <label class="sr-label" for="{{ form.notes.id_for_label }}">ملاحظات</label>
+                        {{ form.notes }}
+                    </div>
+
+                    <div class="sr-field full">
+                        <div class="sr-check">
+                            {{ form.is_active }}
+                            <label class="sr-label" for="{{ form.is_active.id_for_label }}">نشط</label>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="sr-actions">
+                <button type="submit" name="_save" class="sr-btn sr-btn-primary">حفظ</button>
+                <button type="submit" name="_addanother" class="sr-btn sr-btn-soft">حفظ وإضافة آخر</button>
+                <button type="submit" name="_continue" class="sr-btn sr-btn-soft">حفظ واستمرار بالتعديل</button>
+            </div>
+        </form>
+    </section>
+
+</div>
+{% endblock %}

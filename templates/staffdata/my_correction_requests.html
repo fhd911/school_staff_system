@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .my-requests-page,
+    .my-requests-page *{
+        font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+    }
+
+    :root{
+        --mr-paper:#fffefb;
+        --mr-paper-2:#fbfcfa;
+        --mr-line:#d5dfd8;
+        --mr-line-soft:#e5ece7;
+        --mr-ink:#1f3128;
+        --mr-ink-soft:#5a6d63;
+        --mr-green:#1f4d3a;
+        --mr-green-2:#28684a;
+        --mr-gold-soft:#e9ddc2;
+        --mr-gold-bg:#fbf7ef;
+        --mr-danger:#a64646;
+        --mr-danger-bg:#fff6f6;
+        --mr-warning:#8b6b1d;
+        --mr-warning-bg:#fffaf0;
+        --mr-info:#2f5f4b;
+        --mr-info-bg:#f4f8f5;
+        --mr-success:#1f6b42;
+        --mr-success-bg:#eef8f1;
+    }
+
+    .page-hero{
+        position:relative;
+        overflow:hidden;
+        margin-bottom:18px;
+        border-radius:22px;
+        color:#fff;
+        background:
+            radial-gradient(circle at 18% 24%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 24%),
+            linear-gradient(135deg, #1d5a42 0%, #23684a 52%, #2b7354 100%);
+        box-shadow:0 14px 30px rgba(18, 47, 35, .10);
+        border:1px solid rgba(255,255,255,.05);
+    }
+
+    .page-hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:24px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.20) 18%,
+            rgba(221,196,144,.74) 50%,
+            rgba(221,196,144,.20) 82%,
+            transparent 100%
+        );
+    }
+
+    .page-hero-inner{
+        position:relative;
+        z-index:1;
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        min-height:108px;
+        padding:20px 24px 18px;
+    }
+
+    .page-hero-main{
+        min-width:0;
+    }
+
+    .page-hero-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        margin-bottom:10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .page-hero-title{
+        margin:0;
+        font-size:19px;
+        font-weight:700;
+        line-height:1.6;
+        color:#fff;
+    }
+
+    .page-hero-text{
+        margin:7px 0 0;
+        max-width:860px;
+        font-size:12.35px;
+        font-weight:400;
+        line-height:1.9;
+        color:rgba(255,255,255,.91);
+    }
+
+    .page-hero-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:11px;
+    }
+
+    .page-hero-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:27px;
+        padding:0 10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .page-hero-action{
+        flex:0 0 auto;
+        padding-top:2px;
+    }
+
+    .page-hero-back{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:11px;
+        border:1px solid rgba(255,255,255,.14);
+        background:rgba(255,255,255,.06);
+        color:#fff;
+        font-size:12.35px;
+        font-weight:500;
+        transition:.2s ease;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+        backdrop-filter:blur(4px);
+    }
+
+    .page-hero-back:hover{
+        background:rgba(255,255,255,.10);
+        border-color:rgba(255,255,255,.20);
+        color:#fff;
+        transform:translateY(-1px);
+    }
+
+    .my-requests-page{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        color:var(--mr-ink);
+    }
+
+    .requests-panel{
+        background:linear-gradient(180deg, var(--mr-paper) 0%, var(--mr-paper-2) 100%);
+        border:1px solid var(--mr-line);
+        border-radius:20px;
+        box-shadow:var(--shadow-sm);
+        overflow:hidden;
+    }
+
+    .requests-panel-head{
+        padding:16px 20px 12px;
+        border-bottom:1px solid var(--mr-line-soft);
+        background:linear-gradient(180deg, #fcfdfc 0%, #f7faf8 100%);
+    }
+
+    .requests-panel-title{
+        margin:0;
+        font-size:18px;
+        font-weight:700;
+        line-height:1.55;
+        color:var(--mr-ink);
+    }
+
+    .requests-panel-subtitle{
+        margin:5px 0 0;
+        font-size:12.15px;
+        line-height:1.8;
+        color:var(--mr-ink-soft);
+    }
+
+    .requests-panel-body{
+        padding:16px 20px 20px;
+    }
+
+    .requests-note{
+        display:flex;
+        align-items:flex-start;
+        gap:10px;
+        padding:11px 13px;
+        border-radius:12px;
+        border:1px solid var(--mr-gold-soft);
+        background:linear-gradient(180deg, var(--mr-gold-bg) 0%, #fffdfa 100%);
+        color:#6a5932;
+        font-size:11.9px;
+        line-height:1.82;
+        margin-bottom:14px;
+    }
+
+    .requests-note-icon{
+        width:22px;
+        height:22px;
+        flex:0 0 22px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:#fff8eb;
+        border:1px solid #ead9b4;
+        color:#8a703b;
+        font-size:11.2px;
+        font-weight:700;
+        margin-top:1px;
+    }
+
+    .requests-list{
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .request-card{
+        border:1px solid #d9e3dc;
+        border-radius:18px;
+        background:linear-gradient(180deg, #fffefc 0%, #fbfcfa 100%);
+        overflow:hidden;
+        box-shadow:0 2px 8px rgba(19,39,30,.012);
+    }
+
+    .request-card-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:12px;
+        padding:14px 16px 12px;
+        border-bottom:1px solid var(--mr-line-soft);
+        background:linear-gradient(180deg, #fcfdfc 0%, #f8faf8 100%);
+    }
+
+    .request-card-title{
+        margin:0;
+        font-size:15px;
+        font-weight:700;
+        line-height:1.65;
+        color:var(--mr-ink);
+    }
+
+    .request-card-subtitle{
+        margin:3px 0 0;
+        font-size:11.5px;
+        color:var(--mr-ink-soft);
+        line-height:1.75;
+    }
+
+    .request-card-body{
+        padding:15px 16px 16px;
+    }
+
+    .request-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-bottom:14px;
+    }
+
+    .request-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        font-size:11.2px;
+        font-weight:500;
+        white-space:nowrap;
+        border:1px solid transparent;
+    }
+
+    .request-chip.default{
+        background:#f3f7f4;
+        border-color:#dde7e0;
+        color:#486156;
+    }
+
+    .request-chip.pending{
+        background:var(--mr-info-bg);
+        border-color:#dbe9e0;
+        color:var(--mr-info);
+    }
+
+    .request-chip.approved{
+        background:var(--mr-success-bg);
+        border-color:#d7eadc;
+        color:var(--mr-success);
+    }
+
+    .request-chip.returned{
+        background:var(--mr-warning-bg);
+        border-color:#eadfbc;
+        color:var(--mr-warning);
+    }
+
+    .request-chip.rejected{
+        background:var(--mr-danger-bg);
+        border-color:#f0d0d0;
+        color:var(--mr-danger);
+    }
+
+    .request-grid{
+        display:grid;
+        grid-template-columns:repeat(12, minmax(0, 1fr));
+        gap:12px 14px;
+    }
+
+    .request-box{
+        grid-column:span 6;
+        border:1px solid #dfe7e1;
+        border-radius:12px;
+        background:linear-gradient(180deg, #fdfefd 0%, #f8faf8 100%);
+        padding:12px;
+    }
+
+    .request-box.full{
+        grid-column:1 / -1;
+    }
+
+    .request-box-label{
+        margin:0 0 5px;
+        font-size:11.15px;
+        color:var(--mr-ink-soft);
+        line-height:1.6;
+    }
+
+    .request-box-value{
+        margin:0;
+        font-size:12.65px;
+        color:var(--mr-ink);
+        line-height:1.85;
+        font-weight:500;
+    }
+
+    .request-box-value.muted{
+        color:var(--mr-ink-soft);
+        font-weight:400;
+    }
+
+    .empty-state{
+        padding:24px 18px;
+        text-align:center;
+        border-radius:14px;
+        border:1px dashed #d4ddd7;
+        background:linear-gradient(180deg, #fbfcfb 0%, #f7f9f8 100%);
+        color:var(--mr-ink-soft);
+        font-size:12.2px;
+        line-height:1.9;
+    }
+
+    .empty-state strong{
+        color:var(--mr-ink);
+    }
+
+    @media (max-width: 980px){
+        .request-box{
+            grid-column:1 / -1;
+        }
+    }
+
+    @media (max-width: 860px){
+        .page-hero-inner{
+            flex-direction:column;
+            align-items:flex-start;
+            min-height:auto;
+            padding:16px;
+            gap:11px;
+        }
+
+        .page-hero::after{
+            inset-inline:16px;
+        }
+
+        .page-hero-title{
+            font-size:17.2px;
+        }
+
+        .page-hero-text{
+            font-size:11.85px;
+        }
+
+        .requests-panel-body{
+            padding:14px;
+        }
+
+        .request-card-head,
+        .request-card-body{
+            padding:13px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="page-hero">
+    <div class="page-hero-inner">
+        <div class="page-hero-main">
+            <div class="page-hero-kicker">متابعة الطلبات</div>
+            <h1 class="page-hero-title">{{ page_title }}</h1>
+            <p class="page-hero-text">
+                من هذه الصفحة يمكنك متابعة جميع طلبات التصحيح التي قمت برفعها، ومعرفة حالة كل طلب وملاحظات الإدارة المرتبطة به.
+            </p>
+
+            <div class="page-hero-meta">
+                <span class="page-hero-chip">طلباتك فقط</span>
+                <span class="page-hero-chip">متابعة الحالة</span>
+                <span class="page-hero-chip">ملاحظات الإدارة</span>
+            </div>
+        </div>
+
+        <div class="page-hero-action">
+            <a href="{% url 'staffdata:records_list' %}" class="page-hero-back">العودة إلى سجلاتي</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="my-requests-page">
+    <section class="requests-panel">
+        <div class="requests-panel-head">
+            <h2 class="requests-panel-title">طلبات التصحيح المرفوعة</h2>
+            <p class="requests-panel-subtitle">
+                يمكنك الاطلاع على حالة الطلبات المرفوعة من حسابك، وما إذا كانت لا تزال قيد المراجعة أو تم اعتمادها أو إعادتها أو رفضها.
+            </p>
+        </div>
+
+        <div class="requests-panel-body">
+            <div class="requests-note">
+                <div class="requests-note-icon">!</div>
+                <div>
+                    <strong>تنبيه:</strong>
+                    في حال تمت إعادة الطلب للمشرف، فهذا يعني الحاجة إلى مراجعة سبب الإرجاع ثم رفع طلب جديد بالبيانات الصحيحة إذا لزم الأمر.
+                </div>
+            </div>
+
+            {% if correction_requests %}
+                <div class="requests-list">
+                    {% for req in correction_requests %}
+                    <article class="request-card">
+                        <div class="request-card-head">
+                            <div>
+                                <h3 class="request-card-title">
+                                    طلب تصحيح رقم #{{ req.id }} — {{ req.get_target_type_display }}
+                                </h3>
+                                <p class="request-card-subtitle">
+                                    تم رفع الطلب بتاريخ {{ req.created_at|date:"Y-m-d H:i" }}
+                                </p>
+                            </div>
+
+                            {% if req.status == "pending" %}
+                                <span class="request-chip pending">{{ req.get_status_display }}</span>
+                            {% elif req.status == "approved" %}
+                                <span class="request-chip approved">{{ req.get_status_display }}</span>
+                            {% elif req.status == "returned" %}
+                                <span class="request-chip returned">{{ req.get_status_display }}</span>
+                            {% elif req.status == "rejected" %}
+                                <span class="request-chip rejected">{{ req.get_status_display }}</span>
+                            {% else %}
+                                <span class="request-chip default">{{ req.get_status_display }}</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="request-card-body">
+                            <div class="request-meta">
+                                <span class="request-chip default">نوع السجل: {{ req.get_target_type_display }}</span>
+
+                                {% if req.target_record %}
+                                    <span class="request-chip default">السجل الحالي: {{ req.target_record.full_name }}</span>
+                                {% endif %}
+
+                                {% if req.reviewed_at %}
+                                    <span class="request-chip default">تاريخ المراجعة: {{ req.reviewed_at|date:"Y-m-d H:i" }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="request-grid">
+                                <div class="request-box">
+                                    <p class="request-box-label">الاسم المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_full_name }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">السجل المدني المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_national_id }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">الصفة المقترحة</p>
+                                    <p class="request-box-value">{{ req.requested_role }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">المرحلة المقترحة</p>
+                                    <p class="request-box-value">{{ req.requested_stage }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">القطاع المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_sector }}</p>
+                                </div>
+
+                                <div class="request-box">
+                                    <p class="request-box-label">نوع المدرسة المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_school_gender }}</p>
+                                </div>
+
+                                <div class="request-box full">
+                                    <p class="request-box-label">اسم المدرسة المقترح</p>
+                                    <p class="request-box-value">{{ req.requested_school_name }}</p>
+                                </div>
+
+                                <div class="request-box full">
+                                    <p class="request-box-label">سبب طلب التصحيح</p>
+                                    <p class="request-box-value">{{ req.reason|linebreaksbr }}</p>
+                                </div>
+
+                                {% if req.requested_notes %}
+                                <div class="request-box full">
+                                    <p class="request-box-label">الملاحظات المقترحة</p>
+                                    <p class="request-box-value">{{ req.requested_notes|linebreaksbr }}</p>
+                                </div>
+                                {% endif %}
+
+                                {% if req.admin_note %}
+                                <div class="request-box full">
+                                    <p class="request-box-label">ملاحظة الإدارة</p>
+                                    <p class="request-box-value">{{ req.admin_note|linebreaksbr }}</p>
+                                </div>
+                                {% endif %}
+
+                                {% if req.target_record %}
+                                <div class="request-box full">
+                                    <p class="request-box-label">السجل المرتبط حاليًا</p>
+                                    <p class="request-box-value muted">
+                                        {{ req.target_record.full_name }} — {{ req.target_record.school_name }}
+                                    </p>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </article>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    لا توجد لديك طلبات تصحيح حتى الآن. يمكنك رفع أول طلب من خلال صفحة
+                    <strong>سجلاتي</strong>
+                    عند الحاجة إلى تصحيح أي سجل محفوظ.
+                </div>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

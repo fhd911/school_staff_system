@@ -1,0 +1,983 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero,
+    .page-hero *,
+    .correction-page,
+    .correction-page *{
+        font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+    }
+
+    :root{
+        --cr-paper:#fffefb;
+        --cr-paper-2:#fbfcfa;
+        --cr-paper-3:#f6f8f6;
+
+        --cr-line:#d5dfd8;
+        --cr-line-2:#cad6cf;
+        --cr-line-soft:#e5ece7;
+
+        --cr-ink:#1f3128;
+        --cr-ink-soft:#5a6d63;
+        --cr-ink-faint:#798b81;
+
+        --cr-green:#1f4d3a;
+        --cr-green-2:#28684a;
+        --cr-gold:#c5a765;
+        --cr-gold-soft:#e9ddc2;
+        --cr-gold-bg:#fbf7ef;
+
+        --cr-danger:#a64646;
+        --cr-danger-bg:#fff6f6;
+
+        --cr-info:#35614f;
+        --cr-info-bg:#f4f8f5;
+    }
+
+    .page-hero{
+        position:relative;
+        overflow:hidden;
+        margin-bottom:18px;
+        border-radius:22px;
+        color:#fff;
+        background:
+            radial-gradient(circle at 18% 24%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 24%),
+            linear-gradient(135deg, #1d5a42 0%, #23684a 52%, #2b7354 100%);
+        box-shadow:0 14px 30px rgba(18, 47, 35, .10);
+        border:1px solid rgba(255,255,255,.05);
+    }
+
+    .page-hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:24px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.20) 18%,
+            rgba(221,196,144,.74) 50%,
+            rgba(221,196,144,.20) 82%,
+            transparent 100%
+        );
+    }
+
+    .page-hero-inner{
+        position:relative;
+        z-index:1;
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        min-height:110px;
+        padding:20px 24px 18px;
+    }
+
+    .page-hero-main{
+        min-width:0;
+    }
+
+    .page-hero-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        margin-bottom:10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .page-hero-title{
+        margin:0;
+        font-size:19px;
+        font-weight:700;
+        line-height:1.6;
+        color:#fff;
+    }
+
+    .page-hero-text{
+        margin:7px 0 0;
+        max-width:860px;
+        font-size:12.35px;
+        font-weight:400;
+        line-height:1.9;
+        color:rgba(255,255,255,.91);
+    }
+
+    .page-hero-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:11px;
+    }
+
+    .page-hero-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:27px;
+        padding:0 10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .page-hero-action{
+        flex:0 0 auto;
+        padding-top:2px;
+    }
+
+    .page-hero-back{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:11px;
+        border:1px solid rgba(255,255,255,.14);
+        background:rgba(255,255,255,.06);
+        color:#fff;
+        font-size:12.35px;
+        font-weight:500;
+        transition:.2s ease;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+        backdrop-filter:blur(4px);
+    }
+
+    .page-hero-back:hover{
+        background:rgba(255,255,255,.10);
+        border-color:rgba(255,255,255,.20);
+        color:#fff;
+        transform:translateY(-1px);
+    }
+
+    .correction-page{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+        color:var(--cr-ink);
+    }
+
+    .correction-panel{
+        background:linear-gradient(180deg, var(--cr-paper) 0%, var(--cr-paper-2) 100%);
+        border:1px solid var(--cr-line-2);
+        border-radius:20px;
+        box-shadow:
+            0 18px 34px rgba(19, 39, 30, 0.05),
+            0 4px 10px rgba(19, 39, 30, 0.02);
+        overflow:hidden;
+    }
+
+    .correction-body{
+        padding:24px;
+    }
+
+    .correction-intro{
+        display:flex;
+        flex-direction:column;
+        gap:9px;
+        padding-bottom:14px;
+        margin-bottom:14px;
+        border-bottom:1px solid var(--cr-line-soft);
+    }
+
+    .correction-intro-top{
+        display:flex;
+        align-items:center;
+        justify-content:flex-start;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .correction-intro-title{
+        margin:0;
+        font-size:17px;
+        font-weight:700;
+        color:var(--cr-ink);
+        line-height:1.65;
+    }
+
+    .correction-intro-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:linear-gradient(180deg, #f8faf8 0%, #f2f5f3 100%);
+        border:1px solid #dde5df;
+        color:#51665b;
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .correction-intro-text{
+        margin:0;
+        max-width:860px;
+        font-size:12.1px;
+        font-weight:400;
+        color:var(--cr-ink-soft);
+        line-height:1.9;
+    }
+
+    .correction-summary{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+        margin-bottom:14px;
+    }
+
+    .correction-summary-item{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        min-height:54px;
+        padding:10px 12px;
+        border:1px solid #dde5df;
+        border-radius:14px;
+        background:linear-gradient(180deg, #fdfefd 0%, #f7faf7 100%);
+    }
+
+    .correction-summary-index{
+        width:28px;
+        height:28px;
+        flex:0 0 28px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:#eff4f0;
+        border:1px solid #d9e2dc;
+        color:#5b7166;
+        font-size:11px;
+        font-weight:700;
+    }
+
+    .correction-summary-copy{
+        display:flex;
+        flex-direction:column;
+        gap:2px;
+        min-width:0;
+    }
+
+    .correction-summary-copy strong{
+        font-size:12.2px;
+        font-weight:500;
+        color:var(--cr-ink);
+        line-height:1.55;
+    }
+
+    .correction-summary-copy span{
+        font-size:11px;
+        font-weight:400;
+        color:var(--cr-ink-soft);
+        line-height:1.65;
+    }
+
+    .correction-tip{
+        display:flex;
+        align-items:flex-start;
+        gap:10px;
+        padding:11px 13px;
+        margin-bottom:14px;
+        border-radius:12px;
+        border:1px solid var(--cr-gold-soft);
+        background:linear-gradient(180deg, var(--cr-gold-bg) 0%, #fffdfa 100%);
+        color:#6a5932;
+        font-size:11.9px;
+        line-height:1.82;
+    }
+
+    .correction-tip-icon{
+        width:22px;
+        height:22px;
+        flex:0 0 22px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:#fff8eb;
+        border:1px solid #ead9b4;
+        color:#8a703b;
+        font-size:11.2px;
+        font-weight:700;
+        margin-top:1px;
+    }
+
+    .correction-tip strong{
+        font-weight:700;
+        color:#5f4f2f;
+    }
+
+    .correction-alert{
+        padding:12px 13px;
+        margin-bottom:14px;
+        border-radius:12px;
+        border:1px solid #efd3d3;
+        background:linear-gradient(180deg, #fffdfd 0%, var(--cr-danger-bg) 100%);
+        color:#8b3c3c;
+        font-size:11.85px;
+        line-height:1.8;
+    }
+
+    .correction-layout{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .correction-section{
+        border:1px solid #d6e0d9;
+        border-radius:16px;
+        background:linear-gradient(180deg, #fffefc 0%, #fbfcfa 100%);
+        padding:16px;
+        box-shadow:0 2px 8px rgba(19, 39, 30, 0.012);
+    }
+
+    .correction-section-head{
+        position:relative;
+        margin-bottom:11px;
+        padding-bottom:10px;
+        border-bottom:1px solid var(--cr-line-soft);
+    }
+
+    .correction-section-head::before{
+        content:"";
+        position:absolute;
+        right:0;
+        top:0;
+        width:34px;
+        height:2px;
+        border-radius:999px;
+        background:linear-gradient(90deg, var(--cr-green) 0%, rgba(31,77,58,.24) 100%);
+    }
+
+    .correction-section-no{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:34px;
+        height:22px;
+        padding:0 8px;
+        margin:0 0 7px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid #dde5df;
+        color:#697c72;
+        font-size:10.8px;
+        font-weight:700;
+    }
+
+    .correction-section-title{
+        margin:0;
+        font-size:14.9px;
+        font-weight:700;
+        color:var(--cr-ink);
+        line-height:1.62;
+    }
+
+    .correction-section-subtitle{
+        margin:4px 0 0;
+        font-size:11.5px;
+        font-weight:400;
+        color:var(--cr-ink-soft);
+        line-height:1.78;
+    }
+
+    .correction-info-grid{
+        display:grid;
+        grid-template-columns:repeat(12, minmax(0, 1fr));
+        gap:12px 16px;
+    }
+
+    .correction-info-item{
+        grid-column:span 6;
+        border:1px solid #dfe7e1;
+        border-radius:12px;
+        background:linear-gradient(180deg, #fdfefd 0%, #f8faf8 100%);
+        padding:12px;
+    }
+
+    .correction-info-item.full{
+        grid-column:1 / -1;
+    }
+
+    .correction-info-label{
+        font-size:11.3px;
+        color:var(--cr-ink-soft);
+        margin-bottom:5px;
+        line-height:1.6;
+    }
+
+    .correction-info-value{
+        font-size:12.8px;
+        color:var(--cr-ink);
+        font-weight:500;
+        line-height:1.8;
+    }
+
+    .correction-form-grid{
+        display:grid;
+        grid-template-columns:repeat(12, minmax(0, 1fr));
+        gap:12px 16px;
+    }
+
+    .correction-form-row{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+        min-width:0;
+        grid-column:span 6;
+    }
+
+    .correction-form-row.full{
+        grid-column:1 / -1;
+    }
+
+    .correction-form-row.col-4{
+        grid-column:span 4;
+    }
+
+    .correction-form-row.col-6{
+        grid-column:span 6;
+    }
+
+    .correction-form-label{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .correction-form-label label{
+        margin:0;
+        font-size:12.35px;
+        font-weight:500;
+        color:#273e34;
+        line-height:1.6;
+    }
+
+    .correction-form-tag{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:22px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid #dde5df;
+        color:#62756b;
+        font-size:10.5px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .correction-form-row input,
+    .correction-form-row select,
+    .correction-form-row textarea{
+        width:100%;
+        min-height:44px;
+        padding:10px 12px;
+        border:1px solid #c8d4cc;
+        border-radius:10px;
+        background:#fff;
+        color:var(--cr-ink);
+        font-size:12.9px;
+        font-weight:400;
+        line-height:1.65;
+        box-shadow:0 1px 2px rgba(17,32,24,.015);
+        transition:border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+
+    .correction-form-row textarea{
+        min-height:108px;
+        resize:vertical;
+    }
+
+    .correction-form-row input:focus,
+    .correction-form-row select:focus,
+    .correction-form-row textarea:focus{
+        outline:none;
+        border-color:#9db4a8;
+        box-shadow:0 0 0 4px rgba(31,79,59,.06);
+        background:#fff;
+    }
+
+    .correction-form-help{
+        font-size:11.1px;
+        font-weight:400;
+        color:var(--cr-ink-soft);
+        line-height:1.72;
+    }
+
+    .correction-upload-box{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        border:1px dashed #ced8d1;
+        border-radius:13px;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f7faf8 100%);
+        padding:13px;
+    }
+
+    .correction-upload-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+        padding-bottom:8px;
+        border-bottom:1px solid #e6ece7;
+    }
+
+    .correction-upload-title{
+        margin:0;
+        font-size:12.45px;
+        font-weight:500;
+        color:var(--cr-ink);
+        line-height:1.6;
+    }
+
+    .correction-upload-subtitle{
+        margin:3px 0 0;
+        font-size:11.15px;
+        color:var(--cr-ink-soft);
+        line-height:1.75;
+    }
+
+    .correction-upload-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:24px;
+        padding:0 9px;
+        border-radius:999px;
+        background:#fff7ea;
+        border:1px solid #eadabc;
+        color:#846b38;
+        font-size:10.75px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .correction-upload-box input[type="file"]{
+        min-height:auto;
+        padding:10px 11px;
+        border:1px solid #d1dbd4;
+        border-radius:10px;
+        background:#fff;
+        font-size:12.45px;
+        font-weight:400;
+    }
+
+    .correction-footer{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:14px;
+        margin-top:14px;
+        padding-top:14px;
+        border-top:1px solid var(--cr-line-soft);
+    }
+
+    .correction-footer-note{
+        font-size:11.2px;
+        font-weight:400;
+        color:var(--cr-ink-soft);
+        line-height:1.82;
+        max-width:680px;
+    }
+
+    .correction-actions{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+        flex:0 0 auto;
+    }
+
+    .correction-actions .btn{
+        min-height:42px;
+        padding:0 16px;
+        font-size:12.55px;
+    }
+
+    .errorlist{
+        margin:2px 0 0;
+        padding:0;
+        list-style:none;
+        color:var(--cr-danger);
+        font-size:11.45px;
+        font-weight:400;
+        line-height:1.7;
+    }
+
+    @media (max-width: 1100px){
+        .correction-summary{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width: 980px){
+        .correction-info-item,
+        .correction-form-row,
+        .correction-form-row.col-4,
+        .correction-form-row.col-6{
+            grid-column:1 / -1;
+        }
+    }
+
+    @media (max-width: 860px){
+        .page-hero-inner{
+            flex-direction:column;
+            align-items:flex-start;
+            min-height:auto;
+            padding:16px;
+            gap:11px;
+        }
+
+        .page-hero::after{
+            inset-inline:16px;
+        }
+
+        .page-hero-title{
+            font-size:17.2px;
+        }
+
+        .page-hero-text{
+            font-size:11.85px;
+        }
+
+        .correction-body{
+            padding:16px;
+        }
+
+        .correction-section{
+            padding:14px;
+            border-radius:14px;
+        }
+
+        .correction-form-grid,
+        .correction-info-grid{
+            grid-template-columns:1fr;
+            gap:11px;
+        }
+
+        .correction-footer{
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .correction-actions{
+            justify-content:stretch;
+        }
+
+        .correction-actions .btn{
+            width:100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="page-hero">
+    <div class="page-hero-inner">
+        <div class="page-hero-main">
+            <div class="page-hero-kicker">طلب تصحيح إداري</div>
+            <h1 class="page-hero-title">{{ page_title }}</h1>
+            <p class="page-hero-text">
+                استخدم هذه الصفحة لرفع طلب تصحيح رسمي عند وجود خطأ في السجل المحفوظ، مع توضيح سبب التصحيح وإدخال البيانات الصحيحة المقترحة لإحالتها إلى الإدارة للمراجعة.
+            </p>
+
+            <div class="page-hero-meta">
+                <span class="page-hero-chip">مراجعة السجل الحالي</span>
+                <span class="page-hero-chip">توضيح سبب التصحيح</span>
+                <span class="page-hero-chip">إحالة للإدارة</span>
+            </div>
+        </div>
+
+        <div class="page-hero-action">
+            <a href="{% url 'staffdata:records_list' %}" class="page-hero-back">العودة إلى سجلاتي</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="correction-page">
+    <section class="correction-panel">
+        <div class="correction-body">
+            <div class="correction-intro">
+                <div class="correction-intro-top">
+                    <h2 class="correction-intro-title">نموذج طلب التصحيح</h2>
+                    <span class="correction-intro-badge">مراجعة إدارية</span>
+                </div>
+                <p class="correction-intro-text">
+                    راجع بيانات السجل الحالي أولًا، ثم أدخل البيانات الصحيحة المقترحة بدقة، وسيتم رفع الطلب للإدارة لدراسته واعتماد ما يلزم.
+                </p>
+            </div>
+
+            <div class="correction-summary">
+                <div class="correction-summary-item">
+                    <div class="correction-summary-index">01</div>
+                    <div class="correction-summary-copy">
+                        <strong>السجل الحالي</strong>
+                        <span>مراجعة البيانات المحفوظة قبل طلب التعديل</span>
+                    </div>
+                </div>
+
+                <div class="correction-summary-item">
+                    <div class="correction-summary-index">02</div>
+                    <div class="correction-summary-copy">
+                        <strong>سبب التصحيح</strong>
+                        <span>توضيح الخطأ القائم وسبب طلب المعالجة</span>
+                    </div>
+                </div>
+
+                <div class="correction-summary-item">
+                    <div class="correction-summary-index">03</div>
+                    <div class="correction-summary-copy">
+                        <strong>البيانات المقترحة</strong>
+                        <span>إدخال القيم الصحيحة المطلوبة للمراجعة</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="correction-tip">
+                <div class="correction-tip-icon">!</div>
+                <div>
+                    <strong>تنبيه إداري:</strong>
+                    يرجى رفع طلب التصحيح فقط عند الحاجة الفعلية، مع التأكد من صحة البيانات الجديدة المقترحة؛ لأن الطلب سيخضع للمراجعة والاعتماد من قبل الإدارة.
+                </div>
+            </div>
+
+            {% if form.non_field_errors %}
+                <div class="correction-alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+
+                {{ form.requested_performance_file.as_hidden|default_if_none:"" }}
+
+                <div class="correction-layout">
+                    <section class="correction-section">
+                        <div class="correction-section-head">
+                            <div class="correction-section-no">01</div>
+                            <h3 class="correction-section-title">بيانات السجل الحالي</h3>
+                            <p class="correction-section-subtitle">مراجعة مختصرة للبيانات الحالية المرتبطة بالسجل قبل طلب التصحيح.</p>
+                        </div>
+
+                        <div class="correction-info-grid">
+                            <div class="correction-info-item">
+                                <div class="correction-info-label">الاسم الحالي</div>
+                                <div class="correction-info-value">{{ record.full_name }}</div>
+                            </div>
+
+                            <div class="correction-info-item">
+                                <div class="correction-info-label">السجل المدني الحالي</div>
+                                <div class="correction-info-value">{{ record.national_id }}</div>
+                            </div>
+
+                            <div class="correction-info-item">
+                                <div class="correction-info-label">الصفة الحالية</div>
+                                <div class="correction-info-value">{{ record.role }}</div>
+                            </div>
+
+                            <div class="correction-info-item">
+                                <div class="correction-info-label">المرحلة الحالية</div>
+                                <div class="correction-info-value">{{ record.stage }}</div>
+                            </div>
+
+                            <div class="correction-info-item">
+                                <div class="correction-info-label">القطاع الحالي</div>
+                                <div class="correction-info-value">{{ record.sector }}</div>
+                            </div>
+
+                            <div class="correction-info-item">
+                                <div class="correction-info-label">نوع المدرسة الحالي</div>
+                                <div class="correction-info-value">{{ record.school_gender }}</div>
+                            </div>
+
+                            <div class="correction-info-item full">
+                                <div class="correction-info-label">اسم المدرسة الحالي</div>
+                                <div class="correction-info-value">{{ record.school_name }}</div>
+                            </div>
+
+                            {% if record.notes %}
+                            <div class="correction-info-item full">
+                                <div class="correction-info-label">الملاحظات الحالية</div>
+                                <div class="correction-info-value">{{ record.notes }}</div>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <section class="correction-section">
+                        <div class="correction-section-head">
+                            <div class="correction-section-no">02</div>
+                            <h3 class="correction-section-title">سبب طلب التصحيح</h3>
+                            <p class="correction-section-subtitle">اشرح الخطأ القائم والسبب الإداري لرفع الطلب.</p>
+                        </div>
+
+                        <div class="correction-form-grid">
+                            <div class="correction-form-row full">
+                                <div class="correction-form-label">
+                                    <label>{{ form.reason.label }}</label>
+                                    <span class="correction-form-tag">إجباري</span>
+                                </div>
+                                {{ form.reason }}
+                                <div class="correction-form-help">اكتب وصفًا واضحًا للخطأ الموجود وما الذي يحتاج إلى تصحيح.</div>
+                                {{ form.reason.errors }}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="correction-section">
+                        <div class="correction-section-head">
+                            <div class="correction-section-no">03</div>
+                            <h3 class="correction-section-title">البيانات الصحيحة المقترحة</h3>
+                            <p class="correction-section-subtitle">أدخل القيم الصحيحة التي تطلب اعتمادها بدل البيانات الحالية.</p>
+                        </div>
+
+                        <div class="correction-form-grid">
+                            <div class="correction-form-row full">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_full_name.label }}</label>
+                                    <span class="correction-form-tag">بيان رئيسي</span>
+                                </div>
+                                {{ form.requested_full_name }}
+                                <div class="correction-form-help">يكتب الاسم الصحيح كما هو معتمد في الوثائق الرسمية.</div>
+                                {{ form.requested_full_name.errors }}
+                            </div>
+
+                            <div class="correction-form-row col-6">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_national_id.label }}</label>
+                                    <span class="correction-form-tag">مطابقة رسمية</span>
+                                </div>
+                                {{ form.requested_national_id }}
+                                <div class="correction-form-help">يكتب رقم الهوية أو السجل المدني الصحيح دون مسافات إضافية.</div>
+                                {{ form.requested_national_id.errors }}
+                            </div>
+
+                            <div class="correction-form-row col-6">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_role.label }}</label>
+                                    <span class="correction-form-tag">صفة وظيفية</span>
+                                </div>
+                                {{ form.requested_role }}
+                                <div class="correction-form-help">حدد الصفة الوظيفية الصحيحة وفق المعتمد.</div>
+                                {{ form.requested_role.errors }}
+                            </div>
+
+                            <div class="correction-form-row col-4">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_stage.label }}</label>
+                                    <span class="correction-form-tag">مرحلة</span>
+                                </div>
+                                {{ form.requested_stage }}
+                                <div class="correction-form-help">اختر المرحلة التعليمية الصحيحة.</div>
+                                {{ form.requested_stage.errors }}
+                            </div>
+
+                            <div class="correction-form-row col-4">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_sector.label }}</label>
+                                    <span class="correction-form-tag">قطاع</span>
+                                </div>
+                                {{ form.requested_sector }}
+                                <div class="correction-form-help">حدد القطاع الصحيح المرتبط بالسجل.</div>
+                                {{ form.requested_sector.errors }}
+                            </div>
+
+                            <div class="correction-form-row col-4">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_school_gender.label }}</label>
+                                    <span class="correction-form-tag">تصنيف</span>
+                                </div>
+                                {{ form.requested_school_gender }}
+                                <div class="correction-form-help">حدد نوع المدرسة الصحيح.</div>
+                                {{ form.requested_school_gender.errors }}
+                            </div>
+
+                            <div class="correction-form-row full">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_school_name.label }}</label>
+                                    <span class="correction-form-tag">جهة تعليمية</span>
+                                </div>
+                                {{ form.requested_school_name }}
+                                <div class="correction-form-help">اكتب اسم المدرسة الصحيح كاملًا دون اختصار غير معتمد.</div>
+                                {{ form.requested_school_name.errors }}
+                            </div>
+
+                            <div class="correction-form-row full">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_notes.label }}</label>
+                                    <span class="correction-form-tag">اختياري</span>
+                                </div>
+                                {{ form.requested_notes }}
+                                <div class="correction-form-help">يمكن إضافة أي إيضاح مكمل يتعلق بطلب التصحيح.</div>
+                                {{ form.requested_notes.errors }}
+                            </div>
+
+                            {% if not form.requested_performance_file.is_hidden %}
+                            <div class="correction-form-row full">
+                                <div class="correction-form-label">
+                                    <label>{{ form.requested_performance_file.label }}</label>
+                                    <span class="correction-form-tag">مرفق بديل</span>
+                                </div>
+
+                                <div class="correction-upload-box">
+                                    <div class="correction-upload-head">
+                                        <div>
+                                            <p class="correction-upload-title">رفع مرفق بديل عند الحاجة</p>
+                                            <p class="correction-upload-subtitle">استخدم هذا الحقل إذا كان التصحيح يتعلق بالمرفق المرفوع سابقًا.</p>
+                                        </div>
+                                        <span class="correction-upload-badge">رفع مرفق</span>
+                                    </div>
+
+                                    {{ form.requested_performance_file }}
+                                    {{ form.requested_performance_file.errors }}
+                                </div>
+                            </div>
+                            {% else %}
+                                {{ form.requested_performance_file }}
+                            {% endif %}
+                        </div>
+                    </section>
+                </div>
+
+                <div class="correction-footer">
+                    <div class="correction-footer-note">
+                        بعد إرسال الطلب لا يتم تعديل السجل مباشرة، بل يحال الطلب إلى الإدارة للمراجعة والاعتماد أو الإرجاع أو الرفض حسب ما ينتهي إليه الفحص.
+                    </div>
+
+                    <div class="correction-actions">
+                        <a href="{% url 'staffdata:records_list' %}" class="btn btn-secondary">العودة إلى سجلاتي</a>
+                        <button type="submit" class="btn btn-primary">إرسال طلب التصحيح</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

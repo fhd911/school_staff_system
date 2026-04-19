@@ -1,0 +1,559 @@
+{% extends "base.html" %}
+{% block title %}سجلاتي{% endblock %}
+
+{% block extra_css %}
+<style>
+    .my-records-page{
+        display:flex;
+        flex-direction:column;
+        gap:16px;
+    }
+
+    .my-records-hero{
+        position:relative;
+        overflow:hidden;
+        border-radius:22px;
+        background:linear-gradient(135deg, rgba(24,74,55,.98) 0%, rgba(31,91,67,.95) 58%, rgba(42,111,82,.92) 100%);
+        border:1px solid rgba(255,255,255,.06);
+        box-shadow:var(--shadow-md);
+        color:#fff;
+    }
+
+    .my-records-hero::before{
+        content:"";
+        position:absolute;
+        inset:auto auto -80px -60px;
+        width:220px;
+        height:220px;
+        border-radius:50%;
+        background:radial-gradient(circle, rgba(255,255,255,.06), transparent 68%);
+    }
+
+    .my-records-hero::after{
+        content:"";
+        position:absolute;
+        inset:-90px -50px auto auto;
+        width:220px;
+        height:220px;
+        border-radius:50%;
+        background:radial-gradient(circle, rgba(194,159,90,.10), transparent 70%);
+    }
+
+    .my-records-hero-inner{
+        position:relative;
+        z-index:1;
+        display:grid;
+        grid-template-columns:1.15fr .85fr;
+        gap:18px;
+        padding:20px 22px;
+        align-items:stretch;
+    }
+
+    .my-records-hero-main{
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        gap:16px;
+    }
+
+    .my-records-title{
+        margin:0;
+        font-size:24px;
+        font-weight:700;
+        line-height:1.45;
+        color:#fff;
+    }
+
+    .my-records-text{
+        margin:8px 0 0;
+        max-width:760px;
+        font-size:12.9px;
+        line-height:1.95;
+        color:rgba(255,255,255,.92);
+    }
+
+    .my-records-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+    }
+
+    .my-records-actions .btn{
+        min-height:40px;
+        padding:0 15px;
+    }
+
+    .my-records-kpis{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+        align-self:stretch;
+    }
+
+    .my-records-kpi{
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.10);
+        border-radius:16px;
+        padding:14px;
+        min-height:96px;
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+    }
+
+    .my-records-kpi-label{
+        font-size:12px;
+        color:rgba(255,255,255,.82);
+        line-height:1.7;
+    }
+
+    .my-records-kpi-value{
+        font-size:30px;
+        font-weight:700;
+        line-height:1;
+        color:#fff;
+    }
+
+    .records-section{
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        border:1px solid var(--line);
+        border-radius:22px;
+        box-shadow:var(--shadow-sm);
+        overflow:hidden;
+    }
+
+    .records-section-head{
+        padding:16px 20px 12px;
+        border-bottom:1px solid #e8eeea;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f7faf8 100%);
+    }
+
+    .records-section-title{
+        margin:0;
+        font-size:19px;
+        font-weight:700;
+        line-height:1.5;
+        color:var(--ink);
+    }
+
+    .records-section-subtitle{
+        margin:5px 0 0;
+        font-size:12.3px;
+        line-height:1.85;
+        color:var(--muted);
+    }
+
+    .records-section-body{
+        padding:16px 20px 20px;
+    }
+
+    .quick-grid{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .quick-card{
+        border:1px solid var(--line);
+        border-radius:16px;
+        background:linear-gradient(180deg, #ffffff 0%, #f8faf8 100%);
+        padding:14px;
+    }
+
+    .quick-card-title{
+        margin:0 0 6px;
+        font-size:14px;
+        font-weight:700;
+        color:var(--ink);
+        line-height:1.6;
+    }
+
+    .quick-card-text{
+        margin:0 0 12px;
+        font-size:12.2px;
+        color:var(--muted);
+        line-height:1.8;
+    }
+
+    .soft-note{
+        padding:12px 14px;
+        border-radius:14px;
+        background:linear-gradient(180deg, #faf8f2 0%, #fffdf8 100%);
+        border:1px solid var(--gold-soft);
+        color:#6d5930;
+        font-size:12.2px;
+        line-height:1.85;
+    }
+
+    .records-tabs{
+        display:flex;
+        flex-wrap:wrap;
+        gap:10px;
+        margin-bottom:14px;
+    }
+
+    .tab-btn{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:12px;
+        border:1px solid var(--line);
+        background:#fff;
+        color:var(--ink);
+        font-size:12.5px;
+        font-weight:600;
+        cursor:pointer;
+        transition:.18s ease;
+    }
+
+    .tab-btn:hover{
+        background:#f8faf8;
+    }
+
+    .tab-btn.active{
+        background:linear-gradient(135deg, var(--primary) 0%, var(--primary-2) 100%);
+        color:#fff;
+        border-color:transparent;
+        box-shadow:0 8px 18px rgba(21,71,52,.12);
+    }
+
+    .tab-count{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:24px;
+        height:24px;
+        padding:0 7px;
+        border-radius:999px;
+        background:rgba(255,255,255,.14);
+        border:1px solid rgba(255,255,255,.14);
+        font-size:11px;
+        font-weight:700;
+    }
+
+    .tab-btn:not(.active) .tab-count{
+        background:#eef6f1;
+        border-color:#d4e6da;
+        color:#1f6546;
+    }
+
+    .tab-panel{
+        display:none;
+    }
+
+    .tab-panel.active{
+        display:block;
+    }
+
+    .table-meta{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+        gap:12px;
+        flex-wrap:wrap;
+        margin-bottom:14px;
+    }
+
+    .count-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:34px;
+        padding:0 14px;
+        border-radius:999px;
+        background:#f3f7f4;
+        border:1px solid #dde7e0;
+        color:var(--ink-2);
+        font-size:12.3px;
+        font-weight:500;
+    }
+
+    .school-name{
+        font-weight:700;
+        color:var(--ink);
+        line-height:1.75;
+        margin-bottom:2px;
+    }
+
+    .school-meta{
+        font-size:11.8px;
+        color:var(--muted);
+        line-height:1.75;
+    }
+
+    .record-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .record-actions .btn{
+        min-height:36px;
+        padding:0 13px;
+        font-size:12.1px;
+    }
+
+    .empty-note{
+        max-width:760px;
+        margin:0 auto;
+        text-align:center;
+    }
+
+    @media (max-width: 1100px){
+        .my-records-hero-inner{
+            grid-template-columns:1fr;
+        }
+
+        .quick-grid{
+            grid-template-columns:1fr 1fr;
+        }
+    }
+
+    @media (max-width: 760px){
+        .my-records-kpis,
+        .quick-grid{
+            grid-template-columns:1fr;
+        }
+
+        .my-records-actions .btn{
+            width:100%;
+        }
+
+        .tab-btn{
+            width:100%;
+            justify-content:space-between;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="my-records-hero">
+        <div class="my-records-hero-inner">
+            <div class="my-records-hero-main">
+                <div>
+                    <h1 class="my-records-title">سجلاتي المدخلة</h1>
+                    <p class="my-records-text">
+                        من هذه الصفحة يمكنك متابعة السجلات التي قمت بإدخالها بصفتك مشرفًا تربويًا، وإضافة سجلات جديدة فقط، بينما يتم تصحيح الأخطاء عبر طلبات تصحيح تُحال للإدارة للمراجعة.
+                    </p>
+                </div>
+
+                <div class="my-records-actions">
+                    <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">إضافة مدير/مديرة</a>
+                    <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">إضافة وكيل/وكيلة</a>
+                    <a href="{% url 'staffdata:my_correction_requests' %}" class="btn btn-soft">طلبات التصحيح</a>
+                    <a href="{% url 'staffdata:dashboard' %}" class="btn btn-soft">العودة للرئيسية</a>
+                </div>
+            </div>
+
+            <div class="my-records-kpis">
+                <div class="my-records-kpi">
+                    <div class="my-records-kpi-label">سجلات المديرين/المديرات</div>
+                    <div class="my-records-kpi-value">{{ principal_count }}</div>
+                </div>
+
+                <div class="my-records-kpi">
+                    <div class="my-records-kpi-label">سجلات الوكلاء/الوكيلات</div>
+                    <div class="my-records-kpi-value">{{ vice_count }}</div>
+                </div>
+
+                <div class="my-records-kpi">
+                    <div class="my-records-kpi-label">إجمالي السجلات المدخلة</div>
+                    <div class="my-records-kpi-value">{{ total_count }}</div>
+                </div>
+
+                <div class="my-records-kpi">
+                    <div class="my-records-kpi-label">طلبات التصحيح المفتوحة</div>
+                    <div class="my-records-kpi-value">{{ open_correction_requests_count }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="my-records-page">
+
+    <section class="records-section">
+        <div class="records-section-head">
+            <h2 class="records-section-title">إجراءات سريعة</h2>
+            <p class="records-section-subtitle">وصول مباشر إلى أهم الإجراءات المرتبطة بإدخال السجلات ومتابعة طلبات التصحيح.</p>
+        </div>
+        <div class="records-section-body">
+            <div class="quick-grid">
+                <div class="quick-card">
+                    <h3 class="quick-card-title">إضافة سجل مدير/مديرة</h3>
+                    <p class="quick-card-text">إنشاء سجل جديد يتضمن بيانات المدير أو المديرة مع رفع استمارة الأداء الوظيفي.</p>
+                    <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">فتح الصفحة</a>
+                </div>
+
+                <div class="quick-card">
+                    <h3 class="quick-card-title">إضافة سجل وكيل/وكيلة</h3>
+                    <p class="quick-card-text">إنشاء سجل جديد للوكيل أو الوكيلة بالبيانات الأساسية المعتمدة داخل النظام.</p>
+                    <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">فتح الصفحة</a>
+                </div>
+
+                <div class="quick-card">
+                    <h3 class="quick-card-title">تنبيه مهم</h3>
+                    <p class="quick-card-text">هذه الصفحة تعرض فقط السجلات المرتبطة بحسابك الحالي كمشرف تربوي.</p>
+                    <div class="soft-note">بعد حفظ السجل لا يمكن للمشرف تعديله أو حذفه مباشرة، وعند وجود خطأ يتم رفع طلب تصحيح رسمي للإدارة.</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="records-section">
+        <div class="records-section-head">
+            <h2 class="records-section-title">السجلات الحالية</h2>
+            <p class="records-section-subtitle">عرض منظم لسجلاتك الحالية للمتابعة ورفع طلبات التصحيح عند الحاجة.</p>
+        </div>
+
+        <div class="records-section-body">
+            <div class="records-tabs">
+                <button type="button" class="tab-btn active" data-tab="principals-tab">
+                    سجلات المديرين/المديرات
+                    <span class="tab-count">{{ principal_count }}</span>
+                </button>
+
+                <button type="button" class="tab-btn" data-tab="vices-tab">
+                    سجلات الوكلاء/الوكيلات
+                    <span class="tab-count">{{ vice_count }}</span>
+                </button>
+            </div>
+
+            <div id="principals-tab" class="tab-panel active">
+                <div class="table-meta">
+                    <div class="muted">عدد سجلات المديرين/المديرات الحالية</div>
+                    <span class="count-chip">{{ principal_count }} سجل</span>
+                </div>
+
+                {% if principal_records %}
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>السجل المدني</th>
+                                    <th>المدرسة</th>
+                                    <th>المرحلة</th>
+                                    <th>الصفة</th>
+                                    <th>الاستمارة</th>
+                                    <th>تاريخ الإضافة</th>
+                                    <th>طلب تصحيح</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in principal_records %}
+                                <tr>
+                                    <td>{{ item.full_name }}</td>
+                                    <td>{{ item.national_id }}</td>
+                                    <td>
+                                        <div class="school-name">{{ item.school_name }}</div>
+                                        <div class="school-meta">{{ item.sector }} — {{ item.school_gender }}</div>
+                                    </td>
+                                    <td><span class="badge badge-muted">{{ item.stage }}</span></td>
+                                    <td><span class="badge badge-primary">{{ item.role }}</span></td>
+                                    <td>
+                                        {% if item.performance_file %}
+                                            <a href="{{ item.performance_file.url }}" target="_blank" class="file-link">عرض الملف</a>
+                                        {% else %}
+                                            <span class="muted">لا يوجد</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="muted">{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        <div class="record-actions">
+                                            <a href="{% url 'staffdata:principal_request_correction' item.pk %}" class="btn btn-soft">طلب تصحيح</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state empty-note">
+                        لا توجد لديك سجلات مديرين/مديرات حتى الآن. يمكنك البدء بإضافة أول سجل من خلال زر
+                        <strong>إضافة مدير/مديرة</strong>.
+                    </div>
+                {% endif %}
+            </div>
+
+            <div id="vices-tab" class="tab-panel">
+                <div class="table-meta">
+                    <div class="muted">عدد سجلات الوكلاء/الوكيلات الحالية</div>
+                    <span class="count-chip">{{ vice_count }} سجل</span>
+                </div>
+
+                {% if vice_records %}
+                    <div class="table-wrap">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>الاسم</th>
+                                    <th>السجل المدني</th>
+                                    <th>المدرسة</th>
+                                    <th>المرحلة</th>
+                                    <th>الصفة</th>
+                                    <th>تاريخ الإضافة</th>
+                                    <th>طلب تصحيح</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in vice_records %}
+                                <tr>
+                                    <td>{{ item.full_name }}</td>
+                                    <td>{{ item.national_id }}</td>
+                                    <td>
+                                        <div class="school-name">{{ item.school_name }}</div>
+                                        <div class="school-meta">{{ item.sector }} — {{ item.school_gender }}</div>
+                                    </td>
+                                    <td><span class="badge badge-muted">{{ item.stage }}</span></td>
+                                    <td><span class="badge badge-primary">{{ item.role }}</span></td>
+                                    <td class="muted">{{ item.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        <div class="record-actions">
+                                            <a href="{% url 'staffdata:vice_request_correction' item.pk %}" class="btn btn-soft">طلب تصحيح</a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="empty-state empty-note">
+                        لا توجد لديك سجلات وكلاء/وكيلات حتى الآن. يمكنك البدء بإضافة أول سجل من خلال زر
+                        <strong>إضافة وكيل/وكيلة</strong>.
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    (function () {
+        const buttons = document.querySelectorAll(".tab-btn");
+        const panels = document.querySelectorAll(".tab-panel");
+
+        buttons.forEach((button) => {
+            button.addEventListener("click", function () {
+                const targetId = this.getAttribute("data-tab");
+
+                buttons.forEach((btn) => btn.classList.remove("active"));
+                panels.forEach((panel) => panel.classList.remove("active"));
+
+                this.classList.add("active");
+                document.getElementById(targetId).classList.add("active");
+            });
+        });
+    })();
+</script>
+{% endblock %}

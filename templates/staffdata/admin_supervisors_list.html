@@ -1,0 +1,690 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .supervisors-page{
+        --sp-surface:#ffffff;
+        --sp-surface-2:#fbfcfb;
+        --sp-surface-3:#f7faf8;
+
+        --sp-line:#d9e3dc;
+        --sp-line-2:#e7ede9;
+
+        --sp-ink:#1c2f27;
+        --sp-ink-2:#4d6358;
+        --sp-muted:#7e8d84;
+
+        --sp-primary:#184838;
+        --sp-primary-2:#245a44;
+        --sp-primary-3:#2f7055;
+
+        --sp-good:#1f6a42;
+        --sp-good-bg:#edf7f0;
+
+        --sp-warn:#8a6520;
+        --sp-warn-bg:#fcf5e8;
+
+        --sp-idle:#63756b;
+        --sp-idle-bg:#f3f6f4;
+
+        --sp-shadow-sm:0 8px 18px rgba(18,34,27,.035);
+        --sp-shadow-md:0 18px 38px rgba(18,34,27,.08);
+
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .supervisors-page .hero{
+        position:relative;
+        overflow:hidden;
+        padding:20px 22px 18px;
+        margin-bottom:0;
+        border-radius:26px;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 26%),
+            linear-gradient(135deg, var(--sp-primary) 0%, var(--sp-primary-2) 56%, var(--sp-primary-3) 100%);
+        box-shadow:var(--sp-shadow-md);
+        color:#fff;
+    }
+
+    .supervisors-page .hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:22px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.18) 18%,
+            rgba(221,196,144,.7) 50%,
+            rgba(221,196,144,.18) 82%,
+            transparent 100%
+        );
+    }
+
+    .sp-hero{
+        position:relative;
+        z-index:1;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .sp-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.8px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .supervisors-page .hero-title{
+        margin:0 0 7px;
+        font-size:26px;
+        line-height:1.28;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .supervisors-page .hero-text{
+        margin:0;
+        max-width:860px;
+        font-size:12.4px;
+        line-height:1.9;
+        color:rgba(255,255,255,.88);
+        font-weight:400;
+    }
+
+    .sp-hero-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .sp-hero-actions .btn{
+        min-height:38px;
+        padding:0 14px;
+        border-radius:11px;
+        font-size:11.9px;
+        font-weight:600;
+    }
+
+    .sp-kpis{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .sp-kpi{
+        min-height:90px;
+        padding:14px;
+        border-radius:16px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.11);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        backdrop-filter:blur(4px);
+    }
+
+    .sp-kpi-label{
+        font-size:11px;
+        line-height:1.75;
+        color:rgba(255,255,255,.8);
+        font-weight:500;
+    }
+
+    .sp-kpi-value{
+        font-size:24px;
+        line-height:1;
+        color:#fff;
+        font-weight:700;
+        margin-top:8px;
+    }
+
+    .section{
+        padding:14px;
+        border-radius:22px;
+        background:linear-gradient(180deg, var(--sp-surface) 0%, var(--sp-surface-2) 100%);
+        border:1px solid var(--sp-line);
+        box-shadow:var(--sp-shadow-sm);
+    }
+
+    .section-head{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:16px;
+        margin-bottom:12px;
+    }
+
+    .section-title{
+        margin:0;
+        font-size:18px;
+        line-height:1.3;
+        color:var(--sp-ink);
+        font-weight:700;
+    }
+
+    .section-subtitle{
+        margin:0;
+        font-size:11.2px;
+        line-height:1.8;
+        color:var(--sp-muted);
+        font-weight:400;
+    }
+
+    .section-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:26px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--sp-line-2);
+        color:var(--sp-ink-2);
+        font-size:10px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .filters-form{
+        display:grid;
+        grid-template-columns:1.4fr .9fr .9fr auto auto;
+        gap:10px;
+        align-items:end;
+    }
+
+    .field{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+    }
+
+    .field label{
+        font-size:11px;
+        color:var(--sp-ink-2);
+        font-weight:600;
+        line-height:1.6;
+    }
+
+    .field input,
+    .field select{
+        width:100%;
+        min-height:42px;
+        padding:10px 12px;
+        border:1px solid #cad7cf;
+        border-radius:11px;
+        background:#fff;
+        color:var(--sp-ink);
+        font-size:12.5px;
+        font-weight:400;
+        outline:none;
+        transition:border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .field input:focus,
+    .field select:focus{
+        border-color:#9fb6aa;
+        box-shadow:0 0 0 4px rgba(24,72,56,.06);
+    }
+
+    .filters-actions{
+        display:flex;
+        gap:8px;
+        flex-wrap:wrap;
+    }
+
+    .filters-actions .btn{
+        min-height:42px;
+        padding:0 14px;
+        font-size:12px;
+        border-radius:11px;
+    }
+
+    .records-shell{
+        border:1px solid var(--sp-line);
+        border-radius:18px;
+        overflow:hidden;
+        background:#fff;
+        box-shadow:var(--sp-shadow-sm);
+    }
+
+    .records-table{
+        width:100%;
+        border-collapse:collapse;
+    }
+
+    .records-table thead th{
+        background:#f8faf8;
+        color:var(--sp-ink-2);
+        font-size:11px;
+        font-weight:700;
+        padding:12px 12px;
+        border-bottom:1px solid var(--sp-line);
+        white-space:nowrap;
+    }
+
+    .records-table tbody td{
+        padding:12px 12px;
+        border-bottom:1px solid #edf1ee;
+        font-size:11.8px;
+        color:var(--sp-ink-2);
+        vertical-align:middle;
+    }
+
+    .records-table tbody tr:last-child td{
+        border-bottom:none;
+    }
+
+    .records-table td strong{
+        color:var(--sp-ink);
+        font-weight:700;
+    }
+
+    .supervisor-cell{
+        min-width:220px;
+    }
+
+    .supervisor-name{
+        margin:0;
+        font-size:12.8px;
+        line-height:1.5;
+        color:var(--sp-ink);
+        font-weight:700;
+    }
+
+    .supervisor-meta{
+        margin:2px 0 0;
+        font-size:10px;
+        line-height:1.7;
+        color:var(--sp-muted);
+    }
+
+    .count-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:34px;
+        min-height:28px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--sp-line-2);
+        color:var(--sp-primary);
+        font-size:10.8px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .status-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 10px;
+        border-radius:999px;
+        font-size:10px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .status-chip.good{
+        background:var(--sp-good-bg);
+        color:var(--sp-good);
+        border:1px solid #d9eadf;
+    }
+
+    .status-chip.warn{
+        background:var(--sp-warn-bg);
+        color:var(--sp-warn);
+        border:1px solid #ead9b5;
+    }
+
+    .status-chip.idle{
+        background:var(--sp-idle-bg);
+        color:var(--sp-idle);
+        border:1px solid #dde5df;
+    }
+
+    .table-actions{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        flex-wrap:wrap;
+    }
+
+    .table-link{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 10px;
+        border-radius:10px;
+        border:1px solid var(--sp-line);
+        background:#fff;
+        color:var(--sp-primary);
+        font-size:10.4px;
+        font-weight:600;
+        text-decoration:none;
+        white-space:nowrap;
+    }
+
+    .table-link:hover{
+        border-color:rgba(24,72,56,.16);
+        color:var(--sp-primary);
+        background:#f8fbf9;
+    }
+
+    .empty-state{
+        border:1px dashed #d8e2dc;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f8faf8 100%);
+        border-radius:16px;
+        padding:24px 16px;
+        text-align:center;
+        color:var(--sp-muted);
+        font-size:12px;
+        line-height:1.9;
+    }
+
+    .pagination-wrap{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        margin-top:12px;
+        flex-wrap:wrap;
+    }
+
+    .pagination-note{
+        color:var(--sp-muted);
+        font-size:11px;
+        line-height:1.7;
+    }
+
+    .pagination{
+        display:flex;
+        align-items:center;
+        gap:6px;
+        flex-wrap:wrap;
+    }
+
+    .pagination a,
+    .pagination span{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:34px;
+        min-height:34px;
+        padding:0 10px;
+        border-radius:10px;
+        border:1px solid var(--sp-line);
+        background:#fff;
+        color:var(--sp-ink-2);
+        font-size:11px;
+        font-weight:600;
+        text-decoration:none;
+    }
+
+    .pagination .current{
+        background:#edf4f0;
+        color:var(--sp-primary);
+        border-color:#d9e6de;
+    }
+
+    @media (max-width: 1180px){
+        .sp-kpis{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+
+        .filters-form{
+            grid-template-columns:1fr 1fr;
+        }
+
+        .filters-actions{
+            grid-column:1 / -1;
+        }
+    }
+
+    @media (max-width: 760px){
+        .supervisors-page .hero{
+            padding:16px;
+            border-radius:22px;
+        }
+
+        .supervisors-page .hero-title{
+            font-size:22px;
+        }
+
+        .sp-kpis,
+        .filters-form{
+            grid-template-columns:1fr;
+        }
+
+        .section{
+            padding:12px;
+        }
+
+        .records-shell{
+            overflow-x:auto;
+        }
+
+        .records-table{
+            min-width:1180px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="sp-hero">
+        <div>
+            <span class="sp-kicker">استعراض المشرفين</span>
+            <h1 class="hero-title">{{ page_title }}</h1>
+            <p class="hero-text">
+                واجهة تنفيذية لمراجعة المشرفين ومدخلاتهم، مع إبراز حجم النشاط، النواقص، وطلبات التصحيح
+                لتسهيل المتابعة الإدارية واتخاذ القرار بسرعة ووضوح.
+            </p>
+
+            <div class="sp-hero-actions">
+                <a href="{% url 'staffdata:admin_overview' %}" class="btn btn-secondary">العودة للوحة الإدارة</a>
+                <a href="{% url 'staffdata:admin_principals_list' %}" class="btn btn-soft">سجلات المديرين</a>
+                <a href="{% url 'staffdata:admin_vices_list' %}" class="btn btn-soft">سجلات الوكلاء</a>
+            </div>
+        </div>
+
+        <div class="sp-kpis">
+            <div class="sp-kpi">
+                <div class="sp-kpi-label">إجمالي المشرفين في النتائج</div>
+                <div class="sp-kpi-value">{{ total_count }}</div>
+            </div>
+
+            <div class="sp-kpi">
+                <div class="sp-kpi-label">عدد المشرفين المعروضين في الصفحة</div>
+                <div class="sp-kpi-value">{{ page_obj.object_list|length }}</div>
+            </div>
+
+            <div class="sp-kpi">
+                <div class="sp-kpi-label">الترتيب الحالي</div>
+                <div class="sp-kpi-value">
+                    {% if current_sort == "latest" %}
+                        الأحدث
+                    {% elif current_sort == "activity" %}
+                        النشاط
+                    {% elif current_sort == "corrections" %}
+                        التصحيح
+                    {% else %}
+                        الأولوية
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="sp-kpi">
+                <div class="sp-kpi-label">القطاع المحدد</div>
+                <div class="sp-kpi-value">{{ current_sector|default:"الكل" }}</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="supervisors-page">
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">فلاتر الاستعراض</h2>
+                <p class="section-subtitle">ابحث وفلتر ورتب النتائج للوصول السريع إلى المشرف المطلوب.</p>
+            </div>
+            <span class="section-badge">بحث إداري</span>
+        </div>
+
+        <form method="get" class="filters-form">
+            <div class="field">
+                <label for="q">بحث</label>
+                <input
+                    type="text"
+                    id="q"
+                    name="q"
+                    value="{{ current_q }}"
+                    placeholder="الاسم، الهوية، الجوال، البريد"
+                >
+            </div>
+
+            <div class="field">
+                <label for="sector">القطاع</label>
+                <select id="sector" name="sector">
+                    <option value="">كل القطاعات</option>
+                    {% for item in sector_choices %}
+                        <option value="{{ item }}" {% if item == current_sector %}selected{% endif %}>{{ item }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="field">
+                <label for="sort">الترتيب</label>
+                <select id="sort" name="sort">
+                    <option value="priority" {% if current_sort == "priority" %}selected{% endif %}>حسب الأولوية</option>
+                    <option value="activity" {% if current_sort == "activity" %}selected{% endif %}>حسب النشاط</option>
+                    <option value="latest" {% if current_sort == "latest" %}selected{% endif %}>حسب آخر نشاط</option>
+                    <option value="corrections" {% if current_sort == "corrections" %}selected{% endif %}>حسب طلبات التصحيح</option>
+                </select>
+            </div>
+
+            <div class="filters-actions">
+                <button type="submit" class="btn btn-primary">تطبيق</button>
+                <a href="{% url 'staffdata:admin_supervisors_list' %}" class="btn btn-secondary">إعادة تعيين</a>
+            </div>
+        </form>
+    </section>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">قائمة المشرفين</h2>
+                <p class="section-subtitle">عرض تفصيلي للمشرفين مع مؤشرات الإدخال والمتابعة والحالة العامة.</p>
+            </div>
+            <span class="section-badge">{{ total_count }} نتيجة</span>
+        </div>
+
+        {% if supervisors_rows %}
+            <div class="records-shell">
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>المشرف</th>
+                            <th>القطاع</th>
+                            <th>المديرون</th>
+                            <th>الوكلاء</th>
+                            <th>الإجمالي</th>
+                            <th>المرفقات</th>
+                            <th>النواقص</th>
+                            <th>طلبات التصحيح</th>
+                            <th>آخر نشاط</th>
+                            <th>الحالة</th>
+                            <th>الإجراء</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in supervisors_rows %}
+                        <tr>
+                            <td class="supervisor-cell">
+                                <p class="supervisor-name">{{ row.full_name }}</p>
+                                <p class="supervisor-meta">
+                                    الهوية: {{ row.national_id|default:"—" }}
+                                    <span> - </span>
+                                    الجوال: {{ row.mobile|default:"—" }}
+                                </p>
+                            </td>
+                            <td>{{ row.sector|default:"—" }}</td>
+                            <td><span class="count-badge">{{ row.principals_count }}</span></td>
+                            <td><span class="count-badge">{{ row.vices_count }}</span></td>
+                            <td><span class="count-badge">{{ row.total_count }}</span></td>
+                            <td><span class="count-badge">{{ row.attachments_count }}</span></td>
+                            <td><span class="count-badge">{{ row.missing_attachments }}</span></td>
+                            <td><span class="count-badge">{{ row.pending_corrections_count }}</span></td>
+                            <td>
+                                {% if row.last_activity %}
+                                    {{ row.last_activity|date:"Y-m-d H:i" }}
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="status-chip {{ row.status_class }}">
+                                    {{ row.status_label }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="table-actions">
+                                    <a href="{% url 'staffdata:admin_supervisor_detail' row.id %}" class="table-link">استعراض</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <div class="pagination-wrap">
+                <div class="pagination-note">
+                    الصفحة {{ page_obj.number }} من {{ page_obj.paginator.num_pages }}
+                </div>
+
+                <div class="pagination">
+                    {% if page_obj.has_previous %}
+                        <a href="?page={{ page_obj.previous_page_number }}&q={{ current_q|urlencode }}&sector={{ current_sector|urlencode }}&sort={{ current_sort|urlencode }}">السابق</a>
+                    {% endif %}
+
+                    <span class="current">{{ page_obj.number }}</span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}&q={{ current_q|urlencode }}&sector={{ current_sector|urlencode }}&sort={{ current_sort|urlencode }}">التالي</a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                لا توجد نتائج مطابقة للبحث أو الفلاتر الحالية.
+            </div>
+        {% endif %}
+    </section>
+
+</div>
+{% endblock %}
