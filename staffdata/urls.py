@@ -54,9 +54,24 @@ urlpatterns = [
         name="admin_supervisors_list",
     ),
     path(
+        "management/supervisors/import/",
+        views.admin_import_supervisors_view,
+        name="admin_import_supervisors",
+    ),
+    path(
+        "management/supervisors/template/",
+        views.admin_download_supervisors_template_view,
+        name="admin_download_supervisors_template",
+    ),
+    path(
         "management/supervisors/<int:supervisor_id>/",
         views.admin_supervisor_detail_view,
         name="admin_supervisor_detail",
+    ),
+    path(
+        "management/supervisors/<int:supervisor_id>/edit/",
+        views.admin_supervisor_update_view,
+        name="admin_supervisor_update",
     ),
     path(
         "management/supervisors/<int:supervisor_id>/reset-account/",

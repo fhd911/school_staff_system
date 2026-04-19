@@ -1,5 +1,7 @@
 from django import forms
 
+from accounts.models import Supervisor
+
 from .models import CorrectionRequest, PrincipalRecord, VicePrincipalRecord
 
 
@@ -33,6 +35,17 @@ class StyledModelForm(forms.ModelForm):
 
             if isinstance(field.widget, self.text_input_types):
                 field.widget.attrs.setdefault("autocomplete", "off")
+
+
+def normalize_mobile_value(value):
+    digits = "".join(filter(str.isdigit, str(value or "").strip()))
+
+    if digits.startswith("966") and len(digits) == 12:
+        digits = "0" + digits[3:]
+    elif digits.startswith("5") and len(digits) == 9:
+        digits = "0" + digits
+
+    return digits
 
 
 class BaseStaffRecordForm(StyledModelForm):
@@ -122,15 +135,7 @@ class BaseStaffRecordForm(StyledModelForm):
         return "".join(filter(str.isdigit, value or ""))
 
     def clean_mobile(self):
-        value = self.cleaned_data.get("mobile", "")
-        digits = "".join(filter(str.isdigit, value or ""))
-
-        if digits.startswith("966") and len(digits) == 12:
-            digits = "0" + digits[3:]
-        elif digits.startswith("5") and len(digits) == 9:
-            digits = "0" + digits
-
-        return digits
+        return normalize_mobile_value(self.cleaned_data.get("mobile", ""))
 
 
 class PrincipalRecordForm(BaseStaffRecordForm):
@@ -248,15 +253,7 @@ class CorrectionRequestForm(StyledModelForm):
         return "".join(filter(str.isdigit, value or ""))
 
     def clean_requested_mobile(self):
-        value = self.cleaned_data.get("requested_mobile", "")
-        digits = "".join(filter(str.isdigit, value or ""))
-
-        if digits.startswith("966") and len(digits) == 12:
-            digits = "0" + digits[3:]
-        elif digits.startswith("5") and len(digits) == 9:
-            digits = "0" + digits
-
-        return digits
+        return normalize_mobile_value(self.cleaned_data.get("requested_mobile", ""))
 
 
 class CorrectionDecisionForm(forms.Form):
@@ -286,3 +283,123 @@ class CorrectionDecisionForm(forms.Form):
             }
         ),
     )
+
+
+class SupervisorImportForm(forms.Form):
+    file = forms.FileField(
+        label="ملف المشرفين",
+        help_text="يرفع ملف Excel بصيغة .xlsx ويحتوي على الأعمدة: full_name, national_id, mobile, email, is_active",
+        widget=forms.ClearableFileInput(
+            attrs={
+                "class": "form-control",
+                "accept": ".xlsx",
+            }
+        ),
+    )
+
+    update_existing = forms.BooleanField(
+        label="تحديث المشرفين الموجودين مسبقًا",
+        required=False,
+        initial=True,
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+    )
+
+    reset_existing_accounts = forms.BooleanField(
+        label="إعادة تهيئة الحسابات الموجودة أثناء التحديث",
+        required=False,
+        initial=False,
+        widget=forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        help_text="عند تفعيل هذا الخيار سيتم إلغاء كلمة المرور الحالية وإرجاع الحساب إلى حالة الدخول الأول.",
+    )
+
+    def clean_file(self):
+        file = self.cleaned_data.get("file")
+        if not file:
+            return file
+
+        name = (file.name or "").lower()
+        if not name.endswith(".xlsx"):
+            raise forms.ValidationError("يرجى رفع ملف Excel بصيغة .xlsx فقط.")
+
+        return file
+
+
+class SupervisorAdminUpdateForm(StyledModelForm):
+    class Meta:
+        model = Supervisor
+        fields = [
+            "full_name",
+            "national_id",
+            "mobile",
+            "email",
+            "is_active",
+        ]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if "full_name" in self.fields:
+            self.fields["full_name"].widget.attrs.setdefault("placeholder", "الاسم الكامل للمشرف")
+            self.fields["full_name"].help_text = "يكتب الاسم كما هو معتمد إداريًا."
+
+        if "national_id" in self.fields:
+            self.fields["national_id"].widget.attrs.update({
+                "maxlength": "10",
+                "inputmode": "numeric",
+                "placeholder": "10 أرقام",
+                "readonly": "readonly",
+            })
+            self.fields["national_id"].disabled = True
+            self.fields["national_id"].help_text = "السجل المدني معروض للمراجعة فقط ولا يحرر من هذه الصفحة."
+
+        if "mobile" in self.fields:
+            self.fields["mobile"].widget.attrs.update({
+                "maxlength": "14",
+                "inputmode": "numeric",
+                "placeholder": "05XXXXXXXX",
+            })
+            self.fields["mobile"].help_text = "سيستخدم هذا الرقم في الدخول الأول إذا كان الحساب غير مفعّل."
+
+        if "email" in self.fields:
+            self.fields["email"].required = False
+            self.fields["email"].widget.attrs.setdefault("placeholder", "example@email.com")
+
+        if "is_active" in self.fields:
+            self.fields["is_active"].required = False
+
+        self.order_fields([
+            name for name in [
+                "full_name",
+                "national_id",
+                "mobile",
+                "email",
+                "is_active",
+            ]
+            if name in self.fields
+        ])
+
+    def clean_national_id(self):
+        if self.instance and self.instance.pk:
+            return self.instance.national_id
+        value = self.cleaned_data.get("national_id", "")
+        return "".join(filter(str.isdigit, value or ""))
+
+    def clean_mobile(self):
+        digits = normalize_mobile_value(self.cleaned_data.get("mobile", ""))
+
+        if not digits:
+            raise forms.ValidationError("رقم الجوال مطلوب.")
+
+        if not (digits.startswith("05") and len(digits) == 10):
+            raise forms.ValidationError("رقم الجوال يجب أن يكون بصيغة صحيحة مثل 05XXXXXXXX.")
+
+        return digits
+
+    def clean_email(self):
+        return (self.cleaned_data.get("email") or "").strip()
+
+    def clean_full_name(self):
+        value = (self.cleaned_data.get("full_name") or "").strip()
+        if not value:
+            raise forms.ValidationError("اسم المشرف مطلوب.")
+        return value

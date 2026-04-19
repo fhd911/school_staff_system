@@ -1,0 +1,763 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .import-page{
+        --ai-surface:#ffffff;
+        --ai-surface-2:#fbfcfb;
+        --ai-surface-3:#f7faf8;
+
+        --ai-line:#d9e3dc;
+        --ai-line-2:#e8eeea;
+
+        --ai-ink:#1c2f27;
+        --ai-ink-2:#496055;
+        --ai-muted:#7a8b82;
+
+        --ai-primary:#164736;
+        --ai-primary-2:#235943;
+        --ai-primary-3:#2e6d54;
+
+        --ai-gold:#c6a25c;
+        --ai-gold-soft:#efe2bf;
+        --ai-gold-bg:#fcf8ee;
+
+        --ai-good:#1f6a42;
+        --ai-good-bg:#edf7f0;
+
+        --ai-warn:#8a6421;
+        --ai-warn-bg:#fcf5e7;
+
+        --ai-danger:#8c3a3a;
+        --ai-danger-bg:#fff2f2;
+
+        --ai-shadow-sm:0 8px 18px rgba(18,34,27,.035);
+        --ai-shadow-md:0 18px 38px rgba(18,34,27,.08);
+
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .import-page .hero{
+        position:relative;
+        overflow:hidden;
+        padding:20px 22px 18px;
+        margin-bottom:0;
+        border-radius:26px;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 26%),
+            linear-gradient(135deg, var(--ai-primary) 0%, var(--ai-primary-2) 56%, var(--ai-primary-3) 100%);
+        box-shadow:var(--ai-shadow-md);
+        color:#fff;
+    }
+
+    .import-page .hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:22px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.18) 18%,
+            rgba(221,196,144,.7) 50%,
+            rgba(221,196,144,.18) 82%,
+            transparent 100%
+        );
+    }
+
+    .import-hero{
+        position:relative;
+        z-index:1;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .import-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:18px;
+    }
+
+    .import-copy{
+        max-width:980px;
+    }
+
+    .import-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.9px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .import-page .hero-title{
+        margin:0 0 7px;
+        font-size:26px;
+        line-height:1.28;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .import-page .hero-text{
+        margin:0;
+        max-width:900px;
+        font-size:12.45px;
+        line-height:1.9;
+        color:rgba(255,255,255,.88);
+        font-weight:400;
+    }
+
+    .import-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .import-actions .btn{
+        min-height:38px;
+        padding:0 14px;
+        border-radius:11px;
+        font-size:11.9px;
+        font-weight:600;
+    }
+
+    .import-template-btn{
+        box-shadow:0 8px 18px rgba(18,34,27,.06);
+    }
+
+    .import-grid{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .import-kpi{
+        min-height:92px;
+        padding:14px 14px 13px;
+        border-radius:16px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.11);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        backdrop-filter:blur(4px);
+    }
+
+    .import-kpi.highlight{
+        background:rgba(255,255,255,.12);
+        border-color:rgba(255,255,255,.18);
+    }
+
+    .import-kpi-label{
+        font-size:11px;
+        line-height:1.75;
+        color:rgba(255,255,255,.8);
+        font-weight:500;
+    }
+
+    .import-kpi-value{
+        font-size:23px;
+        line-height:1;
+        color:#fff;
+        font-weight:700;
+        margin-top:8px;
+    }
+
+    .section{
+        padding:14px;
+        border-radius:22px;
+        background:linear-gradient(180deg, var(--ai-surface) 0%, var(--ai-surface-2) 100%);
+        border:1px solid var(--ai-line);
+        box-shadow:var(--ai-shadow-sm);
+    }
+
+    .section-head{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:16px;
+        margin-bottom:12px;
+    }
+
+    .section-title{
+        margin:0;
+        font-size:18px;
+        line-height:1.28;
+        color:var(--ai-ink);
+        font-weight:700;
+    }
+
+    .section-subtitle{
+        margin:0;
+        font-size:11.2px;
+        line-height:1.8;
+        color:var(--ai-muted);
+        font-weight:400;
+    }
+
+    .section-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:26px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--ai-line-2);
+        color:var(--ai-ink-2);
+        font-size:10.1px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .workspace{
+        display:grid;
+        grid-template-columns:minmax(0, 1.45fr) minmax(320px, .85fr);
+        gap:12px;
+        align-items:start;
+    }
+
+    .import-card{
+        padding:14px;
+        border-radius:18px;
+        border:1px solid var(--ai-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .import-note{
+        padding:12px 13px;
+        border-radius:14px;
+        border:1px solid var(--ai-gold-soft);
+        background:linear-gradient(180deg, var(--ai-gold-bg) 0%, #fffdf9 100%);
+        color:#6d5930;
+        font-size:11.4px;
+        line-height:1.9;
+        margin-bottom:12px;
+    }
+
+    .import-note strong{
+        color:#5e4d24;
+        font-weight:700;
+    }
+
+    .import-form{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .field{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+    }
+
+    .field label{
+        font-size:11.5px;
+        color:var(--ai-ink-2);
+        font-weight:700;
+        line-height:1.6;
+    }
+
+    .field input[type="file"],
+    .field input[type="text"],
+    .field select,
+    .field textarea{
+        width:100%;
+        min-height:44px;
+        padding:10px 12px;
+        border:1px solid #cad7cf;
+        border-radius:11px;
+        background:#fff;
+        color:var(--ai-ink);
+        font-size:12.5px;
+        font-weight:400;
+        outline:none;
+        transition:border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .field input[type="file"]:focus,
+    .field input[type="text"]:focus,
+    .field select:focus,
+    .field textarea:focus{
+        border-color:#9fb6aa;
+        box-shadow:0 0 0 4px rgba(22,71,54,.06);
+    }
+
+    .field-help{
+        font-size:10.8px;
+        color:var(--ai-muted);
+        line-height:1.8;
+    }
+
+    .choice-stack{
+        display:flex;
+        flex-direction:column;
+        gap:9px;
+    }
+
+    .choice-card{
+        display:flex;
+        align-items:flex-start;
+        gap:10px;
+        padding:11px 12px;
+        border:1px solid var(--ai-line);
+        border-radius:14px;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .choice-card input{
+        margin-top:3px;
+    }
+
+    .choice-copy{
+        display:flex;
+        flex-direction:column;
+        gap:2px;
+    }
+
+    .choice-title{
+        font-size:11.5px;
+        color:var(--ai-ink);
+        font-weight:700;
+        line-height:1.6;
+    }
+
+    .choice-text{
+        font-size:10.5px;
+        color:var(--ai-muted);
+        line-height:1.8;
+    }
+
+    .import-submit-row{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        padding-top:4px;
+    }
+
+    .import-submit-row .btn{
+        min-height:42px;
+        padding:0 16px;
+        font-size:12.3px;
+        border-radius:12px;
+        font-weight:700;
+    }
+
+    .file-preview{
+        display:none;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        min-height:42px;
+        padding:10px 12px;
+        border-radius:12px;
+        border:1px solid var(--ai-line);
+        background:#f8fbf9;
+        color:var(--ai-ink-2);
+        font-size:11px;
+        line-height:1.7;
+    }
+
+    .file-preview.show{
+        display:flex;
+    }
+
+    .file-preview strong{
+        color:var(--ai-primary);
+    }
+
+    .side-stack{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .side-card{
+        padding:12px;
+        border-radius:17px;
+        border:1px solid var(--ai-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--ai-shadow-sm);
+    }
+
+    .side-card-title{
+        margin:0 0 8px;
+        font-size:13px;
+        line-height:1.45;
+        font-weight:700;
+        color:var(--ai-ink);
+    }
+
+    .mini-actions{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:7px;
+    }
+
+    .mini-action{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        min-height:36px;
+        padding:0 11px;
+        border-radius:11px;
+        border:1px solid var(--ai-line);
+        background:#fff;
+        text-decoration:none;
+        color:var(--ai-ink);
+        font-size:10.7px;
+        font-weight:600;
+    }
+
+    .mini-action:hover{
+        border-color:rgba(22,71,54,.16);
+        color:var(--ai-primary);
+    }
+
+    .example-list{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .example-row{
+        display:grid;
+        grid-template-columns:minmax(0, 1fr) auto;
+        gap:10px;
+        align-items:center;
+        min-height:42px;
+        padding:9px 10px;
+        border-radius:12px;
+        border:1px solid var(--ai-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .example-name{
+        font-size:11.2px;
+        color:var(--ai-ink);
+        font-weight:700;
+        line-height:1.6;
+        word-break:break-word;
+    }
+
+    .example-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:24px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--ai-line-2);
+        color:var(--ai-ink-2);
+        font-size:9.6px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .tips-list{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .tip-row{
+        padding:10px 11px;
+        border-radius:12px;
+        border:1px solid var(--ai-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        font-size:10.7px;
+        line-height:1.85;
+        color:var(--ai-ink-2);
+    }
+
+    .tip-row strong{
+        color:var(--ai-ink);
+        font-weight:700;
+    }
+
+    .errorlist{
+        margin:2px 0 0;
+        padding:0;
+        list-style:none;
+        color:var(--ai-danger);
+        font-size:10.9px;
+        line-height:1.7;
+    }
+
+    @media (max-width: 1160px){
+        .import-grid{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+
+        .workspace{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width: 760px){
+        .import-page .hero{
+            padding:16px;
+            border-radius:21px;
+        }
+
+        .import-page .hero-title{
+            font-size:22px;
+        }
+
+        .import-page .hero-text{
+            font-size:11.6px;
+        }
+
+        .import-grid{
+            grid-template-columns:1fr;
+        }
+
+        .section{
+            padding:12px;
+        }
+
+        .section-title{
+            font-size:16.5px;
+        }
+
+        .import-actions .btn,
+        .import-submit-row .btn{
+            width:100%;
+            justify-content:center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="import-hero">
+        <div class="import-head">
+            <div class="import-copy">
+                <span class="import-kicker">الإدارة العامة — استيراد المشرفين</span>
+                <h1 class="hero-title">{{ page_title }}</h1>
+                <p class="hero-text">
+                    استخدم هذه الصفحة لرفع ملف المشرفين بصيغة Excel وإنشاء الحسابات الجديدة أو تحديث الحسابات الحالية،
+                    مع إتاحة تحميل نموذج جاهز موحد لضبط الأعمدة وتسهيل الإدخال قبل الاستيراد الفعلي.
+                </p>
+
+                <div class="import-actions">
+                    <a href="{% url 'staffdata:admin_overview' %}" class="btn btn-secondary">العودة للوحة الإدارة</a>
+                    <a href="{% url 'staffdata:admin_supervisors_list' %}" class="btn btn-soft">استعراض المشرفين</a>
+                    <a href="{% url 'staffdata:admin_download_supervisors_template' %}" class="btn btn-soft import-template-btn">تحميل نموذج Excel</a>
+                </div>
+            </div>
+        </div>
+
+        <div class="import-grid">
+            <div class="import-kpi highlight">
+                <div class="import-kpi-label">صيغة الملف المعتمدة</div>
+                <div class="import-kpi-value">XLSX</div>
+            </div>
+
+            <div class="import-kpi">
+                <div class="import-kpi-label">الأعمدة الإلزامية</div>
+                <div class="import-kpi-value">3</div>
+            </div>
+
+            <div class="import-kpi">
+                <div class="import-kpi-label">إمكانية التحديث</div>
+                <div class="import-kpi-value">نعم</div>
+            </div>
+
+            <div class="import-kpi">
+                <div class="import-kpi-label">إعادة التهيئة</div>
+                <div class="import-kpi-value">اختياري</div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="import-page">
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">رفع ملف المشرفين</h2>
+                <p class="section-subtitle">ارفع الملف، راجع الخيارات، ثم ابدأ الاستيراد من خلال المسار الإداري المعتمد.</p>
+            </div>
+            <span class="section-badge">إجراء إداري</span>
+        </div>
+
+        <div class="workspace">
+            <div class="import-card">
+                <div class="import-note">
+                    <strong>تنبيه مهم:</strong>
+                    يفضّل دائمًا تحميل النموذج المخصص من هذه الصفحة واستخدامه مباشرة، لضمان توافق أسماء الأعمدة
+                    وسلامة البيانات، خصوصًا السجل المدني ورقم الجوال.
+                </div>
+
+                <form method="post" enctype="multipart/form-data" class="import-form" novalidate>
+                    {% csrf_token %}
+
+                    <div class="field">
+                        <label for="{{ form.file.id_for_label }}">{{ form.file.label }}</label>
+                        {{ form.file }}
+                        <div class="field-help">
+                            ارفع ملف Excel بصيغة <strong>.xlsx</strong> ويحتوي على الصف الأول كعناوين للأعمدة.
+                        </div>
+                        {{ form.file.errors }}
+                    </div>
+
+                    <div class="file-preview" id="filePreviewBox">
+                        <span><strong>الملف المحدد:</strong> <span id="filePreviewName">لم يتم اختيار ملف بعد</span></span>
+                    </div>
+
+                    <div class="choice-stack">
+                        <label class="choice-card" for="{{ form.update_existing.id_for_label }}">
+                            {{ form.update_existing }}
+                            <div class="choice-copy">
+                                <div class="choice-title">{{ form.update_existing.label }}</div>
+                                <div class="choice-text">
+                                    عند تفعيل هذا الخيار سيتم تحديث بيانات المشرف الموجود مسبقًا بدل تجاهله.
+                                </div>
+                            </div>
+                        </label>
+                        {{ form.update_existing.errors }}
+
+                        <label class="choice-card" for="{{ form.reset_existing_accounts.id_for_label }}">
+                            {{ form.reset_existing_accounts }}
+                            <div class="choice-copy">
+                                <div class="choice-title">{{ form.reset_existing_accounts.label }}</div>
+                                <div class="choice-text">
+                                    عند التفعيل ستتم إعادة الحساب إلى حالة الدخول الأول، وإلغاء كلمة المرور الحالية.
+                                </div>
+                            </div>
+                        </label>
+                        {{ form.reset_existing_accounts.errors }}
+                    </div>
+
+                    <div class="import-submit-row">
+                        <button type="submit" class="btn btn-primary">بدء الاستيراد</button>
+                        <a href="{% url 'staffdata:admin_download_supervisors_template' %}" class="btn btn-soft">تحميل النموذج أولًا</a>
+                        <a href="{% url 'staffdata:admin_supervisors_list' %}" class="btn btn-secondary">العودة إلى المشرفين</a>
+                    </div>
+                </form>
+            </div>
+
+            <div class="side-stack">
+                <div class="side-card">
+                    <h3 class="side-card-title">روابط سريعة</h3>
+                    <div class="mini-actions">
+                        <a href="{% url 'staffdata:admin_download_supervisors_template' %}" class="mini-action">
+                            <span>تحميل نموذج المشرفين</span>
+                            <span>⬇</span>
+                        </a>
+                        <a href="{% url 'staffdata:admin_supervisors_list' %}" class="mini-action">
+                            <span>استعراض المشرفين</span>
+                            <span>↗</span>
+                        </a>
+                        <a href="{% url 'staffdata:admin_overview' %}" class="mini-action">
+                            <span>العودة للوحة الإدارة</span>
+                            <span>↗</span>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="side-card">
+                    <h3 class="side-card-title">الأعمدة المعتمدة</h3>
+                    <div class="example-list">
+                        <div class="example-row">
+                            <div class="example-name">full_name</div>
+                            <span class="example-badge">إلزامي</span>
+                        </div>
+                        <div class="example-row">
+                            <div class="example-name">national_id</div>
+                            <span class="example-badge">إلزامي</span>
+                        </div>
+                        <div class="example-row">
+                            <div class="example-name">mobile</div>
+                            <span class="example-badge">إلزامي</span>
+                        </div>
+                        <div class="example-row">
+                            <div class="example-name">email</div>
+                            <span class="example-badge">اختياري</span>
+                        </div>
+                        <div class="example-row">
+                            <div class="example-name">is_active</div>
+                            <span class="example-badge">اختياري</span>
+                        </div>
+                        <div class="example-row">
+                            <div class="example-name">sector</div>
+                            <span class="example-badge">اختياري</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="side-card">
+                    <h3 class="side-card-title">إرشادات قبل الاستيراد</h3>
+                    <div class="tips-list">
+                        <div class="tip-row">
+                            <strong>السجل المدني:</strong>
+                            يجب أن يكون 10 أرقام دون مسافات أو رموز إضافية.
+                        </div>
+                        <div class="tip-row">
+                            <strong>رقم الجوال:</strong>
+                            يفضّل استخدام الصيغة 05XXXXXXXX أو 9665XXXXXXXX.
+                        </div>
+                        <div class="tip-row">
+                            <strong>التحديث:</strong>
+                            استخدم خيار التحديث فقط عند الرغبة في تعديل بيانات الموجودين مسبقًا.
+                        </div>
+                        <div class="tip-row">
+                            <strong>إعادة التهيئة:</strong>
+                            لا تُفعّلها إلا عند الحاجة، لأنها تلغي كلمة المرور الحالية للمشرف.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+
+<script>
+    (function () {
+        const fileInput = document.getElementById('{{ form.file.id_for_label }}');
+        const previewBox = document.getElementById('filePreviewBox');
+        const previewName = document.getElementById('filePreviewName');
+
+        function updatePreview() {
+            if (!fileInput || !previewBox || !previewName) return;
+
+            if (fileInput.files && fileInput.files.length > 0) {
+                previewName.textContent = fileInput.files[0].name;
+                previewBox.classList.add('show');
+            } else {
+                previewName.textContent = 'لم يتم اختيار ملف بعد';
+                previewBox.classList.remove('show');
+            }
+        }
+
+        if (fileInput) {
+            updatePreview();
+            fileInput.addEventListener('change', updatePreview);
+        }
+    })();
+</script>
+{% endblock %}

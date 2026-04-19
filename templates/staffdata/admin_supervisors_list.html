@@ -120,6 +120,14 @@
         font-weight:600;
     }
 
+    .sp-import-btn{
+        box-shadow:0 10px 22px rgba(24,72,56,.12);
+    }
+
+    .sp-template-btn{
+        box-shadow:0 8px 18px rgba(18,34,27,.06);
+    }
+
     .sp-kpis{
         display:grid;
         grid-template-columns:repeat(4, minmax(0, 1fr));
@@ -484,6 +492,11 @@
         .records-table{
             min-width:1180px;
         }
+
+        .sp-hero-actions .btn{
+            width:100%;
+            justify-content:center;
+        }
     }
 </style>
 {% endblock %}
@@ -501,6 +514,8 @@
 
             <div class="sp-hero-actions">
                 <a href="{% url 'staffdata:admin_overview' %}" class="btn btn-secondary">العودة للوحة الإدارة</a>
+                <a href="{% url 'staffdata:admin_import_supervisors' %}" class="btn btn-primary sp-import-btn">استيراد المشرفين</a>
+                <a href="{% url 'staffdata:admin_download_supervisors_template' %}" class="btn btn-soft sp-template-btn">تحميل نموذج Excel</a>
                 <a href="{% url 'staffdata:admin_principals_list' %}" class="btn btn-soft">سجلات المديرين</a>
                 <a href="{% url 'staffdata:admin_vices_list' %}" class="btn btn-soft">سجلات الوكلاء</a>
             </div>

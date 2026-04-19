@@ -16,7 +16,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from django.views.decorators.http import require_POST
 
-from openpyxl import Workbook
+from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
@@ -28,6 +28,8 @@ from .forms import (
     CorrectionDecisionForm,
     CorrectionRequestForm,
     PrincipalRecordForm,
+    SupervisorAdminUpdateForm,
+    SupervisorImportForm,
     VicePrincipalRecordForm,
 )
 from .models import (
@@ -241,17 +243,28 @@ def _build_supervisor_status(
 
 
 def _reset_supervisor_account(supervisor):
-    supervisor.password = ""
-    supervisor.is_activated = False
-    supervisor.password_set_at = None
+    update_fields = []
 
-    update_fields = ["password", "is_activated", "password_set_at"]
+    if _model_has_field(Supervisor, "password"):
+        supervisor.password = ""
+        update_fields.append("password")
 
-    if hasattr(supervisor, "last_login_at"):
+    if _model_has_field(Supervisor, "is_activated"):
+        supervisor.is_activated = False
+        update_fields.append("is_activated")
+
+    if _model_has_field(Supervisor, "password_set_at"):
+        supervisor.password_set_at = None
+        update_fields.append("password_set_at")
+
+    if _model_has_field(Supervisor, "last_login_at"):
         supervisor.last_login_at = None
         update_fields.append("last_login_at")
 
-    supervisor.save(update_fields=update_fields)
+    if update_fields:
+        supervisor.save(update_fields=update_fields)
+    else:
+        supervisor.save()
 
 
 def _auto_fit_xlsx_columns(ws, rows):
@@ -310,6 +323,77 @@ def _build_xlsx_response(filename, sheet_title, headers, rows):
     return response
 
 
+def _normalize_digits(value):
+    return "".join(filter(str.isdigit, str(value or "").strip()))
+
+
+def _normalize_mobile_for_import(value):
+    digits = _normalize_digits(value)
+
+    if digits.startswith("966") and len(digits) == 12:
+        digits = "0" + digits[3:]
+    elif digits.startswith("5") and len(digits) == 9:
+        digits = "0" + digits
+
+    return digits
+
+
+def _normalize_bool_from_excel(value):
+    if value in (True, 1):
+        return True
+    if value in (False, 0, None, ""):
+        return False
+
+    value_str = str(value).strip().lower()
+    return value_str in {"1", "true", "yes", "y", "نعم", "نشط", "active"}
+
+
+def _normalize_import_header(header):
+    return str(header or "").strip().lower().replace(" ", "_")
+
+
+def _resolve_import_headers(header_row):
+    raw_headers = {}
+    for idx, header in enumerate(header_row):
+        normalized = _normalize_import_header(header)
+        if normalized:
+            raw_headers[normalized] = idx
+
+    aliases = {
+        "full_name": {
+            "full_name", "fullname", "name",
+            "الاسم", "الاسم_الرباعي", "اسم_المشرف", "اسم_المشرفة",
+        },
+        "national_id": {
+            "national_id", "id", "civil_id", "nationalid",
+            "السجل_المدني", "رقم_الهوية", "الهوية", "السجل",
+        },
+        "mobile": {
+            "mobile", "phone", "phone_number", "mobile_number",
+            "الجوال", "رقم_الجوال", "رقم_التواصل",
+        },
+        "email": {
+            "email", "البريد_الإلكتروني", "البريد_الالكتروني", "الايميل", "الإيميل",
+        },
+        "is_active": {
+            "is_active", "active", "status",
+            "نشط", "الحالة",
+        },
+        "sector": {
+            "sector", "القطاع",
+        },
+    }
+
+    resolved = {}
+    for canonical_name, possible_names in aliases.items():
+        for possible_name in possible_names:
+            if possible_name in raw_headers:
+                resolved[canonical_name] = raw_headers[possible_name]
+                break
+
+    return resolved
+
+
 @staff_member_required(login_url="/admin/login/")
 @require_POST
 @transaction.atomic
@@ -343,6 +427,182 @@ def admin_reset_supervisor_account_view(request, supervisor_id):
         return redirect(next_url)
 
     return redirect("staffdata:admin_supervisor_detail", supervisor_id=supervisor.id)
+
+
+@staff_member_required(login_url="/admin/login/")
+@transaction.atomic
+def admin_import_supervisors_view(request):
+    form = SupervisorImportForm(request.POST or None, request.FILES or None)
+
+    if request.method == "POST" and form.is_valid():
+        excel_file = form.cleaned_data["file"]
+        update_existing = form.cleaned_data["update_existing"]
+        reset_existing_accounts = form.cleaned_data["reset_existing_accounts"]
+
+        workbook = load_workbook(excel_file, data_only=True)
+        worksheet = workbook.active
+
+        rows = list(worksheet.iter_rows(values_only=True))
+        if not rows:
+            messages.error(request, "الملف المرفوع فارغ.")
+            return redirect("staffdata:admin_import_supervisors")
+
+        headers = _resolve_import_headers(rows[0])
+
+        required_headers = ["full_name", "national_id", "mobile"]
+        missing_headers = [header for header in required_headers if header not in headers]
+        if missing_headers:
+            messages.error(
+                request,
+                f"الملف لا يحتوي على الأعمدة المطلوبة: {', '.join(missing_headers)}"
+            )
+            return redirect("staffdata:admin_import_supervisors")
+
+        created_count = 0
+        updated_count = 0
+        skipped_count = 0
+        reset_count = 0
+        error_rows = []
+
+        for excel_row_number, row in enumerate(rows[1:], start=2):
+            if not row or all(value in (None, "") for value in row):
+                continue
+
+            full_name = str(row[headers["full_name"]] or "").strip()
+            national_id = _normalize_digits(row[headers["national_id"]] or "")
+            mobile = _normalize_mobile_for_import(row[headers["mobile"]] or "")
+
+            email = ""
+            if "email" in headers:
+                email = str(row[headers["email"]] or "").strip()
+
+            sector = ""
+            if "sector" in headers:
+                sector = str(row[headers["sector"]] or "").strip()
+
+            is_active = True
+            if "is_active" in headers:
+                is_active = _normalize_bool_from_excel(row[headers["is_active"]])
+
+            if not full_name or not national_id or not mobile:
+                skipped_count += 1
+                error_rows.append(f"الصف {excel_row_number}: بيانات ناقصة.")
+                continue
+
+            if len(national_id) != 10:
+                skipped_count += 1
+                error_rows.append(f"الصف {excel_row_number}: السجل المدني يجب أن يكون 10 أرقام.")
+                continue
+
+            if not (mobile.startswith("05") and len(mobile) == 10):
+                skipped_count += 1
+                error_rows.append(f"الصف {excel_row_number}: رقم الجوال غير صحيح.")
+                continue
+
+            supervisor = Supervisor.objects.filter(national_id=national_id).first()
+
+            if supervisor is None:
+                create_kwargs = {}
+
+                if _model_has_field(Supervisor, "full_name"):
+                    create_kwargs["full_name"] = full_name
+                if _model_has_field(Supervisor, "national_id"):
+                    create_kwargs["national_id"] = national_id
+                if _model_has_field(Supervisor, "mobile"):
+                    create_kwargs["mobile"] = mobile
+                if _model_has_field(Supervisor, "email"):
+                    create_kwargs["email"] = email
+                if _model_has_field(Supervisor, "sector"):
+                    create_kwargs["sector"] = sector
+                if _model_has_field(Supervisor, "is_active"):
+                    create_kwargs["is_active"] = is_active
+                if _model_has_field(Supervisor, "password"):
+                    create_kwargs["password"] = ""
+                if _model_has_field(Supervisor, "is_activated"):
+                    create_kwargs["is_activated"] = False
+                if _model_has_field(Supervisor, "password_set_at"):
+                    create_kwargs["password_set_at"] = None
+                if _model_has_field(Supervisor, "last_login_at"):
+                    create_kwargs["last_login_at"] = None
+
+                Supervisor.objects.create(**create_kwargs)
+                created_count += 1
+                continue
+
+            if not update_existing:
+                skipped_count += 1
+                continue
+
+            update_fields = []
+
+            if _model_has_field(Supervisor, "full_name") and supervisor.full_name != full_name:
+                supervisor.full_name = full_name
+                update_fields.append("full_name")
+
+            if _model_has_field(Supervisor, "mobile") and getattr(supervisor, "mobile", "") != mobile:
+                supervisor.mobile = mobile
+                update_fields.append("mobile")
+
+            if _model_has_field(Supervisor, "email") and getattr(supervisor, "email", "") != email:
+                supervisor.email = email
+                update_fields.append("email")
+
+            if _model_has_field(Supervisor, "sector") and getattr(supervisor, "sector", "") != sector:
+                supervisor.sector = sector
+                update_fields.append("sector")
+
+            if _model_has_field(Supervisor, "is_active") and getattr(supervisor, "is_active", True) != is_active:
+                supervisor.is_active = is_active
+                update_fields.append("is_active")
+
+            if update_fields:
+                supervisor.save(update_fields=update_fields)
+                updated_count += 1
+            else:
+                skipped_count += 1
+
+            if reset_existing_accounts:
+                _reset_supervisor_account(supervisor)
+                reset_count += 1
+
+        if created_count:
+            messages.success(request, f"تم إنشاء {created_count} مشرف/مشرفة.")
+        if updated_count:
+            messages.success(request, f"تم تحديث {updated_count} مشرف/مشرفة.")
+        if reset_count:
+            messages.warning(request, f"تمت إعادة تهيئة {reset_count} حساب/حسابات.")
+        if skipped_count:
+            messages.info(request, f"تم تخطي {skipped_count} صف/صفوف.")
+
+        if error_rows:
+            messages.warning(request, " | ".join(error_rows[:10]))
+
+        return redirect("staffdata:admin_import_supervisors")
+
+    return render(
+        request,
+        "staffdata/admin_import_supervisors.html",
+        {
+            "page_title": "استيراد المشرفين",
+            "form": form,
+        },
+    )
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_download_supervisors_template_view(request):
+    headers = ["full_name", "national_id", "mobile", "email", "is_active", "sector"]
+    rows = [
+        ["محمد أحمد علي", "1234567890", "0501234567", "m@example.com", 1, "أبها"],
+        ["سارة خالد حسن", "2345678901", "0507654321", "s@example.com", 1, "خميس مشيط"],
+    ]
+
+    return _build_xlsx_response(
+        filename="supervisors_import_template.xlsx",
+        sheet_title="نموذج المشرفين",
+        headers=headers,
+        rows=rows,
+    )
 
 
 @supervisor_login_required
@@ -985,6 +1245,43 @@ def admin_supervisor_detail_view(request, supervisor_id):
         "recent_activity": recent_activity,
     }
     return render(request, "staffdata/admin_supervisor_detail.html", context)
+
+
+@staff_member_required(login_url="/admin/login/")
+@transaction.atomic
+def admin_supervisor_update_view(request, supervisor_id):
+    supervisor = get_object_or_404(Supervisor, pk=supervisor_id)
+
+    editable_fields = [
+        field_name
+        for field_name in ["full_name", "mobile", "email", "is_active"]
+        if _model_has_field(Supervisor, field_name)
+    ]
+
+    form = SupervisorAdminUpdateForm(request.POST or None, instance=supervisor)
+
+    if request.method == "POST" and form.is_valid():
+        updated_supervisor = form.save(commit=False)
+        update_fields = [field for field in editable_fields if field in form.changed_data]
+
+        if update_fields:
+            updated_supervisor.save(update_fields=update_fields)
+            messages.success(request, "تم تحديث بيانات المشرف بنجاح.")
+        else:
+            messages.info(request, "لم يتم إجراء أي تغيير على بيانات المشرف.")
+
+        return redirect("staffdata:admin_supervisor_detail", supervisor_id=supervisor.id)
+
+    return render(
+        request,
+        "staffdata/admin_supervisor_form.html",
+        {
+            "page_title": "تعديل بيانات المشرف",
+            "form": form,
+            "supervisor": supervisor,
+            "submit_label": "حفظ التعديلات",
+        },
+    )
 
 
 @staff_member_required(login_url="/admin/login/")

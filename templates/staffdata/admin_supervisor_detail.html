@@ -761,6 +761,7 @@
 
             <div class="sd-actions">
                 <a href="{% url 'staffdata:admin_supervisors_list' %}" class="btn btn-secondary">العودة لقائمة المشرفين</a>
+                <a href="{% url 'staffdata:admin_supervisor_update' supervisor.id %}" class="btn btn-primary">تعديل البيانات</a>
                 <a href="{% url 'staffdata:admin_principals_list' %}?supervisor={{ supervisor_info.full_name|urlencode }}" class="btn btn-soft">سجلات المديرين</a>
                 <a href="{% url 'staffdata:admin_vices_list' %}?supervisor={{ supervisor_info.full_name|urlencode }}" class="btn btn-soft">سجلات الوكلاء</a>
             </div>

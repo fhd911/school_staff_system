@@ -1,0 +1,771 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .supervisor-form-page{
+        --sf-surface:#ffffff;
+        --sf-surface-2:#fbfcfb;
+        --sf-surface-3:#f7faf8;
+
+        --sf-line:#d9e3dc;
+        --sf-line-2:#e7ede9;
+        --sf-line-3:#eef2ef;
+
+        --sf-ink:#1c2f27;
+        --sf-ink-2:#4b6257;
+        --sf-muted:#7d8c83;
+
+        --sf-primary:#184838;
+        --sf-primary-2:#245a44;
+        --sf-primary-3:#2f7055;
+
+        --sf-gold:#c6a15f;
+        --sf-gold-soft:#ecdfbf;
+        --sf-gold-bg:#fcf8ef;
+
+        --sf-good:#1f6a42;
+        --sf-good-bg:#edf7f0;
+
+        --sf-danger:#944040;
+        --sf-danger-bg:#fff4f4;
+
+        --sf-shadow-sm:0 8px 18px rgba(18,34,27,.035);
+        --sf-shadow-md:0 18px 38px rgba(18,34,27,.08);
+
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .supervisor-form-page .hero{
+        position:relative;
+        overflow:hidden;
+        padding:20px 22px 18px;
+        margin-bottom:0;
+        border-radius:26px;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 26%),
+            linear-gradient(135deg, var(--sf-primary) 0%, var(--sf-primary-2) 56%, var(--sf-primary-3) 100%);
+        box-shadow:var(--sf-shadow-md);
+        color:#fff;
+    }
+
+    .supervisor-form-page .hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:22px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.18) 18%,
+            rgba(221,196,144,.7) 50%,
+            rgba(221,196,144,.18) 82%,
+            transparent 100%
+        );
+    }
+
+    .sf-hero{
+        position:relative;
+        z-index:1;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .sf-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.8px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .supervisor-form-page .hero-title{
+        margin:0 0 7px;
+        font-size:26px;
+        line-height:1.28;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .supervisor-form-page .hero-text{
+        margin:0;
+        max-width:900px;
+        font-size:12.4px;
+        line-height:1.9;
+        color:rgba(255,255,255,.88);
+        font-weight:400;
+    }
+
+    .sf-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .sf-actions .btn{
+        min-height:38px;
+        padding:0 14px;
+        border-radius:11px;
+        font-size:11.9px;
+        font-weight:600;
+    }
+
+    .sf-summary{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .sf-summary-card{
+        min-height:86px;
+        padding:13px 14px;
+        border-radius:16px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.11);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        backdrop-filter:blur(4px);
+    }
+
+    .sf-summary-label{
+        font-size:10.8px;
+        line-height:1.7;
+        color:rgba(255,255,255,.8);
+        font-weight:500;
+    }
+
+    .sf-summary-value{
+        font-size:20px;
+        line-height:1.2;
+        color:#fff;
+        font-weight:700;
+        margin-top:8px;
+        word-break:break-word;
+    }
+
+    .section{
+        padding:14px;
+        border-radius:22px;
+        background:linear-gradient(180deg, var(--sf-surface) 0%, var(--sf-surface-2) 100%);
+        border:1px solid var(--sf-line);
+        box-shadow:var(--sf-shadow-sm);
+    }
+
+    .section-head{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:16px;
+        margin-bottom:12px;
+    }
+
+    .section-title{
+        margin:0;
+        font-size:18px;
+        line-height:1.3;
+        color:var(--sf-ink);
+        font-weight:700;
+    }
+
+    .section-subtitle{
+        margin:0;
+        font-size:11.2px;
+        line-height:1.8;
+        color:var(--sf-muted);
+        font-weight:400;
+    }
+
+    .section-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:26px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--sf-line-2);
+        color:var(--sf-ink-2);
+        font-size:10px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .form-shell{
+        display:grid;
+        grid-template-columns:minmax(0, 1.3fr) minmax(280px, .7fr);
+        gap:12px;
+        align-items:start;
+    }
+
+    .form-main{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .panel-card{
+        padding:15px;
+        border-radius:18px;
+        border:1px solid var(--sf-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--sf-shadow-sm);
+    }
+
+    .panel-title{
+        margin:0 0 6px;
+        font-size:14px;
+        font-weight:700;
+        color:var(--sf-ink);
+        line-height:1.6;
+    }
+
+    .panel-text{
+        margin:0;
+        font-size:11.1px;
+        line-height:1.9;
+        color:var(--sf-muted);
+    }
+
+    .notice-box{
+        padding:12px 13px;
+        border-radius:15px;
+        border:1px solid var(--sf-gold-soft);
+        background:linear-gradient(180deg, var(--sf-gold-bg) 0%, #fffdf8 100%);
+        color:#6a582f;
+        font-size:11.2px;
+        line-height:1.9;
+    }
+
+    .notice-box strong{
+        color:#5b4a22;
+        font-weight:700;
+    }
+
+    .error-box{
+        padding:12px 13px;
+        border-radius:15px;
+        border:1px solid #efd1d1;
+        background:linear-gradient(180deg, #fffdfd 0%, var(--sf-danger-bg) 100%);
+        color:var(--sf-danger);
+        font-size:11.2px;
+        line-height:1.8;
+    }
+
+    .form-grid{
+        display:grid;
+        grid-template-columns:repeat(12, minmax(0, 1fr));
+        gap:12px 14px;
+    }
+
+    .field-row{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+        min-width:0;
+        grid-column:span 6;
+    }
+
+    .field-row.full{
+        grid-column:1 / -1;
+    }
+
+    .field-row.col-4{
+        grid-column:span 4;
+    }
+
+    .field-row.col-8{
+        grid-column:span 8;
+    }
+
+    .field-label{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .field-label label{
+        margin:0;
+        font-size:12px;
+        font-weight:700;
+        color:var(--sf-ink);
+        line-height:1.6;
+    }
+
+    .field-tag{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:22px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--sf-line-2);
+        color:var(--sf-ink-2);
+        font-size:10px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .field-row input[type="text"],
+    .field-row input[type="email"],
+    .field-row input[type="number"],
+    .field-row select,
+    .field-row textarea{
+        width:100%;
+        min-height:44px;
+        padding:10px 12px;
+        border:1px solid #cad7cf;
+        border-radius:11px;
+        background:#fff;
+        color:var(--sf-ink);
+        font-size:12.5px;
+        font-weight:400;
+        outline:none;
+        transition:border-color .18s ease, box-shadow .18s ease;
+        box-shadow:0 1px 2px rgba(15,27,22,.02);
+    }
+
+    .field-row textarea{
+        min-height:110px;
+        resize:vertical;
+    }
+
+    .field-row input:focus,
+    .field-row select:focus,
+    .field-row textarea:focus{
+        border-color:#9fb6aa;
+        box-shadow:0 0 0 4px rgba(24,72,56,.06);
+    }
+
+    .field-row input[readonly],
+    .field-row input:disabled{
+        background:#f5f8f6;
+        color:#62756b;
+        border-color:#d8e2dc;
+        cursor:not-allowed;
+    }
+
+    .field-help{
+        font-size:10.8px;
+        color:var(--sf-muted);
+        line-height:1.8;
+    }
+
+    .switch-card{
+        display:flex;
+        align-items:flex-start;
+        gap:12px;
+        padding:12px 13px;
+        border-radius:15px;
+        border:1px solid var(--sf-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .switch-card input[type="checkbox"]{
+        margin-top:3px;
+    }
+
+    .switch-copy{
+        display:flex;
+        flex-direction:column;
+        gap:2px;
+    }
+
+    .switch-title{
+        font-size:12px;
+        color:var(--sf-ink);
+        font-weight:700;
+        line-height:1.6;
+    }
+
+    .switch-text{
+        font-size:10.8px;
+        color:var(--sf-muted);
+        line-height:1.8;
+    }
+
+    .errorlist{
+        margin:2px 0 0;
+        padding:0;
+        list-style:none;
+        color:var(--sf-danger);
+        font-size:10.8px;
+        line-height:1.7;
+    }
+
+    .side-stack{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .mini-list{
+        display:flex;
+        flex-direction:column;
+        gap:8px;
+    }
+
+    .mini-row{
+        display:grid;
+        grid-template-columns:minmax(0, 1fr) auto;
+        gap:10px;
+        align-items:center;
+        min-height:44px;
+        padding:9px 10px;
+        border-radius:12px;
+        border:1px solid var(--sf-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .mini-name{
+        font-size:11.2px;
+        font-weight:700;
+        color:var(--sf-ink);
+        line-height:1.6;
+        word-break:break-word;
+    }
+
+    .mini-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:24px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--sf-line-2);
+        color:var(--sf-ink-2);
+        font-size:9.6px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .form-footer{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+        padding-top:14px;
+        border-top:1px solid var(--sf-line-3);
+        margin-top:4px;
+    }
+
+    .form-footer-note{
+        font-size:11px;
+        color:var(--sf-muted);
+        line-height:1.8;
+    }
+
+    .form-actions{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        flex-wrap:wrap;
+    }
+
+    .form-actions .btn{
+        min-height:42px;
+        padding:0 16px;
+        border-radius:12px;
+        font-size:12.2px;
+        font-weight:700;
+    }
+
+    @media (max-width: 1180px){
+        .sf-summary{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+
+        .form-shell{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width: 760px){
+        .supervisor-form-page .hero{
+            padding:16px;
+            border-radius:22px;
+        }
+
+        .supervisor-form-page .hero-title{
+            font-size:22px;
+        }
+
+        .sf-summary,
+        .form-grid{
+            grid-template-columns:1fr;
+        }
+
+        .field-row,
+        .field-row.col-4,
+        .field-row.col-8,
+        .field-row.full{
+            grid-column:1 / -1;
+        }
+
+        .section{
+            padding:12px;
+        }
+
+        .form-footer{
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .form-actions{
+            flex-direction:column;
+        }
+
+        .form-actions .btn{
+            width:100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="sf-hero">
+        <div>
+            <span class="sf-kicker">الإدارة العامة — تحديث بيانات المشرف</span>
+            <h1 class="hero-title">{{ page_title }}</h1>
+            <p class="hero-text">
+                تتيح هذه الصفحة تحديث البيانات الأساسية للمشرف من جهة الإدارة، مع الإبقاء على السجل المدني مرجعًا ثابتًا
+                غير قابل للتحرير من هذا المسار، وفصل تعديل البيانات عن إجراءات إعادة تهيئة الحساب.
+            </p>
+
+            <div class="sf-actions">
+                <a href="{% url 'staffdata:admin_supervisor_detail' supervisor.id %}" class="btn btn-secondary">العودة إلى بطاقة المشرف</a>
+                <a href="{% url 'staffdata:admin_supervisors_list' %}" class="btn btn-soft">قائمة المشرفين</a>
+            </div>
+        </div>
+
+        <div class="sf-summary">
+            <div class="sf-summary-card">
+                <div class="sf-summary-label">المشرف</div>
+                <div class="sf-summary-value">{{ supervisor.full_name }}</div>
+            </div>
+
+            <div class="sf-summary-card">
+                <div class="sf-summary-label">السجل المدني</div>
+                <div class="sf-summary-value">{{ supervisor.national_id }}</div>
+            </div>
+
+            <div class="sf-summary-card">
+                <div class="sf-summary-label">الجوال الحالي</div>
+                <div class="sf-summary-value">{{ supervisor.mobile|default:"—" }}</div>
+            </div>
+
+            <div class="sf-summary-card">
+                <div class="sf-summary-label">الحالة الحالية</div>
+                <div class="sf-summary-value">
+                    {% if supervisor.is_active %}
+                        نشط
+                    {% else %}
+                        غير نشط
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="supervisor-form-page">
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">نموذج التعديل الإداري</h2>
+                <p class="section-subtitle">تحديث يدوي للحالات الفردية مع الحفاظ على اتساق بيانات الحساب داخل النظام.</p>
+            </div>
+            <span class="section-badge">تحرير إداري</span>
+        </div>
+
+        <div class="form-shell">
+            <div class="form-main">
+                <div class="panel-card">
+                    <div class="notice-box">
+                        <strong>تنبيه:</strong>
+                        تعديل بيانات المشرف لا يغيّر كلمة المرور الحالية تلقائيًا. عند الحاجة إلى إرجاع الحساب للدخول الأول
+                        استخدم مسار <strong>إعادة تهيئة الحساب</strong> من بطاقة المشرف.
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    {% if form.non_field_errors %}
+                        <div class="error-box" style="margin-bottom:12px;">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="form-grid">
+                            <div class="field-row full">
+                                <div class="field-label">
+                                    {{ form.full_name.label_tag }}
+                                    <span class="field-tag">بيان أساسي</span>
+                                </div>
+                                {{ form.full_name }}
+                                {% if form.full_name.help_text %}
+                                    <div class="field-help">{{ form.full_name.help_text }}</div>
+                                {% endif %}
+                                {{ form.full_name.errors }}
+                            </div>
+
+                            <div class="field-row col-4">
+                                <div class="field-label">
+                                    {{ form.national_id.label_tag }}
+                                    <span class="field-tag">مرجع ثابت</span>
+                                </div>
+                                {{ form.national_id }}
+                                {% if form.national_id.help_text %}
+                                    <div class="field-help">{{ form.national_id.help_text }}</div>
+                                {% endif %}
+                                {{ form.national_id.errors }}
+                            </div>
+
+                            <div class="field-row col-4">
+                                <div class="field-label">
+                                    {{ form.mobile.label_tag }}
+                                    <span class="field-tag">تواصل</span>
+                                </div>
+                                {{ form.mobile }}
+                                {% if form.mobile.help_text %}
+                                    <div class="field-help">{{ form.mobile.help_text }}</div>
+                                {% endif %}
+                                {{ form.mobile.errors }}
+                            </div>
+
+                            <div class="field-row col-4">
+                                <div class="field-label">
+                                    {{ form.sector.label_tag }}
+                                    <span class="field-tag">تنظيمي</span>
+                                </div>
+                                {{ form.sector }}
+                                {% if form.sector.help_text %}
+                                    <div class="field-help">{{ form.sector.help_text }}</div>
+                                {% endif %}
+                                {{ form.sector.errors }}
+                            </div>
+
+                            <div class="field-row full">
+                                <div class="field-label">
+                                    {{ form.email.label_tag }}
+                                    <span class="field-tag">اختياري</span>
+                                </div>
+                                {{ form.email }}
+                                {% if form.email.help_text %}
+                                    <div class="field-help">{{ form.email.help_text }}</div>
+                                {% endif %}
+                                {{ form.email.errors }}
+                            </div>
+
+                            <div class="field-row full">
+                                <label class="switch-card" for="{{ form.is_active.id_for_label }}">
+                                    {{ form.is_active }}
+                                    <div class="switch-copy">
+                                        <div class="switch-title">{{ form.is_active.label }}</div>
+                                        <div class="switch-text">
+                                            عند تعطيل هذا الخيار يصبح الحساب غير نشط إداريًا، دون حذف بياناته السابقة من النظام.
+                                        </div>
+                                    </div>
+                                </label>
+                                {{ form.is_active.errors }}
+                            </div>
+                        </div>
+
+                        <div class="form-footer">
+                            <div class="form-footer-note">
+                                بعد الحفظ ستنعكس التعديلات مباشرة على بطاقة المشرف وقوائم الإدارة ذات الصلة.
+                            </div>
+
+                            <div class="form-actions">
+                                <a href="{% url 'staffdata:admin_supervisor_detail' supervisor.id %}" class="btn btn-secondary">إلغاء والعودة</a>
+                                <button type="submit" class="btn btn-primary">{{ submit_label|default:"حفظ التعديلات" }}</button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="side-stack">
+                <div class="panel-card">
+                    <h3 class="panel-title">ملخص سريع</h3>
+                    <p class="panel-text">
+                        استخدم هذه الصفحة للتعديل الفردي المباشر، بينما يبقى التحديث الجماعي للمشرفين عبر الاستيراد من ملف Excel.
+                    </p>
+                </div>
+
+                <div class="panel-card">
+                    <h3 class="panel-title">الحقول المسموح بها</h3>
+                    <div class="mini-list">
+                        <div class="mini-row">
+                            <div class="mini-name">الاسم الكامل</div>
+                            <span class="mini-badge">مسموح</span>
+                        </div>
+                        <div class="mini-row">
+                            <div class="mini-name">رقم الجوال</div>
+                            <span class="mini-badge">مسموح</span>
+                        </div>
+                        <div class="mini-row">
+                            <div class="mini-name">البريد الإلكتروني</div>
+                            <span class="mini-badge">مسموح</span>
+                        </div>
+                        <div class="mini-row">
+                            <div class="mini-name">القطاع</div>
+                            <span class="mini-badge">مسموح</span>
+                        </div>
+                        <div class="mini-row">
+                            <div class="mini-name">حالة النشاط</div>
+                            <span class="mini-badge">مسموح</span>
+                        </div>
+                        <div class="mini-row">
+                            <div class="mini-name">السجل المدني</div>
+                            <span class="mini-badge">للعرض فقط</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-card">
+                    <h3 class="panel-title">إرشادات إدارية</h3>
+                    <div class="mini-list">
+                        <div class="mini-row">
+                            <div class="mini-name">تعديل الجوال يؤثر على الدخول الأول للحسابات غير المفعلة.</div>
+                            <span class="mini-badge">مهم</span>
+                        </div>
+                        <div class="mini-row">
+                            <div class="mini-name">تعديل البيانات لا يعيد تعيين كلمة المرور الحالية.</div>
+                            <span class="mini-badge">تنبيه</span>
+                        </div>
+                        <div class="mini-row">
+                            <div class="mini-name">إعادة التهيئة تعالج من بطاقة المشرف وليس من هذه الصفحة.</div>
+                            <span class="mini-badge">مسار مستقل</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}
