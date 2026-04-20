@@ -11,7 +11,12 @@ class Supervisor(models.Model):
     email = models.EmailField("البريد الإلكتروني", blank=True)
     is_active = models.BooleanField("نشط", default=True)
 
-    # جديد
+    # صلاحيات المشرف على السجلات
+    can_add_records = models.BooleanField("يستطيع إضافة السجلات", default=True)
+    can_edit_records = models.BooleanField("يستطيع تعديل السجلات", default=False)
+    can_delete_records = models.BooleanField("يستطيع حذف السجلات", default=False)
+
+    # تفعيل الحساب
     is_activated = models.BooleanField("تم تفعيل الحساب", default=False)
     password_set_at = models.DateTimeField("تاريخ إنشاء/تحديث كلمة المرور", null=True, blank=True)
     last_login_at = models.DateTimeField("آخر دخول", null=True, blank=True)

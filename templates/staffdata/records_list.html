@@ -83,6 +83,12 @@
         padding:0 15px;
     }
 
+    .my-records-actions .btn.is-disabled{
+        opacity:.55;
+        pointer-events:none;
+        cursor:not-allowed;
+    }
+
     .my-records-kpis{
         display:grid;
         grid-template-columns:repeat(2, minmax(0, 1fr));
@@ -160,6 +166,10 @@
         padding:14px;
     }
 
+    .quick-card.is-disabled{
+        opacity:.68;
+    }
+
     .quick-card-title{
         margin:0 0 6px;
         font-size:14px;
@@ -183,6 +193,129 @@
         color:#6d5930;
         font-size:12.2px;
         line-height:1.85;
+    }
+
+    .window-grid{
+        display:grid;
+        grid-template-columns:1.05fr .95fr;
+        gap:12px;
+    }
+
+    .window-card{
+        border:1px solid var(--line);
+        border-radius:18px;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        padding:16px;
+    }
+
+    .window-title{
+        margin:0 0 8px;
+        font-size:15px;
+        line-height:1.6;
+        font-weight:700;
+        color:var(--ink);
+    }
+
+    .window-text{
+        margin:0;
+        font-size:12.8px;
+        line-height:1.95;
+        color:var(--muted);
+    }
+
+    .window-text strong{
+        color:var(--primary);
+        font-weight:700;
+    }
+
+    .window-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:12px;
+        font-weight:700;
+        white-space:nowrap;
+        margin-bottom:12px;
+    }
+
+    .window-badge.open{
+        background:#eaf6ee;
+        color:#1f6a42;
+        border:1px solid #cfe7d8;
+    }
+
+    .window-badge.closed{
+        background:#fff3e8;
+        color:#8a5a1e;
+        border:1px solid #ead2b4;
+    }
+
+    .window-badge.inactive{
+        background:#f4f5f6;
+        color:#69757a;
+        border:1px solid #dfe5e8;
+    }
+
+    .window-meta-grid{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+        margin-top:12px;
+    }
+
+    .window-meta{
+        border:1px solid var(--line);
+        border-radius:14px;
+        background:#fff;
+        padding:12px;
+    }
+
+    .window-meta-label{
+        font-size:11px;
+        line-height:1.7;
+        color:var(--muted);
+        margin-bottom:5px;
+    }
+
+    .window-meta-value{
+        font-size:14px;
+        line-height:1.5;
+        font-weight:700;
+        color:var(--ink);
+    }
+
+    .permission-pills{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .permission-pill{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:12px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .permission-pill.allowed{
+        background:#edf7f0;
+        color:#1f6a42;
+        border:1px solid #d5e9dc;
+    }
+
+    .permission-pill.denied{
+        background:#fff3f3;
+        color:#8a3a3a;
+        border:1px solid #ecd0d0;
     }
 
     .records-tabs{
@@ -290,10 +423,25 @@
         gap:8px;
     }
 
+    .record-actions .btn,
+    .record-actions form{
+        margin:0;
+    }
+
     .record-actions .btn{
         min-height:36px;
         padding:0 13px;
         font-size:12.1px;
+    }
+
+    .record-actions .btn.is-disabled{
+        opacity:.55;
+        pointer-events:none;
+        cursor:not-allowed;
+    }
+
+    .inline-delete-form{
+        display:inline-flex;
     }
 
     .empty-note{
@@ -303,18 +451,21 @@
     }
 
     @media (max-width: 1100px){
-        .my-records-hero-inner{
+        .my-records-hero-inner,
+        .window-grid{
             grid-template-columns:1fr;
         }
 
-        .quick-grid{
+        .quick-grid,
+        .window-meta-grid{
             grid-template-columns:1fr 1fr;
         }
     }
 
     @media (max-width: 760px){
         .my-records-kpis,
-        .quick-grid{
+        .quick-grid,
+        .window-meta-grid{
             grid-template-columns:1fr;
         }
 
@@ -338,13 +489,20 @@
                 <div>
                     <h1 class="my-records-title">سجلاتي المدخلة</h1>
                     <p class="my-records-text">
-                        من هذه الصفحة يمكنك متابعة السجلات التي قمت بإدخالها بصفتك مشرفًا تربويًا، وإضافة سجلات جديدة فقط، بينما يتم تصحيح الأخطاء عبر طلبات تصحيح تُحال للإدارة للمراجعة.
+                        من هذه الصفحة يمكنك متابعة السجلات التي قمت بإدخالها بصفتك مشرفًا تربويًا،
+                        وإضافة سجلات جديدة بحسب الفترة الزمنية والصلاحيات المتاحة، مع إمكانية التعديل أو الحذف
+                        عند توفر ذلك، ورفع طلبات التصحيح عند الحاجة.
                     </p>
                 </div>
 
                 <div class="my-records-actions">
-                    <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">إضافة مدير/مديرة</a>
-                    <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">إضافة وكيل/وكيلة</a>
+                    {% if entry_window_can_add %}
+                        <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">إضافة مدير/مديرة</a>
+                        <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">إضافة وكيل/وكيلة</a>
+                    {% else %}
+                        <span class="btn btn-primary is-disabled">إضافة مدير/مديرة</span>
+                        <span class="btn btn-secondary is-disabled">إضافة وكيل/وكيلة</span>
+                    {% endif %}
                     <a href="{% url 'staffdata:my_correction_requests' %}" class="btn btn-soft">طلبات التصحيح</a>
                     <a href="{% url 'staffdata:dashboard' %}" class="btn btn-soft">العودة للرئيسية</a>
                 </div>
@@ -381,27 +539,123 @@
 
     <section class="records-section">
         <div class="records-section-head">
+            <h2 class="records-section-title">حالة فترة التسجيل</h2>
+            <p class="records-section-subtitle">الوضع الزمني الحالي وصلاحياتك التشغيلية على السجلات.</p>
+        </div>
+        <div class="records-section-body">
+            <div class="window-grid">
+                <div class="window-card">
+                    {% if entry_window_status_label == "مفتوحة" %}
+                        <span class="window-badge open">{{ entry_window_status_label }}</span>
+                    {% elif entry_window_status_label == "غير مفعلة" or entry_window_status_label == "لا توجد فترة مسجلة" %}
+                        <span class="window-badge inactive">{{ entry_window_status_label }}</span>
+                    {% else %}
+                        <span class="window-badge closed">{{ entry_window_status_label }}</span>
+                    {% endif %}
+
+                    {% if entry_window %}
+                        <p class="window-text">
+                            الفترة الحالية: <strong>{{ entry_window.title }}</strong>.
+                        </p>
+
+                        <div class="window-meta-grid">
+                            <div class="window-meta">
+                                <div class="window-meta-label">بداية الفترة</div>
+                                <div class="window-meta-value">{{ entry_window.starts_at|date:"Y-m-d H:i" }}</div>
+                            </div>
+
+                            <div class="window-meta">
+                                <div class="window-meta-label">نهاية الفترة</div>
+                                <div class="window-meta-value">{{ entry_window.ends_at|date:"Y-m-d H:i" }}</div>
+                            </div>
+
+                            <div class="window-meta">
+                                <div class="window-meta-label">الوقت المتبقي</div>
+                                <div class="window-meta-value">
+                                    {% if entry_window_status_label == "مفتوحة" %}
+                                        {{ entry_window_remaining_days }} يوم / {{ entry_window_remaining_hours }} ساعة
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <p class="window-text">
+                            لا توجد حاليًا فترة تسجيل معرفة داخل النظام.
+                        </p>
+                    {% endif %}
+                </div>
+
+                <div class="window-card">
+                    <h3 class="window-title">صلاحياتك الحالية</h3>
+                    <p class="window-text">
+                        الإتاحة النهائية تعتمد على <strong>الفترة الزمنية</strong> و<strong>صلاحيات حسابك</strong> معًا.
+                    </p>
+
+                    <div class="permission-pills">
+                        <span class="permission-pill {% if entry_window_can_add %}allowed{% else %}denied{% endif %}">
+                            الإضافة {% if entry_window_can_add %}متاحة{% else %}غير متاحة{% endif %}
+                        </span>
+
+                        <span class="permission-pill {% if entry_window_can_edit %}allowed{% else %}denied{% endif %}">
+                            التعديل {% if entry_window_can_edit %}متاح{% else %}غير متاح{% endif %}
+                        </span>
+
+                        <span class="permission-pill {% if entry_window_can_delete %}allowed{% else %}denied{% endif %}">
+                            الحذف {% if entry_window_can_delete %}متاح{% else %}غير متاح{% endif %}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="records-section">
+        <div class="records-section-head">
             <h2 class="records-section-title">إجراءات سريعة</h2>
             <p class="records-section-subtitle">وصول مباشر إلى أهم الإجراءات المرتبطة بإدخال السجلات ومتابعة طلبات التصحيح.</p>
         </div>
         <div class="records-section-body">
             <div class="quick-grid">
-                <div class="quick-card">
-                    <h3 class="quick-card-title">إضافة سجل مدير/مديرة</h3>
-                    <p class="quick-card-text">إنشاء سجل جديد يتضمن بيانات المدير أو المديرة مع رفع استمارة الأداء الوظيفي.</p>
-                    <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">فتح الصفحة</a>
-                </div>
+                {% if entry_window_can_add %}
+                    <div class="quick-card">
+                        <h3 class="quick-card-title">إضافة سجل مدير/مديرة</h3>
+                        <p class="quick-card-text">إنشاء سجل جديد يتضمن بيانات المدير أو المديرة مع رفع استمارة الأداء الوظيفي.</p>
+                        <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">فتح الصفحة</a>
+                    </div>
+                {% else %}
+                    <div class="quick-card is-disabled">
+                        <h3 class="quick-card-title">إضافة سجل مدير/مديرة</h3>
+                        <p class="quick-card-text">الإضافة غير متاحة حاليًا بسبب إغلاق الفترة أو لعدم توفر الصلاحية.</p>
+                        <span class="btn btn-primary is-disabled">غير متاح</span>
+                    </div>
+                {% endif %}
 
-                <div class="quick-card">
-                    <h3 class="quick-card-title">إضافة سجل وكيل/وكيلة</h3>
-                    <p class="quick-card-text">إنشاء سجل جديد للوكيل أو الوكيلة بالبيانات الأساسية المعتمدة داخل النظام.</p>
-                    <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">فتح الصفحة</a>
-                </div>
+                {% if entry_window_can_add %}
+                    <div class="quick-card">
+                        <h3 class="quick-card-title">إضافة سجل وكيل/وكيلة</h3>
+                        <p class="quick-card-text">إنشاء سجل جديد للوكيل أو الوكيلة بالبيانات الأساسية المعتمدة داخل النظام.</p>
+                        <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">فتح الصفحة</a>
+                    </div>
+                {% else %}
+                    <div class="quick-card is-disabled">
+                        <h3 class="quick-card-title">إضافة سجل وكيل/وكيلة</h3>
+                        <p class="quick-card-text">الإضافة غير متاحة حاليًا بسبب إغلاق الفترة أو لعدم توفر الصلاحية.</p>
+                        <span class="btn btn-secondary is-disabled">غير متاح</span>
+                    </div>
+                {% endif %}
 
                 <div class="quick-card">
                     <h3 class="quick-card-title">تنبيه مهم</h3>
-                    <p class="quick-card-text">هذه الصفحة تعرض فقط السجلات المرتبطة بحسابك الحالي كمشرف تربوي.</p>
-                    <div class="soft-note">بعد حفظ السجل لا يمكن للمشرف تعديله أو حذفه مباشرة، وعند وجود خطأ يتم رفع طلب تصحيح رسمي للإدارة.</div>
+                    <p class="quick-card-text">تعتمد عمليات الإضافة والتعديل والحذف على الفترة الزمنية وصلاحيات حسابك الحالية.</p>
+                    <div class="soft-note">
+                        {% if entry_window_can_edit or entry_window_can_delete %}
+                            عند وجود صلاحية تعديل أو حذف يمكنك تنفيذها مباشرة من هذه الصفحة، كما يبقى طلب التصحيح متاحًا عند الحاجة.
+                        {% else %}
+                            إذا لم تكن التعديلات المباشرة متاحة فبإمكانك استخدام طلبات التصحيح الرسمية لإحالة الملاحظات إلى الإدارة.
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -410,7 +664,7 @@
     <section class="records-section">
         <div class="records-section-head">
             <h2 class="records-section-title">السجلات الحالية</h2>
-            <p class="records-section-subtitle">عرض منظم لسجلاتك الحالية للمتابعة ورفع طلبات التصحيح عند الحاجة.</p>
+            <p class="records-section-subtitle">عرض منظم لسجلاتك الحالية مع الإجراءات المتاحة بحسب الفترة والصلاحيات.</p>
         </div>
 
         <div class="records-section-body">
@@ -444,7 +698,7 @@
                                     <th>الصفة</th>
                                     <th>الاستمارة</th>
                                     <th>تاريخ الإضافة</th>
-                                    <th>طلب تصحيح</th>
+                                    <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -468,6 +722,17 @@
                                     <td class="muted">{{ item.created_at|date:"Y-m-d H:i" }}</td>
                                     <td>
                                         <div class="record-actions">
+                                            {% if entry_window_can_edit %}
+                                                <a href="{% url 'staffdata:principal_update' item.pk %}" class="btn btn-soft">تعديل</a>
+                                            {% endif %}
+
+                                            {% if entry_window_can_delete %}
+                                                <form method="post" action="{% url 'staffdata:principal_delete' item.pk %}" class="inline-delete-form" onsubmit="return confirm('هل أنت متأكد من حذف هذا السجل؟');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">حذف</button>
+                                                </form>
+                                            {% endif %}
+
                                             <a href="{% url 'staffdata:principal_request_correction' item.pk %}" class="btn btn-soft">طلب تصحيح</a>
                                         </div>
                                     </td>
@@ -478,8 +743,7 @@
                     </div>
                 {% else %}
                     <div class="empty-state empty-note">
-                        لا توجد لديك سجلات مديرين/مديرات حتى الآن. يمكنك البدء بإضافة أول سجل من خلال زر
-                        <strong>إضافة مدير/مديرة</strong>.
+                        لا توجد لديك سجلات مديرين/مديرات حتى الآن. يمكنك البدء بإضافة أول سجل إذا كانت الفترة والصلاحية متاحتين.
                     </div>
                 {% endif %}
             </div>
@@ -501,7 +765,7 @@
                                     <th>المرحلة</th>
                                     <th>الصفة</th>
                                     <th>تاريخ الإضافة</th>
-                                    <th>طلب تصحيح</th>
+                                    <th>الإجراءات</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -518,6 +782,17 @@
                                     <td class="muted">{{ item.created_at|date:"Y-m-d H:i" }}</td>
                                     <td>
                                         <div class="record-actions">
+                                            {% if entry_window_can_edit %}
+                                                <a href="{% url 'staffdata:vice_update' item.pk %}" class="btn btn-soft">تعديل</a>
+                                            {% endif %}
+
+                                            {% if entry_window_can_delete %}
+                                                <form method="post" action="{% url 'staffdata:vice_delete' item.pk %}" class="inline-delete-form" onsubmit="return confirm('هل أنت متأكد من حذف هذا السجل؟');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="btn btn-danger">حذف</button>
+                                                </form>
+                                            {% endif %}
+
                                             <a href="{% url 'staffdata:vice_request_correction' item.pk %}" class="btn btn-soft">طلب تصحيح</a>
                                         </div>
                                     </td>
@@ -528,8 +803,7 @@
                     </div>
                 {% else %}
                     <div class="empty-state empty-note">
-                        لا توجد لديك سجلات وكلاء/وكيلات حتى الآن. يمكنك البدء بإضافة أول سجل من خلال زر
-                        <strong>إضافة وكيل/وكيلة</strong>.
+                        لا توجد لديك سجلات وكلاء/وكيلات حتى الآن. يمكنك البدء بإضافة أول سجل إذا كانت الفترة والصلاحية متاحتين.
                     </div>
                 {% endif %}
             </div>

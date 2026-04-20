@@ -35,6 +35,7 @@ from .forms import (
 from .models import (
     AccountResetRequest,
     CorrectionRequest,
+    DataEntryWindow,
     PrincipalRecord,
     VicePrincipalRecord,
 )
@@ -98,10 +99,6 @@ def _build_admin_filter_context(request):
     }
 
 
-def _block_supervisor_record_mutation():
-    raise PermissionDenied("لا يمكن للمشرف التربوي تعديل أو حذف السجلات بعد إدخالها.")
-
-
 def _build_correction_initial_from_record(record):
     return {
         "requested_full_name": getattr(record, "full_name", ""),
@@ -135,6 +132,114 @@ def _build_supervisor_bound_form(request, form_class, supervisor):
         request.FILES or None,
         instance=instance,
     )
+
+
+def _build_supervisor_update_form(request, form_class, instance):
+    return form_class(
+        request.POST or None,
+        request.FILES or None,
+        instance=instance,
+    )
+
+
+def _get_active_entry_window():
+    now = timezone.now()
+    return (
+        DataEntryWindow.objects.filter(
+            is_active=True,
+            starts_at__lte=now,
+            ends_at__gte=now,
+        )
+        .order_by("-starts_at")
+        .first()
+    )
+
+
+def _get_latest_entry_window():
+    return DataEntryWindow.objects.order_by("-starts_at").first()
+
+
+def _build_entry_window_context(supervisor=None):
+    now = timezone.now()
+    window = _get_active_entry_window()
+    latest_window = window or _get_latest_entry_window()
+
+    status_label = "لا توجد فترة مسجلة"
+    can_add = False
+    can_edit = False
+    can_delete = False
+
+    if latest_window:
+        if not latest_window.is_active:
+            status_label = "غير مفعلة"
+        elif now < latest_window.starts_at:
+            status_label = "لم تبدأ"
+        elif latest_window.starts_at <= now <= latest_window.ends_at:
+            status_label = "مفتوحة"
+        else:
+            status_label = "منتهية"
+
+        can_add = status_label == "مفتوحة" and getattr(latest_window, "allow_add", False)
+        can_edit = status_label == "مفتوحة" and getattr(latest_window, "allow_edit", False)
+        can_delete = status_label == "مفتوحة" and getattr(latest_window, "allow_delete", False)
+
+    if supervisor:
+        can_add = can_add and getattr(supervisor, "can_add_records", True)
+        can_edit = can_edit and getattr(supervisor, "can_edit_records", False)
+        can_delete = can_delete and getattr(supervisor, "can_delete_records", False)
+
+    return {
+        "entry_window": latest_window,
+        "entry_window_status_label": status_label,
+        "entry_window_can_add": can_add,
+        "entry_window_can_edit": can_edit,
+        "entry_window_can_delete": can_delete,
+        "entry_window_remaining_seconds": getattr(latest_window, "remaining_seconds", 0) if latest_window else 0,
+        "entry_window_remaining_days": getattr(latest_window, "remaining_days", 0) if latest_window else 0,
+        "entry_window_remaining_hours": getattr(latest_window, "remaining_hours", 0) if latest_window else 0,
+    }
+
+
+def _ensure_supervisor_can_add(supervisor):
+    if not getattr(supervisor, "can_add_records", True):
+        raise PermissionDenied("ليست لديك صلاحية إضافة السجلات.")
+
+    window = _get_active_entry_window()
+    if not window:
+        raise PermissionDenied("فترة تسجيل البيانات مغلقة حاليًا.")
+
+    if not getattr(window, "allow_add", False):
+        raise PermissionDenied("الإضافة غير متاحة خلال الفترة الحالية.")
+
+    return window
+
+
+def _ensure_supervisor_can_edit(supervisor):
+    if not getattr(supervisor, "can_edit_records", False):
+        raise PermissionDenied("ليست لديك صلاحية تعديل السجلات.")
+
+    window = _get_active_entry_window()
+    if not window:
+        raise PermissionDenied("فترة تعديل البيانات مغلقة حاليًا.")
+
+    if not getattr(window, "allow_edit", False):
+        raise PermissionDenied("التعديل غير متاح خلال الفترة الحالية.")
+
+    return window
+
+
+def _ensure_supervisor_can_delete(supervisor):
+    if not getattr(supervisor, "can_delete_records", False):
+        raise PermissionDenied("ليست لديك صلاحية حذف السجلات.")
+
+    window = _get_active_entry_window()
+    if not window:
+        raise PermissionDenied("فترة حذف البيانات مغلقة حاليًا.")
+
+    if not getattr(window, "allow_delete", False):
+        raise PermissionDenied("الحذف غير متاح خلال الفترة الحالية.")
+
+    return window
 
 
 def _create_correction_request(request, record, target_type, title):
@@ -393,6 +498,18 @@ def _resolve_import_headers(header_row):
         "sector": {
             "sector", "القطاع",
         },
+        "can_add_records": {
+            "can_add_records", "allow_add", "add_permission",
+            "صلاحية_الإضافة", "سماح_الإضافة", "يستطيع_الإضافة",
+        },
+        "can_edit_records": {
+            "can_edit_records", "allow_edit", "edit_permission",
+            "صلاحية_التعديل", "سماح_التعديل", "يستطيع_التعديل",
+        },
+        "can_delete_records": {
+            "can_delete_records", "allow_delete", "delete_permission",
+            "صلاحية_الحذف", "سماح_الحذف", "يستطيع_الحذف",
+        },
     }
 
     resolved = {}
@@ -495,7 +612,22 @@ def admin_import_supervisors_view(request):
             if "is_active" in headers:
                 raw_is_active = _normalize_bool_from_excel(row[headers["is_active"]])
 
+            raw_can_add_records = None
+            if "can_add_records" in headers:
+                raw_can_add_records = _normalize_bool_from_excel(row[headers["can_add_records"]])
+
+            raw_can_edit_records = None
+            if "can_edit_records" in headers:
+                raw_can_edit_records = _normalize_bool_from_excel(row[headers["can_edit_records"]])
+
+            raw_can_delete_records = None
+            if "can_delete_records" in headers:
+                raw_can_delete_records = _normalize_bool_from_excel(row[headers["can_delete_records"]])
+
             is_active = True if raw_is_active is None else raw_is_active
+            can_add_records = True if raw_can_add_records is None else raw_can_add_records
+            can_edit_records = False if raw_can_edit_records is None else raw_can_edit_records
+            can_delete_records = False if raw_can_delete_records is None else raw_can_delete_records
 
             if not full_name or not national_id or not mobile:
                 skipped_count += 1
@@ -529,6 +661,12 @@ def admin_import_supervisors_view(request):
                     create_kwargs["sector"] = sector
                 if _model_has_field(Supervisor, "is_active"):
                     create_kwargs["is_active"] = is_active
+                if _model_has_field(Supervisor, "can_add_records"):
+                    create_kwargs["can_add_records"] = can_add_records
+                if _model_has_field(Supervisor, "can_edit_records"):
+                    create_kwargs["can_edit_records"] = can_edit_records
+                if _model_has_field(Supervisor, "can_delete_records"):
+                    create_kwargs["can_delete_records"] = can_delete_records
                 if _model_has_field(Supervisor, "password"):
                     create_kwargs["password"] = ""
                 if _model_has_field(Supervisor, "is_activated"):
@@ -572,6 +710,30 @@ def admin_import_supervisors_view(request):
                 supervisor.is_active = raw_is_active
                 update_fields.append("is_active")
 
+            if (
+                _model_has_field(Supervisor, "can_add_records")
+                and raw_can_add_records is not None
+                and getattr(supervisor, "can_add_records", True) != raw_can_add_records
+            ):
+                supervisor.can_add_records = raw_can_add_records
+                update_fields.append("can_add_records")
+
+            if (
+                _model_has_field(Supervisor, "can_edit_records")
+                and raw_can_edit_records is not None
+                and getattr(supervisor, "can_edit_records", False) != raw_can_edit_records
+            ):
+                supervisor.can_edit_records = raw_can_edit_records
+                update_fields.append("can_edit_records")
+
+            if (
+                _model_has_field(Supervisor, "can_delete_records")
+                and raw_can_delete_records is not None
+                and getattr(supervisor, "can_delete_records", False) != raw_can_delete_records
+            ):
+                supervisor.can_delete_records = raw_can_delete_records
+                update_fields.append("can_delete_records")
+
             if update_fields:
                 supervisor.save(update_fields=update_fields)
                 updated_count += 1
@@ -608,10 +770,20 @@ def admin_import_supervisors_view(request):
 
 @staff_member_required(login_url="/admin/login/")
 def admin_download_supervisors_template_view(request):
-    headers = ["full_name", "national_id", "mobile", "email", "is_active", "sector"]
+    headers = [
+        "full_name",
+        "national_id",
+        "mobile",
+        "email",
+        "is_active",
+        "sector",
+        "can_add_records",
+        "can_edit_records",
+        "can_delete_records",
+    ]
     rows = [
-        ["محمد أحمد علي", "1234567890", "0501234567", "m@example.com", 1, "أبها"],
-        ["سارة خالد حسن", "2345678901", "0507654321", "s@example.com", 1, "خميس مشيط"],
+        ["محمد أحمد علي", "1234567890", "0501234567", "m@example.com", 1, "أبها", 1, 0, 0],
+        ["سارة خالد حسن", "2345678901", "0507654321", "s@example.com", 1, "خميس مشيط", 1, 1, 0],
     ]
 
     return _build_xlsx_response(
@@ -627,12 +799,12 @@ def dashboard_view(request):
     supervisor = get_current_supervisor(request)
 
     principal_records = (
-        PrincipalRecord.objects.filter(supervisor=supervisor)
+        PrincipalRecord.objects.filter(supervisor=supervisor, is_active=True)
         .select_related("supervisor")
         .order_by("-created_at")
     )
     vice_records = (
-        VicePrincipalRecord.objects.filter(supervisor=supervisor)
+        VicePrincipalRecord.objects.filter(supervisor=supervisor, is_active=True)
         .select_related("supervisor")
         .order_by("-created_at")
     )
@@ -671,23 +843,29 @@ def dashboard_view(request):
     recent_items.sort(key=lambda x: x["created_at"], reverse=True)
     recent_items = recent_items[:8]
 
-    return render(
-        request,
-        "staffdata/dashboard.html",
-        {
-            "supervisor": supervisor,
-            "principal_count": principal_count,
-            "vice_count": vice_count,
-            "total_count": total_count,
-            "attachments_count": attachments_count,
-            "recent_items": recent_items,
-        },
-    )
+    context = {
+        "supervisor": supervisor,
+        "principal_count": principal_count,
+        "vice_count": vice_count,
+        "total_count": total_count,
+        "attachments_count": attachments_count,
+        "recent_items": recent_items,
+        **_build_entry_window_context(supervisor),
+    }
+
+    return render(request, "staffdata/dashboard.html", context)
 
 
 @supervisor_login_required
 def principal_create_view(request):
     supervisor = get_current_supervisor(request)
+
+    try:
+        _ensure_supervisor_can_add(supervisor)
+    except PermissionDenied as exc:
+        messages.error(request, str(exc))
+        return redirect("staffdata:dashboard")
+
     form = _build_supervisor_bound_form(request, PrincipalRecordForm, supervisor)
 
     if request.method == "POST" and form.is_valid():
@@ -704,6 +882,7 @@ def principal_create_view(request):
             "form": form,
             "page_title": "إضافة مدير/مديرة",
             "submit_label": "حفظ البيانات",
+            **_build_entry_window_context(supervisor),
         },
     )
 
@@ -711,6 +890,13 @@ def principal_create_view(request):
 @supervisor_login_required
 def vice_create_view(request):
     supervisor = get_current_supervisor(request)
+
+    try:
+        _ensure_supervisor_can_add(supervisor)
+    except PermissionDenied as exc:
+        messages.error(request, str(exc))
+        return redirect("staffdata:dashboard")
+
     form = _build_supervisor_bound_form(request, VicePrincipalRecordForm, supervisor)
 
     if request.method == "POST" and form.is_valid():
@@ -727,6 +913,7 @@ def vice_create_view(request):
             "form": form,
             "page_title": "إضافة وكيل/وكيلة",
             "submit_label": "حفظ البيانات",
+            **_build_entry_window_context(supervisor),
         },
     )
 
@@ -736,12 +923,12 @@ def records_list_view(request):
     supervisor = get_current_supervisor(request)
 
     principal_records = (
-        PrincipalRecord.objects.filter(supervisor=supervisor)
+        PrincipalRecord.objects.filter(supervisor=supervisor, is_active=True)
         .select_related("supervisor")
         .order_by("-created_at")
     )
     vice_records = (
-        VicePrincipalRecord.objects.filter(supervisor=supervisor)
+        VicePrincipalRecord.objects.filter(supervisor=supervisor, is_active=True)
         .select_related("supervisor")
         .order_by("-created_at")
     )
@@ -765,34 +952,125 @@ def records_list_view(request):
             "total_count": principal_count + vice_count,
             "attachments_count": attachments_count,
             "open_correction_requests_count": open_correction_requests_count,
+            **_build_entry_window_context(supervisor),
         },
     )
 
 
 @supervisor_login_required
 def principal_update_view(request, pk):
-    _block_supervisor_record_mutation()
+    supervisor = get_current_supervisor(request)
+    record = get_object_or_404(PrincipalRecord, pk=pk, supervisor=supervisor, is_active=True)
+
+    try:
+        _ensure_supervisor_can_edit(supervisor)
+    except PermissionDenied as exc:
+        messages.error(request, str(exc))
+        return redirect("staffdata:records_list")
+
+    form = _build_supervisor_update_form(request, PrincipalRecordForm, record)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.supervisor = supervisor
+        obj.save()
+        messages.success(request, "تم تحديث سجل المدير/المديرة بنجاح.")
+        return redirect("staffdata:records_list")
+
+    return render(
+        request,
+        "staffdata/principal_form.html",
+        {
+            "form": form,
+            "page_title": "تعديل سجل مدير/مديرة",
+            "submit_label": "حفظ التعديلات",
+            "is_update": True,
+            "record": record,
+            **_build_entry_window_context(supervisor),
+        },
+    )
 
 
 @supervisor_login_required
 def vice_update_view(request, pk):
-    _block_supervisor_record_mutation()
+    supervisor = get_current_supervisor(request)
+    record = get_object_or_404(VicePrincipalRecord, pk=pk, supervisor=supervisor, is_active=True)
+
+    try:
+        _ensure_supervisor_can_edit(supervisor)
+    except PermissionDenied as exc:
+        messages.error(request, str(exc))
+        return redirect("staffdata:records_list")
+
+    form = _build_supervisor_update_form(request, VicePrincipalRecordForm, record)
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+        obj.supervisor = supervisor
+        obj.save()
+        messages.success(request, "تم تحديث سجل الوكيل/الوكيلة بنجاح.")
+        return redirect("staffdata:records_list")
+
+    return render(
+        request,
+        "staffdata/vice_form.html",
+        {
+            "form": form,
+            "page_title": "تعديل سجل وكيل/وكيلة",
+            "submit_label": "حفظ التعديلات",
+            "is_update": True,
+            "record": record,
+            **_build_entry_window_context(supervisor),
+        },
+    )
 
 
 @supervisor_login_required
 def principal_delete_view(request, pk):
-    _block_supervisor_record_mutation()
+    supervisor = get_current_supervisor(request)
+    record = get_object_or_404(PrincipalRecord, pk=pk, supervisor=supervisor, is_active=True)
+
+    if request.method != "POST":
+        messages.info(request, "حذف السجل يتطلب طلبًا مؤكدًا.")
+        return redirect("staffdata:records_list")
+
+    try:
+        _ensure_supervisor_can_delete(supervisor)
+    except PermissionDenied as exc:
+        messages.error(request, str(exc))
+        return redirect("staffdata:records_list")
+
+    record.is_active = False
+    record.save()
+    messages.success(request, "تم إلغاء تنشيط سجل المدير/المديرة بنجاح.")
+    return redirect("staffdata:records_list")
 
 
 @supervisor_login_required
 def vice_delete_view(request, pk):
-    _block_supervisor_record_mutation()
+    supervisor = get_current_supervisor(request)
+    record = get_object_or_404(VicePrincipalRecord, pk=pk, supervisor=supervisor, is_active=True)
+
+    if request.method != "POST":
+        messages.info(request, "حذف السجل يتطلب طلبًا مؤكدًا.")
+        return redirect("staffdata:records_list")
+
+    try:
+        _ensure_supervisor_can_delete(supervisor)
+    except PermissionDenied as exc:
+        messages.error(request, str(exc))
+        return redirect("staffdata:records_list")
+
+    record.is_active = False
+    record.save()
+    messages.success(request, "تم إلغاء تنشيط سجل الوكيل/الوكيلة بنجاح.")
+    return redirect("staffdata:records_list")
 
 
 @supervisor_login_required
 def principal_correction_request_view(request, pk):
     supervisor = get_current_supervisor(request)
-    record = get_object_or_404(PrincipalRecord, pk=pk, supervisor=supervisor)
+    record = get_object_or_404(PrincipalRecord, pk=pk, supervisor=supervisor, is_active=True)
     return _create_correction_request(
         request,
         record,
@@ -804,7 +1082,7 @@ def principal_correction_request_view(request, pk):
 @supervisor_login_required
 def vice_correction_request_view(request, pk):
     supervisor = get_current_supervisor(request)
-    record = get_object_or_404(VicePrincipalRecord, pk=pk, supervisor=supervisor)
+    record = get_object_or_404(VicePrincipalRecord, pk=pk, supervisor=supervisor, is_active=True)
     return _create_correction_request(
         request,
         record,
@@ -828,6 +1106,7 @@ def my_correction_requests_view(request):
         {
             "page_title": "طلبات التصحيح",
             "correction_requests": requests_qs,
+            **_build_entry_window_context(supervisor),
         },
     )
 
@@ -920,6 +1199,7 @@ def admin_overview_view(request):
         "recent_records": overview.get("recent_records", [])[:10],
         "latest_correction_requests": latest_correction_requests,
         **_build_admin_filter_context(request),
+        **_build_entry_window_context(),
     }
 
     return render(request, "staffdata/admin_overview.html", context)
@@ -954,13 +1234,13 @@ def admin_supervisors_list_view(request):
     supervisor_ids = [item.id for item in supervisors]
 
     principals = list(
-        PrincipalRecord.objects.filter(supervisor_id__in=supervisor_ids)
+        PrincipalRecord.objects.filter(supervisor_id__in=supervisor_ids, is_active=True)
         .select_related("supervisor")
         .only("id", "supervisor_id", "created_at", "performance_file")
     )
 
     vices = list(
-        VicePrincipalRecord.objects.filter(supervisor_id__in=supervisor_ids)
+        VicePrincipalRecord.objects.filter(supervisor_id__in=supervisor_ids, is_active=True)
         .select_related("supervisor")
         .only("id", "supervisor_id", "created_at")
     )
@@ -1041,6 +1321,9 @@ def admin_supervisors_list_view(request):
                 "email": _safe_supervisor_value(supervisor, "email"),
                 "sector": _safe_supervisor_value(supervisor, "sector"),
                 "is_active": getattr(supervisor, "is_active", True),
+                "can_add_records": getattr(supervisor, "can_add_records", True),
+                "can_edit_records": getattr(supervisor, "can_edit_records", False),
+                "can_delete_records": getattr(supervisor, "can_delete_records", False),
                 "principals_count": stats.get("principals_count", 0),
                 "vices_count": stats.get("vices_count", 0),
                 "total_count": stats.get("total_count", 0),
@@ -1120,6 +1403,7 @@ def admin_supervisors_list_view(request):
         "current_sector": sector,
         "current_sort": sort,
         "sector_choices": sector_choices,
+        **_build_entry_window_context(),
     }
     return render(request, "staffdata/admin_supervisors_list.html", context)
 
@@ -1149,10 +1433,10 @@ def admin_supervisor_detail_view(request, supervisor_id):
         .order_by("-created_at")
     )
 
-    principal_count = principal_records.count()
-    vice_count = vice_records.count()
+    principal_count = principal_records.filter(is_active=True).count()
+    vice_count = vice_records.filter(is_active=True).count()
     total_count = principal_count + vice_count
-    attachments_count = _count_attachments(principal_records)
+    attachments_count = _count_attachments(principal_records.filter(is_active=True))
     missing_attachments = max(principal_count - attachments_count, 0)
     pending_corrections_count = correction_requests.filter(
         status=CorrectionRequest.STATUS_PENDING
@@ -1176,6 +1460,8 @@ def admin_supervisor_detail_view(request, supervisor_id):
     )
 
     missing_principal_records = principal_records.filter(
+        is_active=True,
+    ).filter(
         Q(performance_file="") | Q(performance_file__isnull=True)
     )
 
@@ -1238,6 +1524,9 @@ def admin_supervisor_detail_view(request, supervisor_id):
             "email": _safe_supervisor_value(supervisor, "email"),
             "sector": _safe_supervisor_value(supervisor, "sector"),
             "is_active": getattr(supervisor, "is_active", True),
+            "can_add_records": getattr(supervisor, "can_add_records", True),
+            "can_edit_records": getattr(supervisor, "can_edit_records", False),
+            "can_delete_records": getattr(supervisor, "can_delete_records", False),
             "status_label": status_label,
             "status_class": status_class,
             "last_activity": last_activity,
@@ -1260,6 +1549,7 @@ def admin_supervisor_detail_view(request, supervisor_id):
             status=AccountResetRequest.STATUS_PENDING
         ).first(),
         "recent_activity": recent_activity,
+        **_build_entry_window_context(supervisor),
     }
     return render(request, "staffdata/admin_supervisor_detail.html", context)
 
@@ -1271,7 +1561,15 @@ def admin_supervisor_update_view(request, supervisor_id):
 
     editable_fields = [
         field_name
-        for field_name in ["full_name", "mobile", "email", "is_active"]
+        for field_name in [
+            "full_name",
+            "mobile",
+            "email",
+            "is_active",
+            "can_add_records",
+            "can_edit_records",
+            "can_delete_records",
+        ]
         if _model_has_field(Supervisor, field_name)
     ]
 
@@ -1297,6 +1595,7 @@ def admin_supervisor_update_view(request, supervisor_id):
             "form": form,
             "supervisor": supervisor,
             "submit_label": "حفظ التعديلات",
+            **_build_entry_window_context(),
         },
     )
 
@@ -1318,6 +1617,7 @@ def admin_principals_list_view(request):
         "total_count": records_qs.count(),
         "export_url_name": "staffdata:admin_export_principals_csv",
         **_build_admin_filter_context(request),
+        **_build_entry_window_context(),
     }
     return render(request, "staffdata/admin_records_list.html", context)
 
@@ -1339,6 +1639,7 @@ def admin_vices_list_view(request):
         "total_count": records_qs.count(),
         "export_url_name": "staffdata:admin_export_vice_csv",
         **_build_admin_filter_context(request),
+        **_build_entry_window_context(),
     }
     return render(request, "staffdata/admin_records_list.html", context)
 
@@ -1387,6 +1688,7 @@ def admin_correction_requests_view(request):
             "current_q": q,
             "status_choices": getattr(CorrectionRequest, "STATUS_CHOICES", []),
             "target_type_choices": getattr(CorrectionRequest, "TARGET_TYPE_CHOICES", []),
+            **_build_entry_window_context(),
         },
     )
 
@@ -1440,6 +1742,7 @@ def admin_correction_request_review_view(request, pk):
             "page_title": "مراجعة طلب تصحيح",
             "correction_request": correction_request,
             "form": form,
+            **_build_entry_window_context(),
         },
     )
 
@@ -1553,6 +1856,7 @@ def admin_download_performance_center_view(request):
         {
             "page_title": "تحميل الاستمارات بحسب المرحلة",
             "stage_choices": stage_choices,
+            **_build_entry_window_context(),
         },
     )
 

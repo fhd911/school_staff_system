@@ -288,7 +288,12 @@ class CorrectionDecisionForm(forms.Form):
 class SupervisorImportForm(forms.Form):
     file = forms.FileField(
         label="ملف المشرفين",
-        help_text="يرفع ملف Excel بصيغة .xlsx ويحتوي على الأعمدة: full_name, national_id, mobile, email, is_active",
+        help_text=(
+            "يرفع ملف Excel بصيغة .xlsx ويحتوي على الأعمدة الأساسية: "
+            "full_name, national_id, mobile "
+            "ويمكن إضافة الأعمدة الاختيارية: email, is_active, sector, "
+            "can_add_records, can_edit_records, can_delete_records"
+        ),
         widget=forms.ClearableFileInput(
             attrs={
                 "class": "form-control",
@@ -333,6 +338,9 @@ class SupervisorAdminUpdateForm(StyledModelForm):
             "mobile",
             "email",
             "is_active",
+            "can_add_records",
+            "can_edit_records",
+            "can_delete_records",
         ]
 
     def __init__(self, *args, **kwargs):
@@ -366,6 +374,19 @@ class SupervisorAdminUpdateForm(StyledModelForm):
 
         if "is_active" in self.fields:
             self.fields["is_active"].required = False
+            self.fields["is_active"].help_text = "عند إلغاء التفعيل لن يتمكن المشرف من الدخول للنظام."
+
+        if "can_add_records" in self.fields:
+            self.fields["can_add_records"].required = False
+            self.fields["can_add_records"].help_text = "يسمح للمشرف بإضافة السجلات خلال الفترة المفتوحة."
+
+        if "can_edit_records" in self.fields:
+            self.fields["can_edit_records"].required = False
+            self.fields["can_edit_records"].help_text = "يسمح للمشرف بتعديل السجلات خلال الفترة المفتوحة."
+
+        if "can_delete_records" in self.fields:
+            self.fields["can_delete_records"].required = False
+            self.fields["can_delete_records"].help_text = "يسمح للمشرف بحذف/إلغاء تنشيط السجلات خلال الفترة المفتوحة."
 
         self.order_fields([
             name for name in [
@@ -374,6 +395,9 @@ class SupervisorAdminUpdateForm(StyledModelForm):
                 "mobile",
                 "email",
                 "is_active",
+                "can_add_records",
+                "can_edit_records",
+                "can_delete_records",
             ]
             if name in self.fields
         ])

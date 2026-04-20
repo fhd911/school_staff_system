@@ -79,6 +79,12 @@
         border-radius:12px;
     }
 
+    .hero-actions .btn.is-disabled{
+        opacity:.55;
+        pointer-events:none;
+        cursor:not-allowed;
+    }
+
     .hero-metrics{
         display:grid;
         grid-template-columns:repeat(4, minmax(0, 1fr));
@@ -215,6 +221,12 @@
         transform:translateY(-2px);
         box-shadow:var(--shadow-md);
         border-color:rgba(21,71,52,.16);
+    }
+
+    .quick-card.is-disabled{
+        opacity:.62;
+        cursor:not-allowed;
+        pointer-events:none;
     }
 
     .quick-card-body{
@@ -386,6 +398,95 @@
         line-height:2;
     }
 
+    .entry-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:12px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .entry-badge.open{
+        background:#eaf6ee;
+        color:#1f6a42;
+        border:1px solid #cfe7d8;
+    }
+
+    .entry-badge.closed{
+        background:#fff3e8;
+        color:#8a5a1e;
+        border:1px solid #ead2b4;
+    }
+
+    .entry-badge.inactive{
+        background:#f4f5f6;
+        color:#69757a;
+        border:1px solid #dfe5e8;
+    }
+
+    .entry-mini-list{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+        margin-top:12px;
+    }
+
+    .entry-mini-item{
+        border:1px solid var(--line);
+        border-radius:14px;
+        background:#fff;
+        padding:12px;
+    }
+
+    .entry-mini-label{
+        font-size:11px;
+        line-height:1.7;
+        color:var(--muted);
+        margin-bottom:6px;
+    }
+
+    .entry-mini-value{
+        font-size:15px;
+        line-height:1.4;
+        color:var(--ink);
+        font-weight:700;
+    }
+
+    .permission-pills{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .permission-pill{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:12px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .permission-pill.allowed{
+        background:#edf7f0;
+        color:#1f6a42;
+        border:1px solid #d5e9dc;
+    }
+
+    .permission-pill.denied{
+        background:#fff3f3;
+        color:#8a3a3a;
+        border:1px solid #ecd0d0;
+    }
+
     @media (max-width: 1100px){
         .hero-metrics,
         .dashboard-stats,
@@ -393,7 +494,8 @@
             grid-template-columns:repeat(2, minmax(0, 1fr));
         }
 
-        .status-grid{
+        .status-grid,
+        .entry-mini-list{
             grid-template-columns:1fr;
         }
     }
@@ -456,8 +558,13 @@
                 </p>
 
                 <div class="action-bar hero-actions">
-                    <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">إضافة مدير/مديرة</a>
-                    <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">إضافة وكيل/وكيلة</a>
+                    {% if entry_window_can_add %}
+                        <a href="{% url 'staffdata:principal_add' %}" class="btn btn-primary">إضافة مدير/مديرة</a>
+                        <a href="{% url 'staffdata:vice_add' %}" class="btn btn-secondary">إضافة وكيل/وكيلة</a>
+                    {% else %}
+                        <span class="btn btn-primary is-disabled">إضافة مدير/مديرة</span>
+                        <span class="btn btn-secondary is-disabled">إضافة وكيل/وكيلة</span>
+                    {% endif %}
                     <a href="{% url 'staffdata:records_list' %}" class="btn btn-soft">عرض السجلات</a>
                 </div>
             </div>
@@ -490,6 +597,83 @@
 
 {% block content %}
 <div class="dashboard-page">
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">حالة فترة التسجيل</h2>
+                <p class="section-subtitle">قراءة مباشرة لوضع الفترة الحالية وصلاحياتك التشغيلية داخل النظام.</p>
+            </div>
+
+            {% if entry_window_status_label == "مفتوحة" %}
+                <span class="entry-badge open">{{ entry_window_status_label }}</span>
+            {% elif entry_window_status_label == "غير مفعلة" or entry_window_status_label == "لا توجد فترة مسجلة" %}
+                <span class="entry-badge inactive">{{ entry_window_status_label }}</span>
+            {% else %}
+                <span class="entry-badge closed">{{ entry_window_status_label }}</span>
+            {% endif %}
+        </div>
+
+        <div class="status-grid">
+            <div class="status-card">
+                <h3 class="status-title">تفاصيل الفترة</h3>
+
+                {% if entry_window %}
+                    <p class="status-text">
+                        الفترة المعتمدة حاليًا هي <strong>{{ entry_window.title }}</strong>.
+                    </p>
+
+                    <div class="entry-mini-list">
+                        <div class="entry-mini-item">
+                            <div class="entry-mini-label">بداية الفترة</div>
+                            <div class="entry-mini-value">{{ entry_window.starts_at|date:"Y-m-d H:i" }}</div>
+                        </div>
+
+                        <div class="entry-mini-item">
+                            <div class="entry-mini-label">نهاية الفترة</div>
+                            <div class="entry-mini-value">{{ entry_window.ends_at|date:"Y-m-d H:i" }}</div>
+                        </div>
+
+                        <div class="entry-mini-item">
+                            <div class="entry-mini-label">الوقت المتبقي</div>
+                            <div class="entry-mini-value">
+                                {% if entry_window_status_label == "مفتوحة" %}
+                                    {{ entry_window_remaining_days }} يوم / {{ entry_window_remaining_hours }} ساعة
+                                {% else %}
+                                    —
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <p class="status-text">
+                        لا توجد حاليًا فترة تسجيل بيانات معرفة في النظام.
+                    </p>
+                {% endif %}
+            </div>
+
+            <div class="status-card">
+                <h3 class="status-title">صلاحياتك الحالية</h3>
+                <p class="status-text">
+                    تعتمد الإتاحة الفعلية على عاملين: <strong>الفترة الزمنية</strong> و<strong>صلاحيات حسابك</strong>.
+                </p>
+
+                <div class="permission-pills">
+                    <span class="permission-pill {% if entry_window_can_add %}allowed{% else %}denied{% endif %}">
+                        الإضافة {% if entry_window_can_add %}متاحة{% else %}غير متاحة{% endif %}
+                    </span>
+
+                    <span class="permission-pill {% if entry_window_can_edit %}allowed{% else %}denied{% endif %}">
+                        التعديل {% if entry_window_can_edit %}متاح{% else %}غير متاح{% endif %}
+                    </span>
+
+                    <span class="permission-pill {% if entry_window_can_delete %}allowed{% else %}denied{% endif %}">
+                        الحذف {% if entry_window_can_delete %}متاح{% else %}غير متاح{% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <section class="section">
         <div class="section-head">
@@ -535,25 +719,49 @@
         </div>
 
         <div class="quick-grid">
-            <a href="{% url 'staffdata:principal_add' %}" class="quick-card">
-                <div class="quick-card-body">
-                    <h3 class="quick-card-title">إضافة مدير/مديرة</h3>
-                    <p class="quick-card-desc">
-                        إنشاء سجل جديد للمدير أو المديرة مع رفع استمارة الأداء الوظيفي.
-                    </p>
+            {% if entry_window_can_add %}
+                <a href="{% url 'staffdata:principal_add' %}" class="quick-card">
+                    <div class="quick-card-body">
+                        <h3 class="quick-card-title">إضافة مدير/مديرة</h3>
+                        <p class="quick-card-desc">
+                            إنشاء سجل جديد للمدير أو المديرة مع رفع استمارة الأداء الوظيفي.
+                        </p>
+                    </div>
+                    <span class="quick-card-link">فتح الصفحة</span>
+                </a>
+            {% else %}
+                <div class="quick-card is-disabled">
+                    <div class="quick-card-body">
+                        <h3 class="quick-card-title">إضافة مدير/مديرة</h3>
+                        <p class="quick-card-desc">
+                            الإضافة غير متاحة حاليًا بسبب إغلاق الفترة أو لعدم توفر الصلاحية.
+                        </p>
+                    </div>
+                    <span class="quick-card-link">غير متاح</span>
                 </div>
-                <span class="quick-card-link">فتح الصفحة</span>
-            </a>
+            {% endif %}
 
-            <a href="{% url 'staffdata:vice_add' %}" class="quick-card">
-                <div class="quick-card-body">
-                    <h3 class="quick-card-title">إضافة وكيل/وكيلة</h3>
-                    <p class="quick-card-desc">
-                        إنشاء سجل جديد للوكيل أو الوكيلة بالبيانات الأساسية المعتمدة.
-                    </p>
+            {% if entry_window_can_add %}
+                <a href="{% url 'staffdata:vice_add' %}" class="quick-card">
+                    <div class="quick-card-body">
+                        <h3 class="quick-card-title">إضافة وكيل/وكيلة</h3>
+                        <p class="quick-card-desc">
+                            إنشاء سجل جديد للوكيل أو الوكيلة بالبيانات الأساسية المعتمدة.
+                        </p>
+                    </div>
+                    <span class="quick-card-link">فتح الصفحة</span>
+                </a>
+            {% else %}
+                <div class="quick-card is-disabled">
+                    <div class="quick-card-body">
+                        <h3 class="quick-card-title">إضافة وكيل/وكيلة</h3>
+                        <p class="quick-card-desc">
+                            الإضافة غير متاحة حاليًا بسبب إغلاق الفترة أو لعدم توفر الصلاحية.
+                        </p>
+                    </div>
+                    <span class="quick-card-link">غير متاح</span>
                 </div>
-                <span class="quick-card-link">فتح الصفحة</span>
-            </a>
+            {% endif %}
 
             <a href="{% url 'staffdata:records_list' %}" class="quick-card">
                 <div class="quick-card-body">
@@ -567,12 +775,20 @@
 
             <div class="quick-card">
                 <div class="quick-card-body">
-                    <h3 class="quick-card-title">الصفحة الحالية</h3>
+                    <h3 class="quick-card-title">الوضع الحالي</h3>
                     <p class="quick-card-desc">
-                        هذه اللوحة تعرض مؤشراتك وأحدث المدخلات وتساعدك على متابعة العمل اليومي.
+                        {% if entry_window_status_label == "مفتوحة" %}
+                            فترة التسجيل مفتوحة حاليًا ويمكنك تنفيذ العمليات المسموح بها حسب صلاحياتك.
+                        {% elif entry_window_status_label == "لم تبدأ" %}
+                            توجد فترة معرفة لكنها لم تبدأ بعد.
+                        {% elif entry_window_status_label == "منتهية" %}
+                            انتهت فترة التسجيل الحالية، ويمكنك المتابعة حسب ما هو متاح في النظام.
+                        {% else %}
+                            لا توجد فترة تشغيل فعالة حاليًا.
+                        {% endif %}
                     </p>
                 </div>
-                <span class="quick-card-link">أنت هنا</span>
+                <span class="quick-card-link">{{ entry_window_status_label }}</span>
             </div>
         </div>
     </section>
@@ -623,7 +839,7 @@
             </div>
         {% else %}
             <div class="empty-state">
-                لا توجد أي مدخلات حتى الآن. ابدأ بإضافة أول سجل من خلال قسم الإجراءات السريعة أعلاه.
+                لا توجد أي مدخلات حتى الآن. ابدأ بإضافة أول سجل من خلال قسم الإجراءات السريعة أعلاه إذا كانت الفترة والصلاحية متاحتين.
             </div>
         {% endif %}
     </section>
@@ -645,6 +861,9 @@
                     و<strong>{{ vice_count }}</strong> للوكلاء والوكيلات،
                     مع <strong>{{ attachments_count }}</strong> استمارة مرفوعة.
                 </p>
+                <p class="status-text" style="margin-top:10px;">
+                    حالة فترة التسجيل الحالية: <strong>{{ entry_window_status_label }}</strong>.
+                </p>
             </div>
 
             <div class="status-card">
@@ -653,6 +872,7 @@
                     <li>وحّد كتابة اسم المدرسة والقطاع لتظهر التقارير بصورة أدق.</li>
                     <li>ارفع استمارة الأداء مباشرة عند إدخال بيانات المدير أو المديرة.</li>
                     <li>عند وجود خطأ في سجل محفوظ استخدم طلب التصحيح عبر المسار المعتمد.</li>
+                    <li>الإضافة والتعديل والحذف تخضع للفترة الزمنية وصلاحيات حسابك.</li>
                 </ul>
             </div>
         </div>

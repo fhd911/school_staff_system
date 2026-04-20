@@ -2,6 +2,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.core.validators import FileExtensionValidator, RegexValidator
 from django.db import models
+from django.utils import timezone
 
 from accounts.models import Supervisor
 
@@ -435,3 +436,74 @@ class AccountResetRequest(models.Model):
                 raise ValidationError({"processed_at": "يجب تحديد تاريخ المعالجة عند اعتماد الطلب."})
             if not self.processed_by:
                 raise ValidationError({"processed_by": "يجب تحديد المستخدم الذي عالج الطلب."})
+
+
+class DataEntryWindow(models.Model):
+    title = models.CharField("اسم الفترة", max_length=200, default="فترة تسجيل البيانات")
+
+    starts_at = models.DateTimeField("بداية الفترة")
+    ends_at = models.DateTimeField("نهاية الفترة")
+
+    is_active = models.BooleanField("مفعلة", default=True)
+
+    allow_add = models.BooleanField("السماح بالإضافة", default=True)
+    allow_edit = models.BooleanField("السماح بالتعديل", default=False)
+    allow_delete = models.BooleanField("السماح بالحذف", default=False)
+
+    notes = models.TextField("ملاحظات", blank=True)
+
+    created_at = models.DateTimeField("تاريخ الإنشاء", auto_now_add=True)
+    updated_at = models.DateTimeField("آخر تحديث", auto_now=True)
+
+    class Meta:
+        verbose_name = "فترة تسجيل البيانات"
+        verbose_name_plural = "فترات تسجيل البيانات"
+        ordering = ["-starts_at"]
+
+    def __str__(self):
+        return self.title
+
+    def clean(self):
+        if self.ends_at <= self.starts_at:
+            raise ValidationError(
+                {"ends_at": "يجب أن يكون وقت نهاية الفترة بعد وقت البداية."}
+            )
+
+    @property
+    def is_open_now(self):
+        now = timezone.now()
+        return self.is_active and self.starts_at <= now <= self.ends_at
+
+    @property
+    def has_started(self):
+        return timezone.now() >= self.starts_at
+
+    @property
+    def has_ended(self):
+        return timezone.now() > self.ends_at
+
+    @property
+    def remaining_seconds(self):
+        if not self.is_open_now:
+            return 0
+        remaining = int((self.ends_at - timezone.now()).total_seconds())
+        return max(remaining, 0)
+
+    @property
+    def remaining_days(self):
+        return self.remaining_seconds // 86400
+
+    @property
+    def remaining_hours(self):
+        return self.remaining_seconds // 3600
+
+    @property
+    def status_label(self):
+        now = timezone.now()
+        if not self.is_active:
+            return "غير مفعلة"
+        if now < self.starts_at:
+            return "لم تبدأ"
+        if self.starts_at <= now <= self.ends_at:
+            return "مفتوحة"
+        return "منتهية"
