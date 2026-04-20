@@ -1,0 +1,496 @@
+{% extends "base.html" %}
+{% block title %}تحميل الاستمارات بحسب المرحلة{% endblock %}
+
+{% block extra_css %}
+<style>
+    .download-center-page{
+        --dc-bg:#f4f7f5;
+        --dc-paper:#fffefb;
+        --dc-paper-2:#fbfcfa;
+        --dc-line:#d9e2dc;
+        --dc-line-strong:#c9d5ce;
+
+        --dc-ink:#18382d;
+        --dc-ink-soft:#4f665d;
+        --dc-muted:#7b8d84;
+
+        --dc-green:#165c43;
+        --dc-green-2:#1d6a4d;
+        --dc-green-soft:#edf6f1;
+
+        --dc-gold:#c9a45c;
+        --dc-gold-soft:#f6eddc;
+
+        --dc-shadow:0 20px 45px rgba(19, 47, 36, .10);
+        --dc-radius-xl:28px;
+        --dc-radius-lg:22px;
+        --dc-radius-md:16px;
+    }
+
+    .download-center-page,
+    .download-center-page *{
+        font-family:"Tajawal","Noto Sans Arabic","Segoe UI",Tahoma,Arial,sans-serif;
+        box-sizing:border-box;
+    }
+
+    .download-center-page{
+        padding:28px 18px 40px;
+    }
+
+    .download-shell{
+        max-width:1180px;
+        margin:0 auto;
+    }
+
+    .download-hero{
+        position:relative;
+        overflow:hidden;
+        background:
+            linear-gradient(135deg, rgba(16,69,49,.98), rgba(22,92,67,.95));
+        color:#fff;
+        border-radius:32px;
+        padding:32px 34px;
+        box-shadow:var(--dc-shadow);
+        margin-bottom:22px;
+        border:1px solid rgba(255,255,255,.08);
+    }
+
+    .download-hero::before{
+        content:"";
+        position:absolute;
+        inset:auto auto -45px -45px;
+        width:180px;
+        height:180px;
+        border-radius:50%;
+        background:rgba(255,255,255,.06);
+    }
+
+    .download-hero::after{
+        content:"";
+        position:absolute;
+        inset:22px 22px auto auto;
+        width:110px;
+        height:110px;
+        border-radius:24px;
+        border:1px solid rgba(255,255,255,.10);
+        background:rgba(255,255,255,.04);
+        transform:rotate(14deg);
+    }
+
+    .download-hero-content{
+        position:relative;
+        z-index:2;
+        display:flex;
+        justify-content:space-between;
+        align-items:flex-start;
+        gap:20px;
+        flex-wrap:wrap;
+    }
+
+    .download-hero-badge{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.16);
+        color:#fff;
+        border-radius:999px;
+        padding:8px 14px;
+        font-size:13px;
+        font-weight:700;
+        margin-bottom:14px;
+    }
+
+    .download-hero-title{
+        margin:0 0 8px;
+        font-size:2rem;
+        font-weight:800;
+        letter-spacing:0;
+        line-height:1.25;
+    }
+
+    .download-hero-text{
+        margin:0;
+        max-width:760px;
+        color:rgba(255,255,255,.88);
+        font-size:1rem;
+        line-height:1.95;
+        font-weight:500;
+    }
+
+    .download-hero-side{
+        min-width:230px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.12);
+        border-radius:24px;
+        padding:16px 18px;
+        backdrop-filter:blur(3px);
+    }
+
+    .download-hero-side-label{
+        font-size:13px;
+        color:rgba(255,255,255,.78);
+        margin-bottom:6px;
+        font-weight:700;
+    }
+
+    .download-hero-side-value{
+        font-size:1.15rem;
+        font-weight:800;
+        color:#fff;
+    }
+
+    .download-grid{
+        display:grid;
+        grid-template-columns:1.1fr .9fr;
+        gap:22px;
+    }
+
+    .download-card{
+        background:linear-gradient(180deg, var(--dc-paper), var(--dc-paper-2));
+        border:1px solid var(--dc-line);
+        border-radius:var(--dc-radius-xl);
+        box-shadow:0 16px 34px rgba(17, 43, 34, .06);
+    }
+
+    .download-card-inner{
+        padding:28px;
+    }
+
+    .section-kicker{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding:7px 12px;
+        border-radius:999px;
+        background:var(--dc-green-soft);
+        color:var(--dc-green);
+        border:1px solid #d8eadf;
+        font-size:12px;
+        font-weight:800;
+        margin-bottom:14px;
+    }
+
+    .section-title{
+        margin:0 0 10px;
+        color:var(--dc-ink);
+        font-size:1.55rem;
+        font-weight:800;
+        line-height:1.4;
+    }
+
+    .section-text{
+        margin:0;
+        color:var(--dc-ink-soft);
+        line-height:2;
+        font-size:1rem;
+        font-weight:500;
+    }
+
+    .download-actions{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:14px;
+        margin-top:22px;
+    }
+
+    .download-btn{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:14px;
+        min-height:86px;
+        padding:16px 18px;
+        text-decoration:none;
+        border-radius:20px;
+        border:1px solid var(--dc-line);
+        background:#fff;
+        color:var(--dc-ink);
+        box-shadow:0 8px 18px rgba(20, 43, 35, .04);
+        transition:transform .18s ease, box-shadow .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .download-btn:hover{
+        transform:translateY(-2px);
+        box-shadow:0 16px 24px rgba(20, 43, 35, .10);
+        border-color:#c6d6ce;
+        text-decoration:none;
+    }
+
+    .download-btn-main{
+        background:linear-gradient(180deg, #1a6449, #15553d);
+        border-color:#15553d;
+        color:#fff;
+    }
+
+    .download-btn-main:hover{
+        color:#fff;
+        border-color:#124b36;
+        box-shadow:0 18px 26px rgba(17, 82, 59, .25);
+    }
+
+    .download-btn-stage{
+        background:linear-gradient(180deg, #fffefb, #fbfcf9);
+    }
+
+    .download-btn-stage:hover{
+        background:#fff;
+        color:var(--dc-ink);
+    }
+
+    .download-btn-content{
+        display:flex;
+        flex-direction:column;
+        align-items:flex-start;
+        gap:6px;
+        min-width:0;
+    }
+
+    .download-btn-title{
+        font-size:1.05rem;
+        font-weight:800;
+        line-height:1.5;
+    }
+
+    .download-btn-desc{
+        font-size:.92rem;
+        color:var(--dc-muted);
+        line-height:1.7;
+        font-weight:500;
+    }
+
+    .download-btn-main .download-btn-desc{
+        color:rgba(255,255,255,.82);
+    }
+
+    .download-btn-icon{
+        width:44px;
+        height:44px;
+        flex:0 0 44px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:14px;
+        font-size:1.15rem;
+        font-weight:800;
+    }
+
+    .download-btn-main .download-btn-icon{
+        background:rgba(255,255,255,.12);
+        color:#fff;
+        border:1px solid rgba(255,255,255,.12);
+    }
+
+    .download-btn-stage .download-btn-icon{
+        background:var(--dc-gold-soft);
+        color:#9d7a36;
+        border:1px solid #ead8b2;
+    }
+
+    .notes-list{
+        display:grid;
+        gap:12px;
+        margin-top:18px;
+    }
+
+    .note-item{
+        display:flex;
+        gap:12px;
+        align-items:flex-start;
+        padding:14px 15px;
+        border-radius:18px;
+        background:#fff;
+        border:1px solid var(--dc-line);
+    }
+
+    .note-bullet{
+        width:28px;
+        height:28px;
+        flex:0 0 28px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:var(--dc-green-soft);
+        color:var(--dc-green);
+        font-size:13px;
+        font-weight:800;
+        margin-top:1px;
+    }
+
+    .note-text{
+        color:var(--dc-ink-soft);
+        line-height:1.95;
+        font-size:.97rem;
+        font-weight:500;
+    }
+
+    .download-footer{
+        margin-top:22px;
+        display:flex;
+        justify-content:flex-start;
+    }
+
+    .back-link{
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        color:var(--dc-green);
+        text-decoration:none;
+        font-weight:800;
+        font-size:.98rem;
+    }
+
+    .back-link:hover{
+        color:var(--dc-green-2);
+        text-decoration:none;
+    }
+
+    @media (max-width: 980px){
+        .download-grid{
+            grid-template-columns:1fr;
+        }
+
+        .download-actions{
+            grid-template-columns:1fr 1fr;
+        }
+    }
+
+    @media (max-width: 720px){
+        .download-center-page{
+            padding:18px 12px 28px;
+        }
+
+        .download-hero{
+            padding:24px 18px;
+            border-radius:24px;
+        }
+
+        .download-card-inner{
+            padding:20px 16px;
+        }
+
+        .download-hero-title{
+            font-size:1.6rem;
+        }
+
+        .download-actions{
+            grid-template-columns:1fr;
+        }
+
+        .download-hero-side{
+            width:100%;
+            min-width:auto;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="download-center-page">
+    <div class="download-shell">
+
+        <section class="download-hero">
+            <div class="download-hero-content">
+                <div class="download-hero-main">
+                    <div class="download-hero-badge">مركز التحميل الإداري</div>
+                    <h1 class="download-hero-title">تحميل الاستمارات بحسب المرحلة</h1>
+                    <p class="download-hero-text">
+                        اختر المرحلة المطلوبة لتحميل استمارات الأداء المرتبطة بها فقط، مع إمكانية
+                        تحميل جميع الاستمارات دفعة واحدة عند الحاجة إلى مراجعة شاملة.
+                    </p>
+                </div>
+
+                <div class="download-hero-side">
+                    <div class="download-hero-side-label">آلية التحميل</div>
+                    <div class="download-hero-side-value">بحسب المرحلة الدراسية</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="download-grid">
+            <section class="download-card">
+                <div class="download-card-inner">
+                    <div class="section-kicker">تنزيل الملفات</div>
+                    <h2 class="section-title">اختر نوع التحميل المناسب</h2>
+                    <p class="section-text">
+                        تظهر أدناه أزرار التحميل بحسب المراحل المعتمدة في النظام. عند الضغط على أي مرحلة،
+                        سيتم إنشاء ملف مضغوط يحتوي فقط على الاستمارات المطابقة لها.
+                    </p>
+
+                    <div class="download-actions">
+                        <a href="{% url 'staffdata:admin_download_performance_zip' %}"
+                           class="download-btn download-btn-main">
+                            <div class="download-btn-content">
+                                <div class="download-btn-title">تحميل جميع الاستمارات</div>
+                                <div class="download-btn-desc">تنزيل شامل لكل الاستمارات المرفوعة في النظام</div>
+                            </div>
+                            <div class="download-btn-icon">⬇</div>
+                        </a>
+
+                        {% for item in stage_choices %}
+                        <a href="{% url 'staffdata:admin_download_performance_zip' %}?stage={{ item.value|urlencode }}"
+                           class="download-btn download-btn-stage">
+                            <div class="download-btn-content">
+                                <div class="download-btn-title">تحميل استمارات {{ item.label }}</div>
+                                <div class="download-btn-desc">تنزيل الاستمارات الخاصة بمرحلة {{ item.label }}</div>
+                            </div>
+                            <div class="download-btn-icon">⇩</div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+
+            <aside class="download-card">
+                <div class="download-card-inner">
+                    <div class="section-kicker">إرشادات</div>
+                    <h2 class="section-title">ملاحظات مهمة قبل التحميل</h2>
+                    <p class="section-text">
+                        لضمان تنظيم الملفات وسهولة مراجعتها، يفضل تحديد المرحلة المطلوبة بدلًا من
+                        تنزيل جميع الاستمارات عند كل مرة.
+                    </p>
+
+                    <div class="notes-list">
+                        <div class="note-item">
+                            <div class="note-bullet">1</div>
+                            <div class="note-text">
+                                تحميل كل مرحلة بشكل مستقل يسهل الفرز والمراجعة السريعة داخل الإدارة.
+                            </div>
+                        </div>
+
+                        <div class="note-item">
+                            <div class="note-bullet">2</div>
+                            <div class="note-text">
+                                إذا لم تكن هناك استمارات مرفوعة لمرحلة معينة، فسيتم تنزيل ملف مضغوط فارغ أو بعدد محدود وفق المتاح.
+                            </div>
+                        </div>
+
+                        <div class="note-item">
+                            <div class="note-bullet">3</div>
+                            <div class="note-text">
+                                اسم الملف الناتج يتضمن اسم المرحلة المختارة لتسهيل حفظه وأرشفته لاحقًا.
+                            </div>
+                        </div>
+
+                        <div class="note-item">
+                            <div class="note-bullet">4</div>
+                            <div class="note-text">
+                                يمكن الاستفادة من فلاتر الإدارة الأخرى مستقبلًا عند الحاجة إلى تحميل أكثر دقة بحسب القطاع أو المدرسة أو المشرف.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="download-footer">
+                        <a href="{% url 'staffdata:admin_overview' %}" class="back-link">
+                            <span>←</span>
+                            <span>العودة إلى لوحة الإدارة</span>
+                        </a>
+                    </div>
+                </div>
+            </aside>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

@@ -1541,6 +1541,23 @@ def admin_export_vice_csv(request):
 
 
 @staff_member_required(login_url="/admin/login/")
+def admin_download_performance_center_view(request):
+    stage_choices = [
+        {"value": value, "label": label}
+        for value, label in PrincipalRecord.STAGE_CHOICES
+    ]
+
+    return render(
+        request,
+        "staffdata/admin_download_performance_center.html",
+        {
+            "page_title": "تحميل الاستمارات بحسب المرحلة",
+            "stage_choices": stage_choices,
+        },
+    )
+
+
+@staff_member_required(login_url="/admin/login/")
 def admin_download_performance_zip(request):
     records = apply_principal_filters(
         request,
@@ -1567,6 +1584,13 @@ def admin_download_performance_zip(request):
 
     buffer.seek(0)
 
+    stage_value = request.GET.get("stage", "").strip()
+    stage_map = dict(getattr(PrincipalRecord, "STAGE_CHOICES", []))
+    stage_label = stage_map.get(stage_value, "الكل")
+    safe_stage = _clean_filename(stage_label)
+
     response = HttpResponse(buffer.getvalue(), content_type="application/zip")
-    response["Content-Disposition"] = 'attachment; filename="performance_forms.zip"'
+    response["Content-Disposition"] = (
+        f'attachment; filename="performance_forms_{safe_stage}.zip"'
+    )
     return response

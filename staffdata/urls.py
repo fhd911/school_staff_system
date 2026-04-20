@@ -91,7 +91,9 @@ urlpatterns = [
         name="admin_correction_request_review",
     ),
 
-    # التصدير
+    # =========================
+    # التحميل والتصدير
+    # =========================
     path(
         "management/export/principals/",
         views.admin_export_principals_csv,
@@ -102,6 +104,15 @@ urlpatterns = [
         views.admin_export_vice_csv,
         name="admin_export_vice_csv",
     ),
+
+    # صفحة اختيار المرحلة لتحميل الاستمارات
+    path(
+        "management/performance-download/",
+        views.admin_download_performance_center_view,
+        name="admin_download_performance_center",
+    ),
+
+    # تحميل ملف ZIP بعد اختيار المرحلة
     path(
         "management/export/performance-zip/",
         views.admin_download_performance_zip,
