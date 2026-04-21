@@ -399,6 +399,23 @@
         line-height:1.8;
     }
 
+    .permission-block{
+        margin-top:4px;
+        padding-top:14px;
+        border-top:1px solid var(--sf-line-3);
+    }
+
+    .permission-grid{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+        margin-top:10px;
+    }
+
+    .permission-grid .switch-card{
+        min-height:100%;
+    }
+
     .errorlist{
         margin:2px 0 0;
         padding:0;
@@ -495,6 +512,10 @@
         .form-shell{
             grid-template-columns:1fr;
         }
+
+        .permission-grid{
+            grid-template-columns:1fr;
+        }
     }
 
     @media (max-width: 760px){
@@ -546,7 +567,7 @@
             <span class="sf-kicker">الإدارة العامة — تحديث بيانات المشرف</span>
             <h1 class="hero-title">{{ page_title }}</h1>
             <p class="hero-text">
-                تتيح هذه الصفحة تحديث البيانات الأساسية للمشرف من جهة الإدارة، مع الإبقاء على السجل المدني مرجعًا ثابتًا
+                تتيح هذه الصفحة تحديث البيانات الأساسية للمشرف وصلاحياته التشغيلية من جهة الإدارة، مع الإبقاء على السجل المدني مرجعًا ثابتًا
                 غير قابل للتحرير من هذا المسار، وفصل تعديل البيانات عن إجراءات إعادة تهيئة الحساب.
             </p>
 
@@ -594,7 +615,7 @@
         <div class="section-head">
             <div>
                 <h2 class="section-title">نموذج التعديل الإداري</h2>
-                <p class="section-subtitle">تحديث يدوي للحالات الفردية مع الحفاظ على اتساق بيانات الحساب داخل النظام.</p>
+                <p class="section-subtitle">تحديث يدوي للحالات الفردية مع الحفاظ على اتساق بيانات الحساب وصلاحياته داخل النظام.</p>
             </div>
             <span class="section-badge">تحرير إداري</span>
         </div>
@@ -604,7 +625,7 @@
                 <div class="panel-card">
                     <div class="notice-box">
                         <strong>تنبيه:</strong>
-                        تعديل بيانات المشرف لا يغيّر كلمة المرور الحالية تلقائيًا. عند الحاجة إلى إرجاع الحساب للدخول الأول
+                        تعديل بيانات المشرف وصلاحياته لا يغيّر كلمة المرور الحالية تلقائيًا. عند الحاجة إلى إرجاع الحساب للدخول الأول
                         استخدم مسار <strong>إعادة تهيئة الحساب</strong> من بطاقة المشرف.
                     </div>
                 </div>
@@ -694,9 +715,68 @@
                             </div>
                         </div>
 
+                        {% if form.can_add_records or form.can_edit_records or form.can_delete_records %}
+                        <div class="permission-block">
+                            <div class="section-head" style="margin-bottom:10px;">
+                                <div>
+                                    <h3 class="section-title" style="font-size:16px;">الصلاحيات التشغيلية</h3>
+                                    <p class="section-subtitle">التحكم في ما يمكن للمشرف تنفيذه داخل النظام.</p>
+                                </div>
+                                <span class="section-badge">صلاحيات</span>
+                            </div>
+
+                            <div class="permission-grid">
+                                {% if form.can_add_records %}
+                                <div>
+                                    <label class="switch-card" for="{{ form.can_add_records.id_for_label }}">
+                                        {{ form.can_add_records }}
+                                        <div class="switch-copy">
+                                            <div class="switch-title">{{ form.can_add_records.label }}</div>
+                                            <div class="switch-text">
+                                                تمكّن المشرف من إضافة السجلات الجديدة أثناء الفترات المتاحة.
+                                            </div>
+                                        </div>
+                                    </label>
+                                    {{ form.can_add_records.errors }}
+                                </div>
+                                {% endif %}
+
+                                {% if form.can_edit_records %}
+                                <div>
+                                    <label class="switch-card" for="{{ form.can_edit_records.id_for_label }}">
+                                        {{ form.can_edit_records }}
+                                        <div class="switch-copy">
+                                            <div class="switch-title">{{ form.can_edit_records.label }}</div>
+                                            <div class="switch-text">
+                                                تمكّن المشرف من تعديل السجلات متى كان التعديل مسموحًا في النظام.
+                                            </div>
+                                        </div>
+                                    </label>
+                                    {{ form.can_edit_records.errors }}
+                                </div>
+                                {% endif %}
+
+                                {% if form.can_delete_records %}
+                                <div>
+                                    <label class="switch-card" for="{{ form.can_delete_records.id_for_label }}">
+                                        {{ form.can_delete_records }}
+                                        <div class="switch-copy">
+                                            <div class="switch-title">{{ form.can_delete_records.label }}</div>
+                                            <div class="switch-text">
+                                                تمكّن المشرف من حذف السجلات عند فتح صلاحية الحذف من جهة الإدارة.
+                                            </div>
+                                        </div>
+                                    </label>
+                                    {{ form.can_delete_records.errors }}
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endif %}
+
                         <div class="form-footer">
                             <div class="form-footer-note">
-                                بعد الحفظ ستنعكس التعديلات مباشرة على بطاقة المشرف وقوائم الإدارة ذات الصلة.
+                                بعد الحفظ ستنعكس التعديلات مباشرة على بطاقة المشرف وقوائم الإدارة والصلاحيات التشغيلية ذات الصلة.
                             </div>
 
                             <div class="form-actions">
@@ -740,6 +820,10 @@
                             <span class="mini-badge">مسموح</span>
                         </div>
                         <div class="mini-row">
+                            <div class="mini-name">صلاحيات الإضافة/التعديل/الحذف</div>
+                            <span class="mini-badge">مسموح</span>
+                        </div>
+                        <div class="mini-row">
                             <div class="mini-name">السجل المدني</div>
                             <span class="mini-badge">للعرض فقط</span>
                         </div>
@@ -760,6 +844,10 @@
                         <div class="mini-row">
                             <div class="mini-name">إعادة التهيئة تعالج من بطاقة المشرف وليس من هذه الصفحة.</div>
                             <span class="mini-badge">مسار مستقل</span>
+                        </div>
+                        <div class="mini-row">
+                            <div class="mini-name">الصلاحيات الفعلية ترتبط أيضًا بفترة التسجيل المعتمدة داخل النظام.</div>
+                            <span class="mini-badge">تنظيمي</span>
                         </div>
                     </div>
                 </div>

@@ -28,6 +28,9 @@
         --sd-idle:#64756b;
         --sd-idle-bg:#f3f6f4;
 
+        --sd-danger:#8a3a3a;
+        --sd-danger-bg:#fff3f3;
+
         --sd-shadow-sm:0 8px 18px rgba(18,34,27,.035);
         --sd-shadow-md:0 18px 38px rgba(18,34,27,.08);
 
@@ -242,6 +245,76 @@
         font-weight:700;
         margin-top:4px;
         word-break:break-word;
+    }
+
+    .permissions-wrap{
+        margin-top:12px;
+        padding-top:12px;
+        border-top:1px solid var(--sd-line-2);
+    }
+
+    .permissions-title{
+        margin:0 0 10px;
+        font-size:13px;
+        line-height:1.6;
+        color:var(--sd-ink);
+        font-weight:700;
+    }
+
+    .permissions-grid{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .permission-card{
+        min-height:70px;
+        padding:10px 11px;
+        border-radius:13px;
+        border:1px solid var(--sd-line-2);
+        background:linear-gradient(180deg, #ffffff 0%, #f8faf8 100%);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        gap:8px;
+    }
+
+    .permission-card-label{
+        font-size:10.4px;
+        color:var(--sd-muted);
+        font-weight:700;
+        line-height:1.6;
+    }
+
+    .permission-state{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 10px;
+        border-radius:999px;
+        font-size:10px;
+        font-weight:700;
+        white-space:nowrap;
+        align-self:flex-start;
+    }
+
+    .permission-state.allowed{
+        background:var(--sd-good-bg);
+        color:var(--sd-good);
+        border:1px solid #d8eadf;
+    }
+
+    .permission-state.denied{
+        background:var(--sd-danger-bg);
+        color:var(--sd-danger);
+        border:1px solid #ecd0d0;
+    }
+
+    .permission-state.neutral{
+        background:var(--sd-idle-bg);
+        color:var(--sd-idle);
+        border:1px solid #dde5df;
     }
 
     .status-box{
@@ -687,6 +760,10 @@
         .two-col{
             grid-template-columns:1fr;
         }
+
+        .permissions-grid{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
     }
 
     @media (max-width: 760px){
@@ -700,7 +777,8 @@
         }
 
         .sd-kpis,
-        .profile-list{
+        .profile-list,
+        .permissions-grid{
             grid-template-columns:1fr;
         }
 
@@ -808,7 +886,7 @@
         <div class="section-head">
             <div>
                 <h2 class="section-title">البيانات الأساسية</h2>
-                <p class="section-subtitle">بطاقة تعريف مختصرة للمشرف مع الحالة وآخر نشاط.</p>
+                <p class="section-subtitle">بطاقة تعريف مختصرة للمشرف مع الحالة وآخر نشاط والصلاحيات الحالية.</p>
             </div>
             <span class="section-badge">معلومات أساسية</span>
         </div>
@@ -848,6 +926,48 @@
                                 {{ supervisor_info.last_activity|date:"Y-m-d H:i" }}
                             {% else %}
                                 —
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="permissions-wrap">
+                    <h3 class="permissions-title">الصلاحيات التشغيلية الحالية</h3>
+
+                    <div class="permissions-grid">
+                        <div class="permission-card">
+                            <div class="permission-card-label">حالة الحساب</div>
+                            {% if supervisor_info.is_active %}
+                                <span class="permission-state allowed">نشط</span>
+                            {% else %}
+                                <span class="permission-state denied">غير نشط</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="permission-card">
+                            <div class="permission-card-label">صلاحية الإضافة</div>
+                            {% if supervisor_info.can_add_records %}
+                                <span class="permission-state allowed">متاحة</span>
+                            {% else %}
+                                <span class="permission-state denied">غير متاحة</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="permission-card">
+                            <div class="permission-card-label">صلاحية التعديل</div>
+                            {% if supervisor_info.can_edit_records %}
+                                <span class="permission-state allowed">متاحة</span>
+                            {% else %}
+                                <span class="permission-state denied">غير متاحة</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="permission-card">
+                            <div class="permission-card-label">صلاحية الحذف</div>
+                            {% if supervisor_info.can_delete_records %}
+                                <span class="permission-state allowed">متاحة</span>
+                            {% else %}
+                                <span class="permission-state denied">غير متاحة</span>
                             {% endif %}
                         </div>
                     </div>

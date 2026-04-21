@@ -84,9 +84,6 @@ class ManualSchoolStaffBase(models.Model):
         self.sector = (self.sector or "").strip()
         super().save(*args, **kwargs)
 
-    # =========================
-    # Supervisor display helpers
-    # =========================
     def _display_value(self, value):
         if value is None:
             return ""
@@ -145,7 +142,18 @@ class PrincipalRecord(ManualSchoolStaffBase):
         ("مديرة", "مديرة"),
     ]
 
+    ASSIGNMENT_STATUS_CHOICES = [
+        ("رسمي", "رسمي"),
+        ("مسير", "مسير"),
+    ]
+
     role = models.CharField("الصفة", max_length=10, choices=ROLE_CHOICES)
+    assignment_status = models.CharField(
+        "الحالة الإدارية",
+        max_length=10,
+        choices=ASSIGNMENT_STATUS_CHOICES,
+        default="رسمي",
+    )
     performance_file = models.FileField(
         "استمارة الأداء الوظيفي",
         upload_to="performance_forms/%Y/%m/",
@@ -440,18 +448,13 @@ class AccountResetRequest(models.Model):
 
 class DataEntryWindow(models.Model):
     title = models.CharField("اسم الفترة", max_length=200, default="فترة تسجيل البيانات")
-
     starts_at = models.DateTimeField("بداية الفترة")
     ends_at = models.DateTimeField("نهاية الفترة")
-
     is_active = models.BooleanField("مفعلة", default=True)
-
     allow_add = models.BooleanField("السماح بالإضافة", default=True)
     allow_edit = models.BooleanField("السماح بالتعديل", default=False)
     allow_delete = models.BooleanField("السماح بالحذف", default=False)
-
     notes = models.TextField("ملاحظات", blank=True)
-
     created_at = models.DateTimeField("تاريخ الإنشاء", auto_now_add=True)
     updated_at = models.DateTimeField("آخر تحديث", auto_now=True)
 
@@ -465,9 +468,7 @@ class DataEntryWindow(models.Model):
 
     def clean(self):
         if self.ends_at <= self.starts_at:
-            raise ValidationError(
-                {"ends_at": "يجب أن يكون وقت نهاية الفترة بعد وقت البداية."}
-            )
+            raise ValidationError({"ends_at": "يجب أن يكون وقت نهاية الفترة بعد وقت البداية."})
 
     @property
     def is_open_now(self):

@@ -1,8 +1,69 @@
 from django import forms
+from django.utils import timezone
 
 from accounts.models import Supervisor
 
-from .models import CorrectionRequest, PrincipalRecord, VicePrincipalRecord
+from .models import CorrectionRequest, DataEntryWindow, PrincipalRecord, VicePrincipalRecord
+
+
+SECTOR_GROUPS = [
+    ("النماص", [
+        "النماص",
+        "منصبه",
+    ]),
+    ("بيشة", [
+        "الأمواه",
+        "البشاير",
+        "بيشة",
+        "تثليث",
+        "ترج",
+    ]),
+    ("رجال ألمع", [
+        "الحريضة",
+        "رجال ألمع",
+    ]),
+    ("سراة عبيدة", [
+        "تهامة سراة عبيدة",
+        "سراة عبيدة",
+    ]),
+    ("ظهران الجنوب", [
+        "الحرجة",
+        "تهامة ظهران الجنوب",
+        "ظهران الجنوب",
+    ]),
+    ("عسير", [
+        "أبها",
+        "أحد رفيدة",
+        "بلحمر وبلسمر",
+        "خيبر الجنوب",
+        "خميس مشيط",
+        "طريب والعرين",
+        "وادي بن هشبل",
+    ]),
+    ("محايل", [
+        "الساحل",
+        "بارق والمجاردة",
+        "قنا-بحر أبو سكينة",
+        "محايل",
+    ]),
+]
+
+
+def build_grouped_sector_choices(include_blank=True):
+    choices = []
+
+    if include_blank:
+        choices.append(("", "اختر القطاع"))
+
+    for governorate, sectors in SECTOR_GROUPS:
+        choices.append(
+            (
+                governorate,
+                [(sector, sector) for sector in sectors],
+            )
+        )
+
+    return choices
 
 
 class StyledModelForm(forms.ModelForm):
@@ -54,10 +115,23 @@ class BaseStaffRecordForm(StyledModelForm):
         self.show_supervisor = kwargs.pop("show_supervisor", False)
         super().__init__(*args, **kwargs)
 
+        self._setup_sector_field()
         self._setup_common_ui()
         self._setup_supervisor_field()
         self._setup_meta_flags()
         self._setup_field_order()
+
+    def _setup_sector_field(self):
+        if "sector" in self.fields:
+            self.fields["sector"] = forms.ChoiceField(
+                label=self.fields["sector"].label,
+                choices=build_grouped_sector_choices(),
+                required=True,
+                widget=forms.Select(attrs={"class": "form-select"}),
+            )
+
+            if self.instance and getattr(self.instance, "sector", ""):
+                self.initial["sector"] = self.instance.sector
 
     def _setup_common_ui(self):
         if "full_name" in self.fields:
@@ -80,11 +154,11 @@ class BaseStaffRecordForm(StyledModelForm):
         if "role" in self.fields:
             self.fields["role"].widget.attrs.setdefault("data-field", "role")
 
+        if "assignment_status" in self.fields:
+            self.fields["assignment_status"].widget.attrs.setdefault("data-field", "assignment_status")
+
         if "stage" in self.fields:
             self.fields["stage"].widget.attrs.setdefault("data-field", "stage")
-
-        if "sector" in self.fields:
-            self.fields["sector"].widget.attrs.setdefault("placeholder", "اسم القطاع")
 
         if "school_name" in self.fields:
             self.fields["school_name"].widget.attrs.setdefault("placeholder", "اسم المدرسة")
@@ -116,6 +190,7 @@ class BaseStaffRecordForm(StyledModelForm):
             "national_id",
             "mobile",
             "role",
+            "assignment_status",
             "stage",
             "sector",
             "school_name",
@@ -147,6 +222,7 @@ class PrincipalRecordForm(BaseStaffRecordForm):
             "national_id",
             "mobile",
             "role",
+            "assignment_status",
             "stage",
             "sector",
             "school_name",
@@ -230,7 +306,14 @@ class CorrectionRequestForm(StyledModelForm):
             })
 
         if "requested_sector" in self.fields:
-            self.fields["requested_sector"].widget.attrs.setdefault("placeholder", "اسم القطاع")
+            self.fields["requested_sector"] = forms.ChoiceField(
+                label="القطاع المقترح",
+                choices=build_grouped_sector_choices(),
+                required=True,
+                widget=forms.Select(attrs={"class": "form-select"}),
+            )
+            if self.instance and getattr(self.instance, "requested_sector", ""):
+                self.initial["requested_sector"] = self.instance.requested_sector
 
         if "requested_school_name" in self.fields:
             self.fields["requested_school_name"].widget.attrs.setdefault("placeholder", "اسم المدرسة")
@@ -330,6 +413,13 @@ class SupervisorImportForm(forms.Form):
 
 
 class SupervisorAdminUpdateForm(StyledModelForm):
+    sector = forms.ChoiceField(
+        label="القطاع",
+        choices=build_grouped_sector_choices(),
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
+
     class Meta:
         model = Supervisor
         fields = [
@@ -346,84 +436,94 @@ class SupervisorAdminUpdateForm(StyledModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if "full_name" in self.fields:
-            self.fields["full_name"].widget.attrs.setdefault("placeholder", "الاسم الكامل للمشرف")
-            self.fields["full_name"].help_text = "يكتب الاسم كما هو معتمد إداريًا."
+        if hasattr(self.instance, "sector"):
+            self.initial["sector"] = getattr(self.instance, "sector", "")
 
         if "national_id" in self.fields:
-            self.fields["national_id"].widget.attrs.update({
-                "maxlength": "10",
-                "inputmode": "numeric",
-                "placeholder": "10 أرقام",
-                "readonly": "readonly",
-            })
             self.fields["national_id"].disabled = True
             self.fields["national_id"].help_text = "السجل المدني معروض للمراجعة فقط ولا يحرر من هذه الصفحة."
 
         if "mobile" in self.fields:
-            self.fields["mobile"].widget.attrs.update({
-                "maxlength": "14",
-                "inputmode": "numeric",
-                "placeholder": "05XXXXXXXX",
-            })
-            self.fields["mobile"].help_text = "سيستخدم هذا الرقم في الدخول الأول إذا كان الحساب غير مفعّل."
+            self.fields["mobile"].widget.attrs.setdefault("placeholder", "05XXXXXXXX")
 
         if "email" in self.fields:
-            self.fields["email"].required = False
-            self.fields["email"].widget.attrs.setdefault("placeholder", "example@email.com")
+            self.fields["email"].widget.attrs.setdefault("placeholder", "name@example.com")
 
-        if "is_active" in self.fields:
-            self.fields["is_active"].required = False
-            self.fields["is_active"].help_text = "عند إلغاء التفعيل لن يتمكن المشرف من الدخول للنظام."
+        for field_name in ["is_active", "can_add_records", "can_edit_records", "can_delete_records"]:
+            if field_name in self.fields:
+                self.fields[field_name].required = False
 
-        if "can_add_records" in self.fields:
-            self.fields["can_add_records"].required = False
-            self.fields["can_add_records"].help_text = "يسمح للمشرف بإضافة السجلات خلال الفترة المفتوحة."
+    def save(self, commit=True):
+        instance = super().save(commit=False)
 
-        if "can_edit_records" in self.fields:
-            self.fields["can_edit_records"].required = False
-            self.fields["can_edit_records"].help_text = "يسمح للمشرف بتعديل السجلات خلال الفترة المفتوحة."
+        if hasattr(instance, "sector"):
+            instance.sector = self.cleaned_data.get("sector", "")
 
-        if "can_delete_records" in self.fields:
-            self.fields["can_delete_records"].required = False
-            self.fields["can_delete_records"].help_text = "يسمح للمشرف بحذف/إلغاء تنشيط السجلات خلال الفترة المفتوحة."
+        if commit:
+            instance.save()
 
-        self.order_fields([
-            name for name in [
-                "full_name",
-                "national_id",
-                "mobile",
-                "email",
-                "is_active",
-                "can_add_records",
-                "can_edit_records",
-                "can_delete_records",
-            ]
-            if name in self.fields
-        ])
+        return instance
 
-    def clean_national_id(self):
+
+class DataEntryWindowAdminForm(StyledModelForm):
+    starts_at = forms.DateTimeField(
+        label="بداية الفترة",
+        input_formats=["%Y-%m-%dT%H:%M"],
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "class": "form-control",
+            }
+        ),
+    )
+
+    ends_at = forms.DateTimeField(
+        label="نهاية الفترة",
+        input_formats=["%Y-%m-%dT%H:%M"],
+        widget=forms.DateTimeInput(
+            attrs={
+                "type": "datetime-local",
+                "class": "form-control",
+            }
+        ),
+    )
+
+    class Meta:
+        model = DataEntryWindow
+        fields = [
+            "title",
+            "starts_at",
+            "ends_at",
+            "is_active",
+            "allow_add",
+            "allow_edit",
+            "allow_delete",
+            "notes",
+        ]
+        widgets = {
+            "notes": forms.Textarea(attrs={"rows": 4}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        if "title" in self.fields:
+            self.fields["title"].widget.attrs.setdefault("placeholder", "مثال: فترة إدخال الفصل الثاني")
+
+        if "notes" in self.fields:
+            self.fields["notes"].widget.attrs.setdefault("placeholder", "ملاحظات تنظيمية إن وجدت")
+
+        for field_name in ["is_active", "allow_add", "allow_edit", "allow_delete"]:
+            if field_name in self.fields:
+                self.fields[field_name].required = False
+
         if self.instance and self.instance.pk:
-            return self.instance.national_id
-        value = self.cleaned_data.get("national_id", "")
-        return "".join(filter(str.isdigit, value or ""))
+            if self.instance.starts_at:
+                self.initial["starts_at"] = timezone.localtime(
+                    self.instance.starts_at
+                ).strftime("%Y-%m-%dT%H:%M")
 
-    def clean_mobile(self):
-        digits = normalize_mobile_value(self.cleaned_data.get("mobile", ""))
-
-        if not digits:
-            raise forms.ValidationError("رقم الجوال مطلوب.")
-
-        if not (digits.startswith("05") and len(digits) == 10):
-            raise forms.ValidationError("رقم الجوال يجب أن يكون بصيغة صحيحة مثل 05XXXXXXXX.")
-
-        return digits
-
-    def clean_email(self):
-        return (self.cleaned_data.get("email") or "").strip()
-
-    def clean_full_name(self):
-        value = (self.cleaned_data.get("full_name") or "").strip()
-        if not value:
-            raise forms.ValidationError("اسم المشرف مطلوب.")
-        return value
+            if self.instance.ends_at:
+                self.initial["ends_at"] = timezone.localtime(
+                    self.instance.ends_at
+                ).strftime("%Y-%m-%dT%H:%M")

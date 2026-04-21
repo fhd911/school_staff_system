@@ -1,7 +1,7 @@
 import re
 import zipfile
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from io import BytesIO
 from pathlib import Path
 
@@ -27,6 +27,7 @@ from .filters import apply_principal_filters, apply_vice_filters, build_filter_c
 from .forms import (
     CorrectionDecisionForm,
     CorrectionRequestForm,
+    DataEntryWindowAdminForm,
     PrincipalRecordForm,
     SupervisorAdminUpdateForm,
     SupervisorImportForm,
@@ -240,6 +241,69 @@ def _ensure_supervisor_can_delete(supervisor):
         raise PermissionDenied("الحذف غير متاح خلال الفترة الحالية.")
 
     return window
+
+
+@staff_member_required(login_url="/admin/login/")
+@transaction.atomic
+def admin_entry_window_settings_view(request):
+    managed_window = _get_latest_entry_window()
+
+    form = DataEntryWindowAdminForm(
+        request.POST or None,
+        instance=managed_window,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        form.save()
+        messages.success(request, "تم حفظ إعدادات فترة التسجيل بنجاح.")
+        return redirect("staffdata:admin_entry_window_settings")
+
+    return render(
+        request,
+        "staffdata/admin_entry_window_settings.html",
+        {
+            "page_title": "إعدادات فترة التسجيل",
+            "form": form,
+            "managed_window": managed_window,
+            **_build_entry_window_context(),
+        },
+    )
+
+
+@staff_member_required(login_url="/admin/login/")
+@require_POST
+@transaction.atomic
+def admin_entry_window_toggle_view(request):
+    managed_window = _get_latest_entry_window()
+
+    if managed_window is None:
+        messages.error(request, "لا توجد فترة تسجيل محفوظة بعد. أنشئ فترة أولًا ثم أعد المحاولة.")
+        return redirect("staffdata:admin_entry_window_settings")
+
+    action = request.POST.get("action")
+    now = timezone.now()
+
+    if action == "open":
+        managed_window.is_active = True
+
+        if managed_window.starts_at > now:
+            managed_window.starts_at = now
+
+        if managed_window.ends_at <= now:
+            managed_window.ends_at = now + timedelta(days=7)
+
+        managed_window.save()
+        messages.success(request, "تم فتح فترة التسجيل الحالية بنجاح.")
+
+    elif action == "close":
+        managed_window.is_active = False
+        managed_window.save()
+        messages.success(request, "تم إغلاق فترة التسجيل الحالية بنجاح.")
+
+    else:
+        messages.error(request, "الإجراء المطلوب غير صحيح.")
+
+    return redirect("staffdata:admin_entry_window_settings")
 
 
 def _create_correction_request(request, record, target_type, title):
@@ -764,6 +828,7 @@ def admin_import_supervisors_view(request):
         {
             "page_title": "استيراد المشرفين",
             "form": form,
+            **_build_entry_window_context(),
         },
     )
 
@@ -824,6 +889,7 @@ def dashboard_view(request):
                 "school": item.school_name,
                 "sector": item.sector,
                 "role": item.role,
+                "assignment_status": getattr(item, "assignment_status", ""),
                 "created_at": item.created_at,
             }
         )
@@ -1041,7 +1107,7 @@ def principal_delete_view(request, pk):
         return redirect("staffdata:records_list")
 
     record.is_active = False
-    record.save()
+    record.save(update_fields=["is_active"])
     messages.success(request, "تم إلغاء تنشيط سجل المدير/المديرة بنجاح.")
     return redirect("staffdata:records_list")
 
@@ -1062,7 +1128,7 @@ def vice_delete_view(request, pk):
         return redirect("staffdata:records_list")
 
     record.is_active = False
-    record.save()
+    record.save(update_fields=["is_active"])
     messages.success(request, "تم إلغاء تنشيط سجل الوكيل/الوكيلة بنجاح.")
     return redirect("staffdata:records_list")
 
@@ -1565,6 +1631,7 @@ def admin_supervisor_update_view(request, supervisor_id):
             "full_name",
             "mobile",
             "email",
+            "sector",
             "is_active",
             "can_add_records",
             "can_edit_records",
@@ -1759,6 +1826,7 @@ def admin_export_principals_csv(request):
         "السجل المدني",
         "رقم الجوال",
         "الصفة",
+        "الحالة الإدارية",
         "المدرسة",
         "القطاع",
         "المرحلة",
@@ -1777,6 +1845,7 @@ def admin_export_principals_csv(request):
                 item.national_id,
                 getattr(item, "mobile", ""),
                 item.role,
+                getattr(item, "assignment_status", ""),
                 item.school_name,
                 item.sector,
                 item.stage,

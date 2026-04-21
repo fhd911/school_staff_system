@@ -9,6 +9,7 @@ class Supervisor(models.Model):
     password = models.CharField("كلمة المرور", max_length=255, blank=True, default="")
     mobile = models.CharField("رقم الجوال", max_length=20, blank=True)
     email = models.EmailField("البريد الإلكتروني", blank=True)
+    sector = models.CharField("القطاع", max_length=100, blank=True, default="")
     is_active = models.BooleanField("نشط", default=True)
 
     # صلاحيات المشرف على السجلات

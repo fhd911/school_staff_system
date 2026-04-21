@@ -415,6 +415,10 @@
         grid-column:1 / -1;
     }
 
+    .record-form-row.col-3{
+        grid-column:span 3;
+    }
+
     .record-form-row.col-4{
         grid-column:span 4;
     }
@@ -665,6 +669,7 @@
 
     @media (max-width: 980px){
         .record-form-row,
+        .record-form-row.col-3,
         .record-form-row.col-4,
         .record-form-row.col-6{
             grid-column:span 6;
@@ -707,6 +712,7 @@
         }
 
         .record-form-row,
+        .record-form-row.col-3,
         .record-form-row.col-4,
         .record-form-row.col-6,
         .record-form-row.full{
@@ -772,7 +778,7 @@
                     <div class="record-form-summary-index">01</div>
                     <div class="record-form-summary-copy">
                         <strong>البيانات الأساسية</strong>
-                        <span>الاسم والهوية والجوال والدور الوظيفي</span>
+                        <span>الاسم والهوية والجوال والدور الوظيفي والحالة الإدارية</span>
                     </div>
                 </div>
 
@@ -830,7 +836,7 @@
                                 {{ form.full_name.errors }}
                             </div>
 
-                            <div class="record-form-row col-4">
+                            <div class="record-form-row col-3">
                                 <div class="record-form-label">
                                     <label>{{ form.national_id.label }}</label>
                                     <span class="record-form-tag">مطابقة رسمية</span>
@@ -840,7 +846,7 @@
                                 {{ form.national_id.errors }}
                             </div>
 
-                            <div class="record-form-row col-4">
+                            <div class="record-form-row col-3">
                                 <div class="record-form-label">
                                     <label>{{ form.mobile.label }}</label>
                                     <span class="record-form-tag">تواصل</span>
@@ -850,7 +856,7 @@
                                 {{ form.mobile.errors }}
                             </div>
 
-                            <div class="record-form-row col-4">
+                            <div class="record-form-row col-3">
                                 <div class="record-form-label">
                                     <label>{{ form.role.label }}</label>
                                     <span class="record-form-tag">صفة وظيفية</span>
@@ -858,6 +864,16 @@
                                 {{ form.role }}
                                 <div class="record-form-help">حدد الصفة الوظيفية وفق المعتمد في الجهة التعليمية.</div>
                                 {{ form.role.errors }}
+                            </div>
+
+                            <div class="record-form-row col-3">
+                                <div class="record-form-label">
+                                    <label>{{ form.assignment_status.label }}</label>
+                                    <span class="record-form-tag">تنظيم إداري</span>
+                                </div>
+                                {{ form.assignment_status }}
+                                <div class="record-form-help">حدد حالة المدير: رسمي أو مسير حسب الوضع المعتمد.</div>
+                                {{ form.assignment_status.errors }}
                             </div>
                         </div>
                     </section>
