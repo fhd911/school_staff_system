@@ -1,0 +1,538 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-page{
+        --pf-surface:#ffffff;
+        --pf-surface-2:#fbfcfb;
+        --pf-surface-3:#f7faf8;
+
+        --pf-line:#d9e3dc;
+        --pf-line-2:#e7ede9;
+
+        --pf-ink:#1c2f27;
+        --pf-ink-2:#4c6358;
+        --pf-muted:#7e8d84;
+
+        --pf-primary:#184838;
+        --pf-primary-2:#245a44;
+        --pf-primary-3:#2f7055;
+
+        --pf-good:#1f6a42;
+        --pf-good-bg:#edf7f0;
+
+        --pf-warn:#8a6520;
+        --pf-warn-bg:#fcf5e8;
+
+        --pf-danger:#8a3a3a;
+        --pf-danger-bg:#fff3f3;
+
+        --pf-shadow-sm:0 8px 18px rgba(18,34,27,.035);
+        --pf-shadow-md:0 18px 38px rgba(18,34,27,.08);
+
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .profile-page .hero{
+        position:relative;
+        overflow:hidden;
+        padding:20px 22px 18px;
+        margin-bottom:0;
+        border-radius:26px;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 26%),
+            linear-gradient(135deg, var(--pf-primary) 0%, var(--pf-primary-2) 56%, var(--pf-primary-3) 100%);
+        box-shadow:var(--pf-shadow-md);
+        color:#fff;
+    }
+
+    .profile-page .hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:22px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.18) 18%,
+            rgba(221,196,144,.7) 50%,
+            rgba(221,196,144,.18) 82%,
+            transparent 100%
+        );
+    }
+
+    .pf-hero{
+        position:relative;
+        z-index:1;
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+    }
+
+    .pf-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.8px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .profile-page .hero-title{
+        margin:0 0 7px;
+        font-size:26px;
+        line-height:1.28;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .profile-page .hero-text{
+        margin:0;
+        max-width:860px;
+        font-size:12.4px;
+        line-height:1.9;
+        color:rgba(255,255,255,.88);
+        font-weight:400;
+    }
+
+    .pf-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .pf-actions .btn{
+        min-height:38px;
+        padding:0 14px;
+        border-radius:11px;
+        font-size:11.9px;
+        font-weight:600;
+    }
+
+    .section{
+        padding:14px;
+        border-radius:22px;
+        background:linear-gradient(180deg, var(--pf-surface) 0%, var(--pf-surface-2) 100%);
+        border:1px solid var(--pf-line);
+        box-shadow:var(--pf-shadow-sm);
+    }
+
+    .section-head{
+        display:flex;
+        align-items:flex-end;
+        justify-content:space-between;
+        gap:16px;
+        margin-bottom:12px;
+    }
+
+    .section-title{
+        margin:0;
+        font-size:18px;
+        line-height:1.3;
+        color:var(--pf-ink);
+        font-weight:700;
+    }
+
+    .section-subtitle{
+        margin:0;
+        font-size:11.2px;
+        line-height:1.8;
+        color:var(--pf-muted);
+        font-weight:400;
+    }
+
+    .section-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:26px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--pf-line-2);
+        color:var(--pf-ink-2);
+        font-size:10px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .profile-grid{
+        display:grid;
+        grid-template-columns:1.2fr .8fr;
+        gap:12px;
+    }
+
+    .profile-card{
+        padding:14px;
+        border-radius:17px;
+        border:1px solid var(--pf-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--pf-shadow-sm);
+    }
+
+    .profile-list{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .profile-item{
+        min-height:56px;
+        padding:10px 11px;
+        border-radius:13px;
+        border:1px solid var(--pf-line-2);
+        background:var(--pf-surface-3);
+    }
+
+    .profile-item-label{
+        font-size:10.3px;
+        line-height:1.6;
+        color:var(--pf-muted);
+        font-weight:600;
+    }
+
+    .profile-item-value{
+        font-size:12.7px;
+        line-height:1.55;
+        color:var(--pf-ink);
+        font-weight:700;
+        margin-top:4px;
+        word-break:break-word;
+    }
+
+    .permissions-wrap{
+        margin-top:12px;
+        padding-top:12px;
+        border-top:1px solid var(--pf-line-2);
+    }
+
+    .permissions-title{
+        margin:0 0 10px;
+        font-size:13px;
+        line-height:1.6;
+        color:var(--pf-ink);
+        font-weight:700;
+    }
+
+    .permissions-grid{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .permission-card{
+        min-height:70px;
+        padding:10px 11px;
+        border-radius:13px;
+        border:1px solid var(--pf-line-2);
+        background:linear-gradient(180deg, #ffffff 0%, #f8faf8 100%);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        gap:8px;
+    }
+
+    .permission-card-label{
+        font-size:10.4px;
+        color:var(--pf-muted);
+        font-weight:700;
+        line-height:1.6;
+    }
+
+    .permission-state{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 10px;
+        border-radius:999px;
+        font-size:10px;
+        font-weight:700;
+        white-space:nowrap;
+        align-self:flex-start;
+    }
+
+    .permission-state.allowed{
+        background:var(--pf-good-bg);
+        color:var(--pf-good);
+        border:1px solid #d8eadf;
+    }
+
+    .permission-state.denied{
+        background:var(--pf-danger-bg);
+        color:var(--pf-danger);
+        border:1px solid #ecd0d0;
+    }
+
+    .status-box{
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+        gap:10px;
+        text-align:center;
+        min-height:100%;
+    }
+
+    .status-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:10.2px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .status-chip.good{
+        background:var(--pf-good-bg);
+        color:var(--pf-good);
+        border:1px solid #d8eadf;
+    }
+
+    .status-chip.warn{
+        background:var(--pf-warn-bg);
+        color:var(--pf-warn);
+        border:1px solid #ead8b0;
+    }
+
+    .status-chip.idle{
+        background:#f3f6f4;
+        color:#64756b;
+        border:1px solid #dde5df;
+    }
+
+    .status-figure{
+        font-size:28px;
+        line-height:1;
+        font-weight:700;
+        color:var(--pf-primary);
+    }
+
+    .status-copy{
+        font-size:10.8px;
+        line-height:1.8;
+        color:var(--pf-muted);
+        margin:0;
+    }
+
+    .note-box{
+        padding:14px;
+        border-radius:16px;
+        border:1px solid #eadcbf;
+        background:linear-gradient(180deg, #faf8f2 0%, #fffdf8 100%);
+        color:#715923;
+        font-size:11.5px;
+        line-height:1.95;
+    }
+
+    .note-box strong{
+        color:#5d4a21;
+        font-weight:700;
+    }
+
+    @media (max-width: 1180px){
+        .profile-grid{
+            grid-template-columns:1fr;
+        }
+
+        .permissions-grid{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 760px){
+        .profile-page .hero{
+            padding:16px;
+            border-radius:22px;
+        }
+
+        .profile-page .hero-title{
+            font-size:22px;
+        }
+
+        .profile-list,
+        .permissions-grid{
+            grid-template-columns:1fr;
+        }
+
+        .section{
+            padding:12px;
+        }
+
+        .pf-actions .btn{
+            width:100%;
+            justify-content:center;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="hero">
+    <div class="pf-hero">
+        <div>
+            <span class="pf-kicker">بوابة المشرف</span>
+            <h1 class="hero-title">{{ page_title }}</h1>
+            <p class="hero-text">
+                هذه الصفحة مخصصة لعرض بياناتك الأساسية وحالة حسابك وصلاحياتك الحالية داخل النظام،
+                بينما تبقى جميع عمليات تعديل البيانات والتصحيح من جهة الإدارة فقط.
+            </p>
+
+            <div class="pf-actions">
+                <a href="{% url 'staffdata:dashboard' %}" class="btn btn-secondary">العودة إلى لوحة المشرف</a>
+                <a href="{% url 'accounts:change_password' %}" class="btn btn-primary">تغيير كلمة المرور</a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">البيانات الأساسية</h2>
+                <p class="section-subtitle">عرض مرجعي لبيانات حساب المشرف داخل النظام.</p>
+            </div>
+            <span class="section-badge">للعرض فقط</span>
+        </div>
+
+        <div class="profile-grid">
+            <div class="profile-card">
+                <div class="profile-list">
+                    <div class="profile-item">
+                        <div class="profile-item-label">الاسم الكامل</div>
+                        <div class="profile-item-value">{{ supervisor.full_name }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">السجل المدني</div>
+                        <div class="profile-item-value">{{ supervisor.national_id }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">رقم الجوال</div>
+                        <div class="profile-item-value">{{ supervisor.mobile|default:"—" }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">البريد الإلكتروني</div>
+                        <div class="profile-item-value">{{ supervisor.email|default:"—" }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">القطاع</div>
+                        <div class="profile-item-value">{{ supervisor.sector|default:"—" }}</div>
+                    </div>
+
+                    <div class="profile-item">
+                        <div class="profile-item-label">تفعيل الحساب</div>
+                        <div class="profile-item-value">
+                            {% if supervisor.is_activated %}مفعّل{% else %}غير مفعّل{% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="permissions-wrap">
+                    <h3 class="permissions-title">الصلاحيات التشغيلية الحالية</h3>
+
+                    <div class="permissions-grid">
+                        <div class="permission-card">
+                            <div class="permission-card-label">حالة الحساب</div>
+                            {% if supervisor.is_active %}
+                                <span class="permission-state allowed">نشط</span>
+                            {% else %}
+                                <span class="permission-state denied">غير نشط</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="permission-card">
+                            <div class="permission-card-label">صلاحية الإضافة</div>
+                            {% if supervisor.can_add_records %}
+                                <span class="permission-state allowed">متاحة</span>
+                            {% else %}
+                                <span class="permission-state denied">غير متاحة</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="permission-card">
+                            <div class="permission-card-label">صلاحية التعديل</div>
+                            {% if supervisor.can_edit_records %}
+                                <span class="permission-state allowed">متاحة</span>
+                            {% else %}
+                                <span class="permission-state denied">غير متاحة</span>
+                            {% endif %}
+                        </div>
+
+                        <div class="permission-card">
+                            <div class="permission-card-label">صلاحية الحذف</div>
+                            {% if supervisor.can_delete_records %}
+                                <span class="permission-state allowed">متاحة</span>
+                            {% else %}
+                                <span class="permission-state denied">غير متاحة</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="profile-card">
+                <div class="status-box">
+                    <div>
+                        {% if supervisor.is_active %}
+                            <span class="status-chip good">الحساب عامل</span>
+                        {% else %}
+                            <span class="status-chip warn">الحساب غير نشط</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="status-figure">
+                        {% if supervisor.is_active %}
+                            نشط
+                        {% else %}
+                            موقوف
+                        {% endif %}
+                    </div>
+
+                    <p class="status-copy">
+                        هذه الصفحة للعرض المرجعي فقط. أي تعديل على البيانات الأساسية أو الصلاحيات أو التصحيحات يتم من خلال الإدارة.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section">
+        <div class="section-head">
+            <div>
+                <h2 class="section-title">ملاحظة تنظيمية</h2>
+                <p class="section-subtitle">بيان يوضح آلية التعامل مع بيانات الحساب.</p>
+            </div>
+            <span class="section-badge">تنظيمي</span>
+        </div>
+
+        <div class="note-box">
+            <strong>مهم:</strong>
+            لا يمكن تعديل بيانات المشرف من هذه الصفحة. عند الحاجة إلى تعديل الاسم أو الجوال أو البريد أو القطاع
+            أو معالجة أي تصحيح، يتم ذلك من خلال الإدارة فقط. يمكنك من هذه الصفحة الاطلاع على بياناتك الحالية
+            وتغيير كلمة المرور فقط.
+        </div>
+    </section>
+
+</div>
+{% endblock %}
