@@ -6,6 +6,10 @@ from accounts.models import Supervisor
 from .models import CorrectionRequest, DataEntryWindow, PrincipalRecord, VicePrincipalRecord
 
 
+def _rtl_label(text):
+    return f"\u200f{text}\u200f"
+
+
 SECTOR_GROUPS = [
     ("النماص", [
         "النماص",
@@ -13,7 +17,7 @@ SECTOR_GROUPS = [
     ]),
     ("بيشة", [
         "الأمواه",
-        "البشاير وبلقرن",
+        "البشائر وبلقرن",
         "بيشة",
         "تثليث",
         "ترج",
@@ -53,13 +57,13 @@ def build_grouped_sector_choices(include_blank=True):
     choices = []
 
     if include_blank:
-        choices.append(("", "اختر القطاع"))
+        choices.append(("", _rtl_label("اختر القطاع")))
 
     for governorate, sectors in SECTOR_GROUPS:
         choices.append(
             (
-                governorate,
-                [(sector, sector) for sector in sectors],
+                _rtl_label(governorate),
+                [(sector, _rtl_label(sector)) for sector in sectors],
             )
         )
 
@@ -123,8 +127,9 @@ class BaseStaffRecordForm(StyledModelForm):
 
     def _setup_sector_field(self):
         if "sector" in self.fields:
+            current_label = self.fields["sector"].label
             self.fields["sector"] = forms.ChoiceField(
-                label=self.fields["sector"].label,
+                label=current_label,
                 choices=build_grouped_sector_choices(),
                 required=True,
                 widget=forms.Select(attrs={"class": "form-select"}),
@@ -427,6 +432,7 @@ class SupervisorAdminUpdateForm(StyledModelForm):
             "national_id",
             "mobile",
             "email",
+            "sector",
             "is_active",
             "can_add_records",
             "can_edit_records",
@@ -436,8 +442,7 @@ class SupervisorAdminUpdateForm(StyledModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        if hasattr(self.instance, "sector"):
-            self.initial["sector"] = getattr(self.instance, "sector", "")
+        self.initial["sector"] = getattr(self.instance, "sector", "")
 
         if "national_id" in self.fields:
             self.fields["national_id"].disabled = True
@@ -453,11 +458,12 @@ class SupervisorAdminUpdateForm(StyledModelForm):
             if field_name in self.fields:
                 self.fields[field_name].required = False
 
+    def clean_mobile(self):
+        return normalize_mobile_value(self.cleaned_data.get("mobile", ""))
+
     def save(self, commit=True):
         instance = super().save(commit=False)
-
-        if hasattr(instance, "sector"):
-            instance.sector = self.cleaned_data.get("sector", "")
+        instance.sector = self.cleaned_data.get("sector", "")
 
         if commit:
             instance.save()
