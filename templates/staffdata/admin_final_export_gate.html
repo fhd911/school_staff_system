@@ -1,0 +1,699 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title|default:"بوابة التصدير النهائي" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .export-gate,
+    .export-gate *,
+    .export-hero,
+    .export-hero *{
+        font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+    }
+
+    .export-gate{
+        --eg-paper:#fffefb;
+        --eg-paper-2:#fbfcfa;
+        --eg-paper-3:#f7faf8;
+        --eg-line:#d9e3dc;
+        --eg-line-2:#e8eeea;
+        --eg-ink:#1c2f27;
+        --eg-ink-2:#496055;
+        --eg-muted:#7a8b82;
+        --eg-primary:#164736;
+        --eg-primary-2:#235943;
+        --eg-primary-3:#2e6d54;
+        --eg-good:#1f6a42;
+        --eg-good-bg:#edf7f0;
+        --eg-warn:#8a6421;
+        --eg-warn-bg:#fcf5e7;
+        --eg-danger:#8c3a3a;
+        --eg-danger-bg:#fff2f2;
+        --eg-gold:#c6a25c;
+        --eg-gold-soft:#efe2bf;
+        --eg-shadow-sm:0 8px 18px rgba(18,34,27,.035);
+        --eg-shadow-md:0 18px 38px rgba(18,34,27,.08);
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        color:var(--eg-ink);
+    }
+
+    .export-hero{
+        --eg-primary:#164736;
+        --eg-primary-2:#235943;
+        --eg-primary-3:#2e6d54;
+        --eg-shadow-md:0 18px 38px rgba(18,34,27,.08);
+
+        position:relative;
+        overflow:hidden;
+        margin-bottom:18px;
+        border-radius:26px;
+        color:#fff;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 26%),
+            linear-gradient(135deg, var(--eg-primary) 0%, var(--eg-primary-2) 56%, var(--eg-primary-3) 100%);
+        box-shadow:var(--eg-shadow-md);
+    }
+
+    .export-hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:22px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(90deg, transparent 0%, rgba(221,196,144,.18) 18%, rgba(221,196,144,.7) 50%, rgba(221,196,144,.18) 82%, transparent 100%);
+    }
+
+    .export-hero-inner{
+        position:relative;
+        z-index:1;
+        min-height:132px;
+        padding:22px 24px 20px;
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:18px;
+    }
+
+    .export-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.9px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .export-title{
+        margin:0 0 7px;
+        font-size:25px;
+        line-height:1.35;
+        font-weight:700;
+        color:#fff !important;
+        text-shadow:0 1px 1px rgba(0,0,0,.08);
+    }
+
+    .export-text{
+        margin:0;
+        max-width:880px;
+        font-size:12.45px;
+        line-height:1.9;
+        color:rgba(255,255,255,.90) !important;
+        font-weight:400;
+    }
+
+    .export-back{
+        flex:0 0 auto;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:11px;
+        border:1px solid rgba(255,255,255,.14);
+        background:rgba(255,255,255,.06);
+        color:#fff;
+        font-size:12.35px;
+        font-weight:500;
+        text-decoration:none;
+        white-space:nowrap;
+    }
+
+    .export-back:hover{
+        background:rgba(255,255,255,.10);
+        color:#fff;
+    }
+
+    .export-card{
+        padding:14px;
+        border-radius:22px;
+        background:linear-gradient(180deg, var(--eg-paper) 0%, var(--eg-paper-2) 100%);
+        border:1px solid var(--eg-line);
+        box-shadow:var(--eg-shadow-sm);
+    }
+
+    .export-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:14px;
+        margin-bottom:12px;
+    }
+
+    .export-section-title{
+        margin:0;
+        font-size:18px;
+        line-height:1.45;
+        color:var(--eg-ink);
+        font-weight:800;
+    }
+
+    .export-section-text{
+        margin:4px 0 0;
+        font-size:11.6px;
+        line-height:1.9;
+        color:var(--eg-muted);
+    }
+
+    .export-badge{
+        flex:0 0 auto;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:11.5px;
+        font-weight:800;
+        white-space:nowrap;
+    }
+
+    .export-badge.blocked{
+        background:#fff3e8;
+        color:#8a5a1e;
+        border:1px solid #ead2b4;
+    }
+
+    .export-badge.warning{
+        background:#fcf5e7;
+        color:#8a6421;
+        border:1px solid #ead8b0;
+    }
+
+    .export-badge.ready{
+        background:#edf7f0;
+        color:#1f6a42;
+        border:1px solid #d5e9dc;
+    }
+
+    .export-readiness{
+        display:grid;
+        grid-template-columns:minmax(0, .9fr) minmax(0, 1.1fr);
+        gap:12px;
+    }
+
+    .export-status{
+        border:1px solid var(--eg-line);
+        border-radius:18px;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        padding:14px;
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .export-status-label{
+        font-size:11px;
+        line-height:1.7;
+        color:var(--eg-muted);
+        font-weight:700;
+    }
+
+    .export-status-value{
+        font-size:24px;
+        line-height:1.25;
+        font-weight:900;
+    }
+
+    .export-status-value.blocked{ color:#8a5a1e; }
+    .export-status-value.warning{ color:#8a6421; }
+    .export-status-value.ready{ color:#1f6a42; }
+
+    .export-summary{
+        margin:0;
+        color:var(--eg-ink-2);
+        font-size:12px;
+        line-height:1.9;
+    }
+
+    .export-mini-grid{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:8px;
+    }
+
+    .export-mini{
+        min-height:58px;
+        padding:9px 10px;
+        border-radius:13px;
+        background:#f7faf8;
+        border:1px solid var(--eg-line-2);
+        text-align:center;
+    }
+
+    .export-mini span{
+        display:block;
+        color:var(--eg-muted);
+        font-size:9.6px;
+        line-height:1.4;
+        font-weight:700;
+    }
+
+    .export-mini strong{
+        display:block;
+        margin-top:5px;
+        color:var(--eg-primary);
+        font-size:18px;
+        line-height:1;
+        font-weight:900;
+    }
+
+    .export-actions-inline{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:auto;
+    }
+
+    .export-btn{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:38px;
+        padding:0 13px;
+        border-radius:10px;
+        text-decoration:none;
+        border:1px solid transparent;
+        font-size:11.2px;
+        font-weight:800;
+        white-space:nowrap;
+        cursor:pointer;
+    }
+
+    .export-btn.primary{
+        background:var(--eg-primary);
+        color:#fff;
+    }
+
+    .export-btn.primary:hover{
+        background:#103b2b;
+        color:#fff;
+    }
+
+    .export-btn.soft{
+        background:#f4f7f5;
+        border-color:var(--eg-line-2);
+        color:var(--eg-primary);
+    }
+
+    .export-btn.soft:hover{
+        background:#edf3ef;
+        color:var(--eg-primary);
+    }
+
+    .export-list{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:8px;
+    }
+
+    .export-item{
+        display:grid;
+        grid-template-columns:auto minmax(0, 1fr) auto;
+        gap:10px;
+        align-items:center;
+        min-height:58px;
+        padding:9px 10px;
+        border:1px solid var(--eg-line);
+        border-radius:14px;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .export-dot{
+        width:30px;
+        height:30px;
+        border-radius:999px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-size:12px;
+        font-weight:900;
+        border:1px solid var(--eg-line-2);
+        background:#f5f8f6;
+        color:var(--eg-ink-2);
+    }
+
+    .export-item.done .export-dot,
+    .export-item.ready .export-dot{
+        background:#edf7f0;
+        border-color:#d5e9dc;
+        color:#1f6a42;
+    }
+
+    .export-item.blocked .export-dot{
+        background:#fff3e8;
+        border-color:#ead2b4;
+        color:#8a5a1e;
+    }
+
+    .export-name{
+        color:var(--eg-ink);
+        font-size:11.5px;
+        line-height:1.5;
+        font-weight:800;
+    }
+
+    .export-note{
+        margin-top:2px;
+        color:var(--eg-muted);
+        font-size:9.8px;
+        line-height:1.55;
+    }
+
+    .export-step-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:25px;
+        padding:0 9px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--eg-line-2);
+        color:var(--eg-ink-2);
+        font-size:9.5px;
+        font-weight:800;
+        white-space:nowrap;
+    }
+
+    .export-item.blocked .export-step-badge{
+        background:#fff3e8;
+        border-color:#ead2b4;
+        color:#8a5a1e;
+    }
+
+    .export-item.done .export-step-badge,
+    .export-item.ready .export-step-badge{
+        background:#edf7f0;
+        border-color:#d5e9dc;
+        color:#1f6a42;
+    }
+
+    .download-grid{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:12px;
+    }
+
+    .download-card{
+        padding:14px;
+        border-radius:18px;
+        border:1px solid var(--eg-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--eg-shadow-sm);
+    }
+
+    .download-card h3{
+        margin:0 0 6px;
+        color:var(--eg-ink);
+        font-size:15px;
+        line-height:1.6;
+        font-weight:800;
+    }
+
+    .download-card p{
+        margin:0 0 12px;
+        color:var(--eg-muted);
+        font-size:11.2px;
+        line-height:1.85;
+    }
+
+    .override-box{
+        margin-top:10px;
+        padding:10px;
+        border-radius:14px;
+        border:1px solid #ead2b4;
+        background:linear-gradient(180deg, #fffaf2 0%, #fff6ea 100%);
+    }
+
+    .override-box label{
+        display:block;
+        margin-bottom:6px;
+        color:#6f521d;
+        font-size:10.8px;
+        line-height:1.6;
+        font-weight:800;
+    }
+
+    .override-box textarea{
+        width:100%;
+        min-height:76px;
+        resize:vertical;
+        border:1px solid #d8c49b;
+        border-radius:10px;
+        background:#fff;
+        padding:8px 10px;
+        color:#4c3d20;
+        font-size:11.5px;
+        line-height:1.7;
+        outline:none;
+        margin-bottom:8px;
+    }
+
+    .override-check{
+        display:flex;
+        align-items:flex-start;
+        gap:7px;
+        color:#6f521d;
+        font-size:10.8px;
+        line-height:1.7;
+        margin-bottom:8px;
+    }
+
+    .override-check input{
+        margin-top:4px;
+    }
+
+    .export-warning{
+        padding:13px 14px;
+        border-radius:16px;
+        background:linear-gradient(180deg, #fffaf2 0%, #fff6ea 100%);
+        border:1px solid #ead2b4;
+        color:#6f521d;
+        font-size:11.5px;
+        line-height:1.95;
+    }
+
+    .export-warning strong{
+        font-weight:900;
+    }
+
+    @media (max-width:1100px){
+        .export-readiness,
+        .download-grid{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width:760px){
+        .export-hero-inner,
+        .export-head{
+            flex-direction:column;
+            min-height:auto;
+            align-items:stretch;
+        }
+
+        .export-mini-grid{
+            grid-template-columns:1fr;
+        }
+
+        .export-back,
+        .export-btn,
+        .export-badge{
+            width:100%;
+        }
+
+        .export-item{
+            grid-template-columns:auto minmax(0, 1fr);
+        }
+
+        .export-step-badge{
+            grid-column:1 / -1;
+            width:100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="export-hero">
+    <div class="export-hero-inner">
+        <div>
+            <span class="export-kicker">التصدير النهائي</span>
+            <h1 class="export-title">{{ page_title }}</h1>
+            <p class="export-text">
+                بوابة مراجعة أخيرة قبل تنزيل ملفات التصدير، تعرض جاهزية القرار والموانع الحرجة حتى لا يتم إصدار ملف نهائي وفيه بيانات غير مكتملة أو متعارضة.
+            </p>
+        </div>
+
+        <a href="{% url 'staffdata:admin_overview' %}" class="export-back">العودة للوحة الإدارة</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="export-gate">
+
+    <section class="export-card">
+        <div class="export-head">
+            <div>
+                <h2 class="export-section-title">جاهزية التصدير</h2>
+                <p class="export-section-text">هذه القراءة تعتمد على التكرارات الحرجة، طلبات التصحيح، نواقص المرفقات، وملاحظات المتابعة قبل التصدير.</p>
+            </div>
+
+            <span class="export-badge {{ decision_readiness.status_code }}">
+                {{ decision_readiness.status_badge }}
+            </span>
+        </div>
+
+        <div class="export-readiness">
+            <div class="export-status">
+                <div>
+                    <div class="export-status-label">الحالة الحالية</div>
+                    <div class="export-status-value {{ decision_readiness.status_code }}">
+                        {{ decision_readiness.status_label }}
+                    </div>
+                </div>
+
+                <p class="export-summary">{{ decision_readiness.summary }}</p>
+
+                <div class="export-mini-grid">
+                    <div class="export-mini">
+                        <span>موانع حرجة</span>
+                        <strong>{{ decision_readiness.blockers_count }}</strong>
+                    </div>
+                    <div class="export-mini">
+                        <span>ملاحظات</span>
+                        <strong>{{ decision_readiness.warnings_count }}</strong>
+                    </div>
+                    <div class="export-mini">
+                        <span>تكرارات حرجة</span>
+                        <strong>{{ decision_readiness.critical_duplicates }}</strong>
+                    </div>
+                </div>
+
+                <div class="export-actions-inline">
+                    <a href="{% url 'staffdata:admin_backup_center' %}" class="export-btn primary">أخذ نسخة احتياطية</a>
+                    <a href="{% url 'staffdata:admin_duplicates' %}" class="export-btn soft">مراجعة جودة البيانات</a>
+                    <a href="{% url 'staffdata:admin_correction_requests' %}" class="export-btn soft">طلبات التصحيح</a>
+                </div>
+            </div>
+
+            <div class="export-list">
+                {% for step in decision_readiness.approval_steps %}
+                    <div class="export-item {{ step.state }}">
+                        <div class="export-dot">
+                            {% if step.state == "done" or step.state == "ready" %}
+                                ✓
+                            {% elif step.state == "blocked" %}
+                                !
+                            {% else %}
+                                •
+                            {% endif %}
+                        </div>
+
+                        <div>
+                            <div class="export-name">{{ step.title }}</div>
+                            <div class="export-note">{{ step.note }}</div>
+                        </div>
+
+                        <span class="export-step-badge">{{ step.state_label }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    {% if decision_readiness.status_code == "blocked" %}
+        <section class="export-warning">
+            <strong>تنبيه:</strong>
+            توجد موانع حرجة. لا يوصى بالتصدير النهائي قبل المعالجة. عند الحاجة لتصدير نسخة عمل مؤقتة، اكتب سبب التجاوز في بطاقة التصدير المطلوبة.
+        </section>
+    {% endif %}
+
+    <section class="export-card">
+        <div class="export-head">
+            <div>
+                <h2 class="export-section-title">ملفات التصدير</h2>
+                <p class="export-section-text">
+                    إذا كانت البيانات جاهزة، يمكن التصدير مباشرة. إذا كانت غير جاهزة، يتطلب التصدير سبب تجاوز واضح.
+                </p>
+            </div>
+        </div>
+
+        <div class="download-grid">
+            <div class="download-card">
+                <h3>تصدير المشرفين</h3>
+                <p>تقرير متابعة يشمل بيانات المشرفين ومؤشرات السجلات وجودة البيانات.</p>
+
+                {% if decision_readiness.status_code == "blocked" %}
+                    <form method="post" action="{% url 'staffdata:admin_final_export_download' 'supervisors' %}">
+                        {% csrf_token %}
+                        <div class="override-box">
+                            <label>سبب التصدير رغم الموانع</label>
+                            <textarea name="override_reason" required placeholder="مثال: نسخة عمل أولية للمراجعة الداخلية وليست للاعتماد النهائي."></textarea>
+                            <label class="override-check">
+                                <input type="checkbox" name="override_confirm" value="1" required>
+                                أقر بأن هذا التصدير نسخة عمل مع وجود موانع حرجة.
+                            </label>
+                            <button type="submit" class="export-btn primary">تصدير رغم الموانع</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <a href="{% url 'staffdata:admin_final_export_download' 'supervisors' %}" class="export-btn primary">تصدير المشرفين</a>
+                {% endif %}
+            </div>
+
+            <div class="download-card">
+                <h3>تصدير المديرين/المديرات</h3>
+                <p>ملف بيانات سجلات المديرين/المديرات حسب الفلاتر الإدارية الحالية في النظام.</p>
+
+                {% if decision_readiness.status_code == "blocked" %}
+                    <form method="post" action="{% url 'staffdata:admin_final_export_download' 'principals' %}">
+                        {% csrf_token %}
+                        <div class="override-box">
+                            <label>سبب التصدير رغم الموانع</label>
+                            <textarea name="override_reason" required placeholder="مثال: نسخة عمل أولية للمراجعة الداخلية وليست للاعتماد النهائي."></textarea>
+                            <label class="override-check">
+                                <input type="checkbox" name="override_confirm" value="1" required>
+                                أقر بأن هذا التصدير نسخة عمل مع وجود موانع حرجة.
+                            </label>
+                            <button type="submit" class="export-btn primary">تصدير رغم الموانع</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <a href="{% url 'staffdata:admin_final_export_download' 'principals' %}" class="export-btn primary">تصدير المديرين</a>
+                {% endif %}
+            </div>
+
+            <div class="download-card">
+                <h3>تصدير الوكلاء/الوكيلات</h3>
+                <p>ملف بيانات سجلات الوكلاء/الوكيلات لمراجعة الوضع النهائي قبل القرار.</p>
+
+                {% if decision_readiness.status_code == "blocked" %}
+                    <form method="post" action="{% url 'staffdata:admin_final_export_download' 'vices' %}">
+                        {% csrf_token %}
+                        <div class="override-box">
+                            <label>سبب التصدير رغم الموانع</label>
+                            <textarea name="override_reason" required placeholder="مثال: نسخة عمل أولية للمراجعة الداخلية وليست للاعتماد النهائي."></textarea>
+                            <label class="override-check">
+                                <input type="checkbox" name="override_confirm" value="1" required>
+                                أقر بأن هذا التصدير نسخة عمل مع وجود موانع حرجة.
+                            </label>
+                            <button type="submit" class="export-btn primary">تصدير رغم الموانع</button>
+                        </div>
+                    </form>
+                {% else %}
+                    <a href="{% url 'staffdata:admin_final_export_download' 'vices' %}" class="export-btn primary">تصدير الوكلاء</a>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+</div>
+{% endblock %}

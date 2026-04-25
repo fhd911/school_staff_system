@@ -921,6 +921,389 @@
         font-weight:600;
     }
 
+
+
+    .admin-duplicate-alert{
+        width:100%;
+        margin:0 0 4px;
+        padding:16px 18px;
+        border-radius:22px;
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:16px;
+        border:1px solid transparent;
+        box-shadow:var(--ao-shadow-sm);
+    }
+
+    .admin-duplicate-alert-danger{
+        background:linear-gradient(180deg, #fffaf2 0%, #fff6ea 100%);
+        border-color:#ead8b0;
+        color:#6f521d;
+    }
+
+    .admin-duplicate-alert-good{
+        background:linear-gradient(180deg, #f2f8f4 0%, #edf7f0 100%);
+        border-color:#cfe3d5;
+        color:var(--ao-good);
+    }
+
+    .admin-duplicate-alert-main{
+        display:flex;
+        align-items:flex-start;
+        gap:12px;
+        min-width:0;
+    }
+
+    .admin-duplicate-alert-icon{
+        width:36px;
+        height:36px;
+        border-radius:999px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        flex:0 0 auto;
+        font-size:18px;
+        font-weight:900;
+    }
+
+    .admin-duplicate-alert-danger .admin-duplicate-alert-icon{
+        background:#fff1dd;
+        color:#8a6421;
+    }
+
+    .admin-duplicate-alert-good .admin-duplicate-alert-icon{
+        background:#dcefe3;
+        color:var(--ao-good);
+    }
+
+    .admin-duplicate-alert h3{
+        margin:0 0 5px;
+        font-size:15px;
+        font-weight:800;
+        line-height:1.5;
+    }
+
+    .admin-duplicate-alert p{
+        margin:0;
+        font-size:12.2px;
+        line-height:1.9;
+        color:inherit;
+    }
+
+    .admin-duplicate-alert-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:7px;
+        margin-top:9px;
+    }
+
+    .admin-duplicate-alert-meta span{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:25px;
+        padding:0 10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.68);
+        border:1px solid rgba(138,100,33,.14);
+        color:#73551e;
+        font-size:10.5px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .admin-duplicate-alert-link{
+        flex:0 0 auto;
+        min-height:38px;
+        padding:0 14px;
+        border-radius:999px;
+        background:var(--ao-primary);
+        color:#fff;
+        text-decoration:none;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-size:11.5px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .admin-duplicate-alert-link:hover{
+        background:#103b2b;
+        color:#fff;
+    }
+
+    .decision-card{
+        padding:14px;
+        border-radius:22px;
+        background:linear-gradient(180deg, var(--ao-surface) 0%, var(--ao-surface-2) 100%);
+        border:1px solid var(--ao-line);
+        box-shadow:var(--ao-shadow-sm);
+    }
+
+    .decision-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:14px;
+        margin-bottom:12px;
+    }
+
+    .decision-title{
+        margin:0;
+        font-size:18px;
+        line-height:1.45;
+        color:var(--ao-ink);
+        font-weight:800;
+    }
+
+    .decision-text{
+        margin:4px 0 0;
+        font-size:11.6px;
+        line-height:1.9;
+        color:var(--ao-muted);
+    }
+
+    .decision-badge{
+        flex:0 0 auto;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:30px;
+        padding:0 12px;
+        border-radius:999px;
+        font-size:11.5px;
+        font-weight:800;
+        white-space:nowrap;
+    }
+
+    .decision-badge.blocked{
+        background:#fff3e8;
+        color:#8a5a1e;
+        border:1px solid #ead2b4;
+    }
+
+    .decision-badge.warning{
+        background:#fcf5e7;
+        color:#8a6421;
+        border:1px solid #ead8b0;
+    }
+
+    .decision-badge.ready{
+        background:#edf7f0;
+        color:#1f6a42;
+        border:1px solid #d5e9dc;
+    }
+
+    .decision-layout{
+        display:grid;
+        grid-template-columns:minmax(0, .9fr) minmax(0, 1.1fr);
+        gap:12px;
+        align-items:stretch;
+    }
+
+    .decision-status{
+        border:1px solid var(--ao-line);
+        border-radius:18px;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        padding:14px;
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .decision-status-label{
+        font-size:11px;
+        line-height:1.7;
+        color:var(--ao-muted);
+        font-weight:700;
+    }
+
+    .decision-status-value{
+        font-size:23px;
+        line-height:1.25;
+        color:var(--ao-primary);
+        font-weight:900;
+    }
+
+    .decision-status-value.blocked{
+        color:#8a5a1e;
+    }
+
+    .decision-status-value.warning{
+        color:#8a6421;
+    }
+
+    .decision-status-value.ready{
+        color:#1f6a42;
+    }
+
+    .decision-summary{
+        margin:0;
+        color:var(--ao-ink-2);
+        font-size:12px;
+        line-height:1.9;
+    }
+
+    .decision-quick{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:8px;
+    }
+
+    .decision-quick-item{
+        min-height:58px;
+        padding:9px 10px;
+        border-radius:13px;
+        background:#f7faf8;
+        border:1px solid var(--ao-line-2);
+        text-align:center;
+    }
+
+    .decision-quick-item span{
+        display:block;
+        color:var(--ao-muted);
+        font-size:9.6px;
+        line-height:1.4;
+        font-weight:700;
+    }
+
+    .decision-quick-item strong{
+        display:block;
+        margin-top:5px;
+        color:var(--ao-primary);
+        font-size:18px;
+        line-height:1;
+        font-weight:900;
+    }
+
+    .decision-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:auto;
+    }
+
+    .decision-action{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:34px;
+        padding:0 12px;
+        border-radius:10px;
+        text-decoration:none;
+        font-size:10.8px;
+        font-weight:800;
+        white-space:nowrap;
+    }
+
+    .decision-action.primary{
+        background:var(--ao-primary);
+        color:#fff;
+    }
+
+    .decision-action.soft{
+        background:#f4f7f5;
+        border:1px solid var(--ao-line-2);
+        color:var(--ao-primary);
+    }
+
+    .decision-steps{
+        display:grid;
+        grid-template-columns:1fr;
+        gap:8px;
+    }
+
+    .decision-step{
+        display:grid;
+        grid-template-columns:auto minmax(0, 1fr) auto;
+        gap:10px;
+        align-items:center;
+        min-height:58px;
+        padding:9px 10px;
+        border:1px solid var(--ao-line);
+        border-radius:14px;
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+    }
+
+    .decision-step-dot{
+        width:30px;
+        height:30px;
+        border-radius:999px;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        font-size:12px;
+        font-weight:900;
+        border:1px solid var(--ao-line-2);
+        background:#f5f8f6;
+        color:var(--ao-ink-2);
+    }
+
+    .decision-step.done .decision-step-dot,
+    .decision-step.ready .decision-step-dot{
+        background:#edf7f0;
+        border-color:#d5e9dc;
+        color:#1f6a42;
+    }
+
+    .decision-step.blocked .decision-step-dot{
+        background:#fff3e8;
+        border-color:#ead2b4;
+        color:#8a5a1e;
+    }
+
+    .decision-step.advised .decision-step-dot,
+    .decision-step.waiting .decision-step-dot{
+        background:#f6f8f6;
+        border-color:#dde5df;
+        color:#697c72;
+    }
+
+    .decision-step-name{
+        color:var(--ao-ink);
+        font-size:11.5px;
+        line-height:1.5;
+        font-weight:800;
+    }
+
+    .decision-step-note{
+        margin-top:2px;
+        color:var(--ao-muted);
+        font-size:9.8px;
+        line-height:1.55;
+    }
+
+    .decision-step-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:25px;
+        padding:0 9px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid var(--ao-line-2);
+        color:var(--ao-ink-2);
+        font-size:9.5px;
+        font-weight:800;
+        white-space:nowrap;
+    }
+
+    .decision-step.blocked .decision-step-badge{
+        background:#fff3e8;
+        border-color:#ead2b4;
+        color:#8a5a1e;
+    }
+
+    .decision-step.done .decision-step-badge,
+    .decision-step.ready .decision-step-badge{
+        background:#edf7f0;
+        border-color:#d5e9dc;
+        color:#1f6a42;
+    }
+
+
     @media (max-width: 1160px){
         .exec-grid,
         .summary-grid,
@@ -983,6 +1366,41 @@
             overflow-x:auto;
         }
 
+
+
+        .admin-duplicate-alert{
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .admin-duplicate-alert-link{
+            width:100%;
+        }
+
+        .decision-layout,
+        .decision-quick{
+            grid-template-columns:1fr;
+        }
+
+        .decision-head{
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .decision-badge,
+        .decision-action{
+            width:100%;
+        }
+
+        .decision-step{
+            grid-template-columns:auto minmax(0, 1fr);
+        }
+
+        .decision-step-badge{
+            grid-column:1 / -1;
+            width:100%;
+        }
+
         .exec-actions .btn,
         .entry-actions-inline .btn{
             width:100%;
@@ -1008,10 +1426,8 @@
                     <a href="{% url 'staffdata:admin_principals_list' %}" class="btn btn-primary">سجلات المديرين</a>
                     <a href="{% url 'staffdata:admin_vices_list' %}" class="btn btn-secondary">سجلات الوكلاء</a>
                     <a href="{% url 'staffdata:admin_supervisors_list' %}" class="btn btn-soft">استعراض المشرفين</a>
+                    <a href="{% url 'staffdata:admin_duplicates' %}" class="btn btn-soft">جودة البيانات</a>
                     <a href="{% url 'staffdata:admin_correction_requests' %}" class="btn btn-soft">طلبات التصحيح</a>
-                    <a href="{% url 'staffdata:admin_entry_window_settings' %}" class="btn btn-soft">إعدادات فترة التسجيل</a>
-                    <a href="{% url 'staffdata:admin_export_principals_csv' %}" class="btn btn-soft">تصدير المديرين Excel</a>
-                    <a href="{% url 'staffdata:admin_export_vice_csv' %}" class="btn btn-soft">تصدير الوكلاء Excel</a>
                 </div>
             </div>
         </div>
@@ -1043,6 +1459,135 @@
 
 {% block content %}
 <div class="admin-board">
+
+
+    {% if duplicates_alert %}
+        {% if duplicates_alert.has_duplicates %}
+            <section class="admin-duplicate-alert admin-duplicate-alert-danger">
+                <div class="admin-duplicate-alert-main">
+                    <div class="admin-duplicate-alert-icon">!</div>
+
+                    <div>
+                        <h3>تنبيه جودة البيانات</h3>
+                        <p>
+                            يوجد
+                            <strong>{{ duplicates_alert.total_count }}</strong>
+                            حالة تكرار أو اشتباه في بيانات المديرين/المديرات والوكلاء/الوكيلات.
+                            يلزم مراجعتها قبل إصدار أي قرار.
+                        </p>
+
+                        <div class="admin-duplicate-alert-meta">
+                            <span>تكرارات حرجة: {{ duplicates_alert.critical_count }}</span>
+                            <span>تحتاج مراجعة: {{ duplicates_alert.warning_count }}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <a href="{% url 'staffdata:admin_duplicates' %}" class="admin-duplicate-alert-link">
+                    استعراض التكرارات
+                </a>
+            </section>
+        {% else %}
+            <section class="admin-duplicate-alert admin-duplicate-alert-good">
+                <div class="admin-duplicate-alert-main">
+                    <div class="admin-duplicate-alert-icon">✓</div>
+
+                    <div>
+                        <h3>جودة البيانات</h3>
+                        <p>لا توجد تكرارات ظاهرة في السجلات النشطة الحالية.</p>
+                    </div>
+                </div>
+
+                <a href="{% url 'staffdata:admin_duplicates' %}" class="admin-duplicate-alert-link">
+                    مركز جودة البيانات
+                </a>
+            </section>
+        {% endif %}
+    {% endif %}
+
+
+    {% if decision_readiness %}
+        <section class="decision-card">
+            <div class="decision-head">
+                <div>
+                    <h2 class="decision-title">جاهزية القرار ومسار الاعتماد</h2>
+                    <p class="decision-text">
+                        قراءة تنفيذية تجمع موانع الإصدار والتنبيهات المهمة قبل التصدير أو اعتماد القرار.
+                    </p>
+                </div>
+
+                <span class="decision-badge {{ decision_readiness.status_code }}">
+                    {{ decision_readiness.status_badge }}
+                </span>
+            </div>
+
+            <div class="decision-layout">
+                <div class="decision-status">
+                    <div>
+                        <div class="decision-status-label">الحالة الحالية</div>
+                        <div class="decision-status-value {{ decision_readiness.status_code }}">
+                            {{ decision_readiness.status_label }}
+                        </div>
+                    </div>
+
+                    <p class="decision-summary">{{ decision_readiness.summary }}</p>
+
+                    <div class="decision-quick">
+                        <div class="decision-quick-item">
+                            <span>موانع حرجة</span>
+                            <strong>{{ decision_readiness.blockers_count }}</strong>
+                        </div>
+                        <div class="decision-quick-item">
+                            <span>ملاحظات</span>
+                            <strong>{{ decision_readiness.warnings_count }}</strong>
+                        </div>
+                        <div class="decision-quick-item">
+                            <span>تكرارات حرجة</span>
+                            <strong>{{ decision_readiness.critical_duplicates }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="decision-actions">
+                        <a href="{% url 'staffdata:admin_backup_center' %}" class="decision-action primary">
+                            أخذ نسخة احتياطية
+                        </a>
+                        <a href="{% url 'staffdata:admin_duplicates' %}" class="decision-action soft">
+                            مراجعة جودة البيانات
+                        </a>
+                        <a href="{% url 'staffdata:admin_correction_requests' %}" class="decision-action soft">
+                            طلبات التصحيح
+                        </a>
+                        <a href="{% url 'staffdata:admin_final_export_gate' %}" class="decision-action primary">
+                            بوابة التصدير النهائي
+                        </a>
+                    </div>
+                </div>
+
+                <div class="decision-steps">
+                    {% for step in decision_readiness.approval_steps %}
+                        <div class="decision-step {{ step.state }}">
+                            <div class="decision-step-dot">
+                                {% if step.state == "done" or step.state == "ready" %}
+                                    ✓
+                                {% elif step.state == "blocked" %}
+                                    !
+                                {% else %}
+                                    •
+                                {% endif %}
+                            </div>
+
+                            <div>
+                                <div class="decision-step-name">{{ step.title }}</div>
+                                <div class="decision-step-note">{{ step.note }}</div>
+                            </div>
+
+                            <span class="decision-step-badge">{{ step.state_label }}</span>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+    {% endif %}
 
     <section class="section">
         <div class="section-head">
@@ -1290,6 +1835,14 @@
                         <span>فتح طلبات التصحيح</span>
                         <span>↗</span>
                     </a>
+                    <a href="{% url 'staffdata:admin_duplicates' %}" class="mini-action">
+                        <span>مركز جودة البيانات</span>
+                        <span>↗</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_backup_center' %}" class="mini-action">
+                        <span>مركز النسخ الاحتياطي</span>
+                        <span>↗</span>
+                    </a>
                     <a href="{% url 'staffdata:admin_download_performance_center' %}" class="mini-action">
                         <span>تحميل الاستمارات</span>
                         <span>↗</span>
@@ -1312,6 +1865,18 @@
             <div class="side-card">
                 <h3 class="side-card-title">التصدير</h3>
                 <div class="mini-actions">
+                    <a href="{% url 'staffdata:admin_backup_zip' %}" class="mini-action">
+                        <span>نسخة احتياطية كاملة ZIP</span>
+                        <span>⬇</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_backup_excel' %}" class="mini-action">
+                        <span>نسخة Excel شاملة</span>
+                        <span>⬇</span>
+                    </a>
+                    <a href="{% url 'staffdata:admin_export_supervisors_xlsx' %}" class="mini-action">
+                        <span>تصدير بيانات المشرفين Excel</span>
+                        <span>⬇</span>
+                    </a>
                     <a href="{% url 'staffdata:admin_export_principals_csv' %}" class="mini-action">
                         <span>تصدير بيانات المديرين Excel</span>
                         <span>⬇</span>

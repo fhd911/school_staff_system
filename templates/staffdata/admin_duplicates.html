@@ -1,0 +1,1215 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title|default:"تنبيهات تكرار البيانات" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .dup-page,
+    .dup-page *,
+    .dup-hero,
+    .dup-hero *{
+        font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+    }
+
+    .dup-page{
+        --paper:#fffefb;
+        --paper-2:#fbfcfa;
+        --paper-3:#f6f8f6;
+
+        --line:#d5dfd8;
+        --line-2:#cad6cf;
+        --line-soft:#e5ece7;
+
+        --ink:#1f3128;
+        --ink-soft:#5a6d63;
+        --ink-faint:#798b81;
+
+        --green:#1f4d3a;
+        --green-2:#28684a;
+        --green-3:#2f7353;
+
+        --gold:#c5a765;
+        --gold-soft:#e9ddc2;
+        --gold-bg:#fbf7ef;
+
+        --danger:#a64646;
+        --danger-bg:#fff6f6;
+        --danger-line:#efd3d3;
+
+        --warn:#8a703b;
+        --warn-bg:#fff8eb;
+        --warn-line:#ead9b4;
+
+        --good:#2b6c49;
+        --good-bg:#f2f8f4;
+        --good-line:#dce8e0;
+
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        color:var(--ink);
+    }
+
+    .dup-page *,
+    .dup-page *::before,
+    .dup-page *::after{
+        box-sizing:border-box;
+    }
+
+    /* Hero مطابق لروح لوحة الإدارة واستمارة المدير */
+    .dup-hero{
+        position:relative;
+        overflow:hidden;
+        margin-bottom:18px;
+        border-radius:26px;
+        color:#fff;
+        background:
+            radial-gradient(circle at 18% 24%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 24%),
+            linear-gradient(135deg, #1d5a42 0%, #23684a 52%, #2b7354 100%);
+        box-shadow:0 14px 30px rgba(18,47,35,.10);
+        border:1px solid rgba(255,255,255,.05);
+    }
+
+    .dup-hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:24px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.20) 18%,
+            rgba(221,196,144,.74) 50%,
+            rgba(221,196,144,.20) 82%,
+            transparent 100%
+        );
+    }
+
+    .dup-hero-inner{
+        position:relative;
+        z-index:1;
+        min-height:136px;
+        padding:22px 24px 20px;
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+    }
+
+    .dup-hero-main{
+        min-width:0;
+    }
+
+    .dup-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        margin-bottom:10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .dup-hero-title{
+        margin:0;
+        font-size:23px;
+        font-weight:700;
+        line-height:1.45;
+        color:#fff;
+    }
+
+    .dup-hero-text{
+        margin:7px 0 0;
+        max-width:900px;
+        font-size:12.35px;
+        font-weight:400;
+        line-height:1.95;
+        color:rgba(255,255,255,.91);
+    }
+
+    .dup-hero-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:12px;
+    }
+
+    .dup-hero-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:27px;
+        padding:0 10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .dup-back{
+        flex:0 0 auto;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:11px;
+        border:1px solid rgba(255,255,255,.14);
+        background:rgba(255,255,255,.06);
+        color:#fff;
+        font-size:12.35px;
+        font-weight:500;
+        text-decoration:none;
+        transition:.2s ease;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+        backdrop-filter:blur(4px);
+        white-space:nowrap;
+    }
+
+    .dup-back:hover{
+        background:rgba(255,255,255,.10);
+        border-color:rgba(255,255,255,.20);
+        color:#fff;
+        transform:translateY(-1px);
+    }
+
+    .dup-summary{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .dup-summary-card{
+        min-height:86px;
+        padding:14px 16px;
+        border:1px solid #dce5df;
+        border-radius:18px;
+        background:linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+        box-shadow:
+            0 18px 34px rgba(19,39,30,.04),
+            0 4px 10px rgba(19,39,30,.016);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+    }
+
+    .dup-summary-card span{
+        color:var(--ink-soft);
+        font-size:11.4px;
+        font-weight:500;
+        line-height:1.7;
+    }
+
+    .dup-summary-card strong{
+        color:var(--green);
+        font-size:28px;
+        font-weight:700;
+        line-height:1;
+        letter-spacing:-.4px;
+    }
+
+    .dup-summary-card.danger strong{
+        color:#9b4b20;
+    }
+
+    .dup-summary-card.warning strong{
+        color:#8a703b;
+    }
+
+    .dup-summary-card.status strong{
+        font-size:17px;
+        line-height:1.45;
+        letter-spacing:0;
+    }
+
+    .dup-alert{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:14px;
+        padding:15px 17px;
+        border-radius:18px;
+        border:1px solid var(--warn-line);
+        background:linear-gradient(180deg, #fffdf9 0%, var(--warn-bg) 100%);
+        color:#6a5932;
+        box-shadow:0 10px 22px rgba(19,39,30,.035);
+    }
+
+    .dup-alert.good{
+        border-color:var(--good-line);
+        background:linear-gradient(180deg, #fdfefd 0%, var(--good-bg) 100%);
+        color:var(--good);
+    }
+
+    .dup-alert-icon{
+        width:34px;
+        height:34px;
+        border-radius:50%;
+        flex:0 0 34px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        background:#fff8eb;
+        border:1px solid #ead9b4;
+        color:#8a703b;
+        font-size:15px;
+        font-weight:700;
+    }
+
+    .dup-alert.good .dup-alert-icon{
+        background:#edf7f0;
+        border-color:#d5e8dc;
+        color:var(--good);
+    }
+
+    .dup-alert-main{
+        display:flex;
+        align-items:flex-start;
+        gap:10px;
+        min-width:0;
+        flex:1 1 auto;
+    }
+
+    .dup-alert-title{
+        margin:0 0 3px;
+        color:inherit;
+        font-size:13.8px;
+        font-weight:700;
+        line-height:1.7;
+    }
+
+    .dup-alert-text{
+        margin:0;
+        color:inherit;
+        font-size:11.9px;
+        line-height:1.9;
+    }
+
+    .dup-alert-pills{
+        display:flex;
+        flex-wrap:wrap;
+        gap:6px;
+        margin-top:8px;
+    }
+
+    .dup-alert-pill{
+        min-height:24px;
+        padding:0 8px;
+        border-radius:999px;
+        background:rgba(255,255,255,.65);
+        border:1px solid rgba(138,112,59,.18);
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        color:#6a5932;
+        font-size:10.6px;
+        font-weight:600;
+        white-space:nowrap;
+    }
+
+    .dup-alert-action{
+        flex:0 0 auto;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:38px;
+        padding:0 14px;
+        border-radius:11px;
+        background:var(--green);
+        color:#fff;
+        text-decoration:none;
+        font-size:12.1px;
+        font-weight:600;
+        box-shadow:0 8px 16px rgba(30,73,56,.10);
+    }
+
+    .dup-alert-action:hover{
+        background:#183e2f;
+        color:#fff;
+    }
+
+    .dup-panel{
+        background:linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+        border:1px solid var(--line-2);
+        border-radius:20px;
+        box-shadow:
+            0 18px 34px rgba(19,39,30,.05),
+            0 4px 10px rgba(19,39,30,.02);
+        overflow:hidden;
+    }
+
+    .dup-filter-body{
+        padding:16px;
+    }
+
+    .dup-filter-grid{
+        display:grid;
+        grid-template-columns:2fr 1fr 1.2fr auto auto;
+        gap:10px;
+        align-items:end;
+    }
+
+    .dup-field{
+        min-width:0;
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+    }
+
+    .dup-field label{
+        margin:0;
+        font-size:12px;
+        font-weight:500;
+        color:#273e34;
+        line-height:1.6;
+    }
+
+    .dup-field input,
+    .dup-field select{
+        width:100%;
+        min-height:44px;
+        padding:10px 12px;
+        border:1px solid #c8d4cc;
+        border-radius:10px;
+        background:#fff;
+        color:var(--ink);
+        font-size:12.9px;
+        font-weight:400;
+        line-height:1.65;
+        box-shadow:0 1px 2px rgba(17,32,24,.015);
+        transition:border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+
+    .dup-field input:focus,
+    .dup-field select:focus{
+        outline:none;
+        border-color:#9db4a8;
+        box-shadow:0 0 0 4px rgba(31,79,59,.06);
+        background:#fff;
+    }
+
+    .dup-btn,
+    .dup-btn-soft,
+    .dup-btn-danger{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:42px;
+        padding:0 16px;
+        border-radius:10px;
+        text-decoration:none;
+        border:1px solid transparent;
+        font-size:12.55px;
+        font-weight:500;
+        cursor:pointer;
+        transition:.2s ease;
+        white-space:nowrap;
+    }
+
+    .dup-btn{
+        background:var(--green);
+        color:#fff;
+        box-shadow:0 8px 16px rgba(30,73,56,.10);
+    }
+
+    .dup-btn:hover{
+        background:#183e2f;
+        color:#fff;
+    }
+
+    .dup-btn-soft{
+        background:#f7faf8;
+        border-color:#d5dfd8;
+        color:#355144;
+    }
+
+    .dup-btn-soft:hover{
+        background:#eef4f0;
+        color:#284437;
+    }
+
+    .dup-btn-danger{
+        background:linear-gradient(180deg, #fffdfd 0%, #fff4f4 100%);
+        border-color:#e4b9b9;
+        color:#944646;
+    }
+
+    .dup-btn-danger:hover{
+        background:#fff1f1;
+        color:#823b3b;
+    }
+
+    .dup-section-head{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:12px;
+        padding:0 2px;
+    }
+
+    .dup-section-title{
+        margin:0;
+        font-size:17.2px;
+        font-weight:700;
+        line-height:1.6;
+        color:var(--green);
+    }
+
+    .dup-section-sub{
+        color:var(--ink-soft);
+        font-size:11.5px;
+        font-weight:400;
+        line-height:1.7;
+    }
+
+    .dup-group{
+        background:linear-gradient(180deg, var(--paper) 0%, var(--paper-2) 100%);
+        border:1px solid var(--line-2);
+        border-radius:20px;
+        box-shadow:
+            0 18px 34px rgba(19,39,30,.05),
+            0 4px 10px rgba(19,39,30,.02);
+        overflow:hidden;
+    }
+
+    .dup-group-head{
+        padding:16px 18px;
+        border-bottom:1px solid var(--line-soft);
+        background:linear-gradient(180deg, #fffefc 0%, #fbfcfa 100%);
+        display:grid;
+        grid-template-columns:minmax(0, 1fr) auto;
+        gap:14px;
+        align-items:center;
+    }
+
+    .dup-group-title{
+        margin:0;
+        font-size:16.2px;
+        font-weight:700;
+        line-height:1.7;
+        color:var(--ink);
+    }
+
+    .dup-group-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:8px;
+    }
+
+    .dup-pill{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:26px;
+        padding:0 10px;
+        border-radius:999px;
+        background:#f6f9f7;
+        border:1px solid #dde5df;
+        color:#5a6f64;
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .dup-pill.critical{
+        background:#fff6ef;
+        border-color:#efd3c4;
+        color:#9b4b20;
+    }
+
+    .dup-pill.warning{
+        background:#fff8eb;
+        border-color:#ead9b4;
+        color:#8a703b;
+    }
+
+    .dup-count{
+        width:76px;
+        min-height:74px;
+        border-radius:18px;
+        border:1px solid #dbe4dd;
+        background:linear-gradient(180deg, #fdfefd 0%, #f6f9f7 100%);
+        display:flex;
+        flex-direction:column;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+    }
+
+    .dup-count strong{
+        color:var(--green);
+        font-size:30px;
+        font-weight:700;
+        line-height:1;
+    }
+
+    .dup-count span{
+        margin-top:6px;
+        color:var(--ink-soft);
+        font-size:11px;
+        font-weight:500;
+        line-height:1.4;
+    }
+
+    .dup-group-tip{
+        padding:11px 18px;
+        border-bottom:1px solid var(--line-soft);
+        background:linear-gradient(180deg, var(--gold-bg) 0%, #fffdfa 100%);
+        color:#6a5932;
+        font-size:11.7px;
+        line-height:1.9;
+    }
+
+    .dup-records{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:14px;
+        padding:16px 18px 18px;
+    }
+
+    .dup-record{
+        border:1px solid #d6e0d9;
+        border-radius:16px;
+        background:linear-gradient(180deg, #fffefc 0%, #fbfcfa 100%);
+        box-shadow:0 2px 8px rgba(19,39,30,.012);
+        overflow:hidden;
+    }
+
+    .dup-record-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:12px;
+        padding:14px 14px 12px;
+        border-bottom:1px solid var(--line-soft);
+    }
+
+    .dup-record-title{
+        margin:0;
+        font-size:15.8px;
+        font-weight:700;
+        line-height:1.6;
+        color:var(--green);
+    }
+
+    .dup-record-sub{
+        margin:4px 0 0;
+        font-size:11.4px;
+        color:var(--ink-soft);
+        line-height:1.7;
+    }
+
+    .dup-type{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:linear-gradient(180deg, #f8faf8 0%, #f2f5f3 100%);
+        border:1px solid #dde5df;
+        color:#51665b;
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+        flex:0 0 auto;
+    }
+
+    .dup-record-body{
+        padding:14px;
+    }
+
+    .dup-info-grid{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .dup-info{
+        min-height:54px;
+        padding:9px 11px;
+        border:1px solid #dde5df;
+        border-radius:12px;
+        background:linear-gradient(180deg, #fdfefd 0%, #f7faf7 100%);
+    }
+
+    .dup-info.wide{
+        grid-column:1 / -1;
+    }
+
+    .dup-info span{
+        display:block;
+        font-size:10.7px;
+        font-weight:500;
+        color:var(--ink-faint);
+        line-height:1.55;
+        margin-bottom:3px;
+    }
+
+    .dup-info strong{
+        display:block;
+        font-size:12.2px;
+        font-weight:600;
+        color:var(--ink);
+        line-height:1.7;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+    }
+
+    .dup-actions{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+        margin-top:12px;
+        padding-top:12px;
+        border-top:1px solid var(--line-soft);
+    }
+
+    .dup-record-note{
+        color:var(--ink-soft);
+        font-size:11.1px;
+        line-height:1.8;
+        flex:1 1 240px;
+    }
+
+    .dup-action-buttons{
+        display:flex;
+        align-items:center;
+        gap:8px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+    }
+
+    .dup-deactivate-form{
+        width:100%;
+        margin:10px 0 0;
+        padding:10px;
+        border:1px solid #ead9b4;
+        border-radius:13px;
+        background:linear-gradient(180deg, #fffdfa 0%, #fbf7ef 100%);
+        display:grid;
+        grid-template-columns:1fr 1.15fr auto;
+        gap:8px;
+        align-items:end;
+    }
+
+    .dup-reason-field{
+        min-width:0;
+        display:flex;
+        flex-direction:column;
+        gap:5px;
+    }
+
+    .dup-reason-field label{
+        color:#6a5932;
+        font-size:10.8px;
+        font-weight:700;
+        line-height:1.5;
+    }
+
+    .dup-reason-field select,
+    .dup-reason-field input{
+        width:100%;
+        min-height:36px;
+        border:1px solid #d9c69d;
+        border-radius:10px;
+        background:#fff;
+        color:#4c3d20;
+        padding:7px 10px;
+        font-size:11.6px;
+        line-height:1.5;
+        outline:none;
+    }
+
+    .dup-reason-field select:focus,
+    .dup-reason-field input:focus{
+        border-color:#b99a5b;
+        box-shadow:0 0 0 3px rgba(197,167,101,.13);
+    }
+
+    .dup-reason-help{
+        grid-column:1 / -1;
+        margin:0;
+        color:#78633a;
+        font-size:10.6px;
+        line-height:1.75;
+    }
+
+    .dup-foot{
+        padding:12px 16px;
+        border-top:1px solid var(--line-soft);
+        background:#fbfcfb;
+        color:var(--ink-soft);
+        font-size:11.2px;
+        line-height:1.85;
+        text-align:center;
+    }
+
+    .dup-empty{
+        padding:34px 20px;
+        text-align:center;
+    }
+
+    .dup-empty h3{
+        margin:0 0 8px;
+        font-size:18px;
+        font-weight:700;
+        line-height:1.6;
+        color:var(--green);
+    }
+
+    .dup-empty p{
+        margin:0;
+        color:var(--ink-soft);
+        font-size:12.3px;
+        line-height:1.9;
+    }
+
+    .dup-pages{
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        gap:8px;
+        flex-wrap:wrap;
+    }
+
+    .dup-page-link,
+    .dup-page-current{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:40px;
+        min-height:40px;
+        padding:0 12px;
+        border-radius:10px;
+        text-decoration:none;
+        border:1px solid #d5dfd8;
+        background:#fff;
+        color:#355144;
+        font-size:12.4px;
+        font-weight:500;
+    }
+
+    .dup-page-link:hover{
+        background:#f2f7f4;
+        color:#234133;
+    }
+
+    .dup-page-current{
+        background:var(--green);
+        border-color:var(--green);
+        color:#fff;
+    }
+
+    @media (max-width:1100px){
+        .dup-summary{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+
+        .dup-filter-grid{
+            grid-template-columns:1fr 1fr;
+        }
+    }
+
+    @media (max-width:980px){
+        .dup-records{
+            grid-template-columns:1fr;
+        }
+
+        .dup-group-head{
+            grid-template-columns:1fr;
+        }
+
+        .dup-count{
+            width:100%;
+            min-height:64px;
+            flex-direction:row;
+            gap:8px;
+        }
+
+        .dup-count span{
+            margin-top:0;
+        }
+    }
+
+    @media (max-width:860px){
+        .dup-hero-inner{
+            flex-direction:column;
+            align-items:flex-start;
+            min-height:auto;
+            padding:16px;
+            gap:11px;
+        }
+
+        .dup-hero::after{
+            inset-inline:16px;
+        }
+
+        .dup-hero-title{
+            font-size:18px;
+        }
+
+        .dup-hero-text{
+            font-size:11.85px;
+        }
+
+        .dup-summary,
+        .dup-filter-grid,
+        .dup-info-grid{
+            grid-template-columns:1fr;
+        }
+
+        .dup-alert{
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .dup-info.wide{
+            grid-column:auto;
+        }
+
+        .dup-back,
+        .dup-alert-action,
+        .dup-btn,
+        .dup-btn-soft,
+        .dup-btn-danger{
+            width:100%;
+        }
+
+        .dup-action-buttons{
+            width:100%;
+        }
+
+        .dup-action-buttons > *{
+            flex:1 1 100%;
+        }
+
+        .dup-action-buttons form{
+            width:100%;
+        }
+
+        .dup-deactivate-form{
+            grid-template-columns:1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="dup-hero">
+    <div class="dup-hero-inner">
+        <div class="dup-hero-main">
+            <div class="dup-kicker">مركز جودة البيانات</div>
+            <h1 class="dup-hero-title">{{ page_title|default:"تنبيهات تكرار البيانات" }}</h1>
+            <p class="dup-hero-text">
+                واجهة تنفيذية لمراجعة السجلات التي ظهر فيها تكرار أو اشتباه، مع إمكانية تصحيح البيانات أو تعطيل السجل المكرر وفق الحالة قبل الاعتماد أو إصدار القرار.
+            </p>
+
+            <div class="dup-hero-meta">
+                <span class="dup-hero-chip">مراجعة التكرارات</span>
+                <span class="dup-hero-chip">تصحيح إداري</span>
+                <span class="dup-hero-chip">بيانات نشطة فقط</span>
+            </div>
+        </div>
+
+        <div class="page-hero-action">
+            <a href="{% url 'staffdata:admin_overview' %}" class="dup-back">العودة للوحة الإدارة</a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="dup-page">
+
+    <section class="dup-summary">
+        <div class="dup-summary-card">
+            <span>إجمالي مجموعات التكرار</span>
+            <strong>{{ duplicate_report.total_count|default:0 }}</strong>
+        </div>
+
+        <div class="dup-summary-card danger">
+            <span>تكرارات حرجة</span>
+            <strong>{{ duplicate_report.critical_count|default:0 }}</strong>
+        </div>
+
+        <div class="dup-summary-card warning">
+            <span>تحتاج مراجعة</span>
+            <strong>{{ duplicate_report.warning_count|default:0 }}</strong>
+        </div>
+
+        <div class="dup-summary-card status">
+            <span>جاهزية البيانات</span>
+            <strong>
+                {% if duplicate_report.critical_count %}
+                    غير جاهزة
+                {% else %}
+                    جاهزة مبدئيًا
+                {% endif %}
+            </strong>
+        </div>
+    </section>
+
+    {% if duplicate_report.has_duplicates %}
+        <section class="dup-alert">
+            <div class="dup-alert-main">
+                <div class="dup-alert-icon">!</div>
+                <div>
+                    <h2 class="dup-alert-title">تنبيه جودة البيانات</h2>
+                    <p class="dup-alert-text">
+                        توجد حالات تكرار أو اشتباه في بيانات المديرين/المديرات والوكلاء/الوكيلات. عالج الحالات الحرجة قبل إصدار أي قرار.
+                    </p>
+                    <div class="dup-alert-pills">
+                        <span class="dup-alert-pill">تكرارات حرجة: {{ duplicate_report.critical_count|default:0 }}</span>
+                        <span class="dup-alert-pill">تحتاج مراجعة: {{ duplicate_report.warning_count|default:0 }}</span>
+                    </div>
+                </div>
+            </div>
+            <a href="#duplicate-list" class="dup-alert-action">استعراض الحالات</a>
+        </section>
+    {% else %}
+        <section class="dup-alert good">
+            <div class="dup-alert-main">
+                <div class="dup-alert-icon">✓</div>
+                <div>
+                    <h2 class="dup-alert-title">جودة البيانات</h2>
+                    <p class="dup-alert-text">لا توجد تكرارات ظاهرة ضمن السجلات النشطة الحالية.</p>
+                </div>
+            </div>
+        </section>
+    {% endif %}
+
+    <section class="dup-panel">
+        <div class="dup-filter-body">
+            <form method="get" class="dup-filter-grid">
+                <div class="dup-field">
+                    <label for="q">بحث</label>
+                    <input
+                        id="q"
+                        type="text"
+                        name="q"
+                        value="{{ current_q }}"
+                        placeholder="الاسم، السجل المدني، الجوال، المدرسة، أو المشرف"
+                    >
+                </div>
+
+                <div class="dup-field">
+                    <label for="severity">درجة التكرار</label>
+                    <select id="severity" name="severity">
+                        <option value="">الكل</option>
+                        <option value="critical" {% if current_severity == "critical" %}selected{% endif %}>حرج</option>
+                        <option value="warning" {% if current_severity == "warning" %}selected{% endif %}>يحتاج مراجعة</option>
+                    </select>
+                </div>
+
+                <div class="dup-field">
+                    <label for="category">نوع التكرار</label>
+                    <select id="category" name="category">
+                        <option value="">كل الأنواع</option>
+                        {% for value, label in category_choices %}
+                            <option value="{{ value }}" {% if current_category == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <button type="submit" class="dup-btn">تصفية النتائج</button>
+                <a href="{% url 'staffdata:admin_duplicates' %}" class="dup-btn-soft">إعادة ضبط</a>
+            </form>
+        </div>
+    </section>
+
+    <div class="dup-section-head" id="duplicate-list">
+        <h2 class="dup-section-title">قائمة حالات التكرار</h2>
+        <div class="dup-section-sub">المعروض: {{ duplicate_groups|length }} مجموعة</div>
+    </div>
+
+    {% if duplicate_groups %}
+        {% for group in duplicate_groups %}
+            <section class="dup-group">
+                <div class="dup-group-head">
+                    <div>
+                        <h3 class="dup-group-title">{{ group.title }}</h3>
+
+                        <div class="dup-group-meta">
+                            {% if group.severity == "critical" %}
+                                <span class="dup-pill critical">حرج</span>
+                            {% else %}
+                                <span class="dup-pill warning">يحتاج مراجعة</span>
+                            {% endif %}
+                            <span class="dup-pill">{{ group.key_value|default:"—" }}</span>
+                        </div>
+                    </div>
+
+                    <div class="dup-count">
+                        <strong>{{ group.count }}</strong>
+                        <span>سجل</span>
+                    </div>
+                </div>
+
+                <div class="dup-group-tip">
+                    اختر الإجراء المناسب: <strong>تصحيح بيانات السجل</strong> إذا كان الخطأ في حقل محدد، أو <strong>تعطيل كمكرر</strong> إذا كان السجل زائدًا بالكامل.
+                </div>
+
+                <div class="dup-records">
+                    {% for row in group.records %}
+                        <article class="dup-record">
+                            <div class="dup-record-head">
+                                <div>
+                                    <h4 class="dup-record-title">{{ row.full_name|default:"—" }}</h4>
+                                    <div class="dup-record-sub">السجل المدني: {{ row.national_id|default:"—" }}</div>
+                                </div>
+
+                                <span class="dup-type">{{ row.record_type_label|default:"سجل" }}</span>
+                            </div>
+
+                            <div class="dup-record-body">
+                                <div class="dup-info-grid">
+                                    <div class="dup-info">
+                                        <span>الصفة</span>
+                                        <strong>{{ row.role|default:"—" }}</strong>
+                                    </div>
+
+                                    <div class="dup-info">
+                                        <span>الجوال</span>
+                                        <strong>{{ row.mobile|default:"—" }}</strong>
+                                    </div>
+
+                                    <div class="dup-info wide">
+                                        <span>المدرسة</span>
+                                        <strong>{{ row.school_name|default:"—" }}</strong>
+                                    </div>
+
+                                    <div class="dup-info">
+                                        <span>القطاع</span>
+                                        <strong>{{ row.sector|default:"—" }}</strong>
+                                    </div>
+
+                                    <div class="dup-info">
+                                        <span>المرحلة / النوع</span>
+                                        <strong>{{ row.stage|default:"—" }}{% if row.school_gender %} - {{ row.school_gender }}{% endif %}</strong>
+                                    </div>
+
+                                    <div class="dup-info">
+                                        <span>المشرف/ة</span>
+                                        <strong>{{ row.supervisor_name|default:"—" }}</strong>
+                                    </div>
+
+                                    <div class="dup-info">
+                                        <span>تاريخ الإدخال</span>
+                                        <strong>{% if row.created_at %}{{ row.created_at|date:"Y-m-d H:i" }}{% else %}—{% endif %}</strong>
+                                    </div>
+                                </div>
+
+                                <div class="dup-actions">
+                                    <div class="dup-record-note">
+                                        صحح الحقل الخاطئ إذا كان السجل صحيحًا، ولا تستخدم التعطيل إلا إذا كان السجل مكررًا بالكامل.
+                                    </div>
+
+                                    <div class="dup-action-buttons">
+                                        {% if row.record_type %}
+                                            <a
+                                                href="{% url 'staffdata:admin_duplicate_edit_record' row.record_type row.id %}?next={{ request.get_full_path|urlencode }}"
+                                                class="dup-btn-soft"
+                                            >
+                                                تصحيح بيانات السجل
+                                            </a>
+
+                                            <form
+                                                method="post"
+                                                action="{% url 'staffdata:admin_duplicate_deactivate_record' row.record_type row.id %}"
+                                                class="dup-deactivate-form"
+                                            >
+                                                {% csrf_token %}
+                                                <input type="hidden" name="duplicate_title" value="{{ group.title }}">
+                                                <input type="hidden" name="duplicate_key" value="{{ group.key_value }}">
+                                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                                                <div class="dup-reason-field">
+                                                    <label>سبب التعطيل</label>
+                                                    <select name="reason_type" required>
+                                                        <option value="">اختر السبب</option>
+                                                        <option value="full_duplicate">السجل مكرر بالكامل</option>
+                                                        <option value="wrong_entry">إدخال خاطئ من المشرف/ة</option>
+                                                        <option value="test_entry">سجل تجريبي أو غير معتمد</option>
+                                                        <option value="not_required">السجل غير مطلوب ضمن القرار</option>
+                                                        <option value="other">سبب آخر</option>
+                                                    </select>
+                                                </div>
+
+                                                <div class="dup-reason-field">
+                                                    <label>ملاحظة مختصرة</label>
+                                                    <input
+                                                        type="text"
+                                                        name="admin_note"
+                                                        maxlength="220"
+                                                        placeholder="اختياري: مثال/ السجل الصحيح هو سجل المدير الآخر"
+                                                    >
+                                                </div>
+
+                                                <button
+                                                    type="submit"
+                                                    class="dup-btn-danger"
+                                                    onclick="return confirm('سيتم تعطيل هذا السجل كمكرر دون حذفه نهائيًا، وسيحفظ سبب التعطيل في الملاحظات. هل تريد المتابعة؟');"
+                                                >
+                                                    تعطيل كمكرر
+                                                </button>
+
+                                                <p class="dup-reason-help">
+                                                    سيُحفظ سبب التعطيل في ملاحظات السجل إن كان حقل الملاحظات متاحًا.
+                                                </p>
+                                            </form>
+                                        {% else %}
+                                            <span class="dup-btn-soft">تعذر تحديد نوع السجل</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </article>
+                    {% endfor %}
+                </div>
+
+                <div class="dup-foot">
+                    عند اختفاء سبب التكرار بعد التصحيح أو التعطيل فلن تظهر هذه المجموعة مرة أخرى ضمن السجلات النشطة.
+                </div>
+            </section>
+        {% endfor %}
+
+        {% if page_obj.has_other_pages %}
+            <nav class="dup-pages">
+                {% if page_obj.has_previous %}
+                    <a class="dup-page-link" href="?page=1{% if current_q %}&q={{ current_q }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">الأولى</a>
+                    <a class="dup-page-link" href="?page={{ page_obj.previous_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">السابق</a>
+                {% endif %}
+
+                <span class="dup-page-current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+
+                {% if page_obj.has_next %}
+                    <a class="dup-page-link" href="?page={{ page_obj.next_page_number }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">التالي</a>
+                    <a class="dup-page-link" href="?page={{ page_obj.paginator.num_pages }}{% if current_q %}&q={{ current_q }}{% endif %}{% if current_severity %}&severity={{ current_severity }}{% endif %}{% if current_category %}&category={{ current_category }}{% endif %}">الأخيرة</a>
+                {% endif %}
+            </nav>
+        {% endif %}
+    {% else %}
+        <section class="dup-panel">
+            <div class="dup-empty">
+                <h3>لا توجد نتائج مطابقة</h3>
+                <p>لا توجد حالات تكرار وفق التصفية الحالية.</p>
+            </div>
+        </section>
+    {% endif %}
+
+</div>
+{% endblock %}

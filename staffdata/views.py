@@ -1,16 +1,18 @@
 import re
 import zipfile
+from django.conf import settings
 from collections import defaultdict
 from datetime import datetime, timedelta
-from io import BytesIO
+from io import BytesIO, StringIO
 from pathlib import Path
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import FieldDoesNotExist, PermissionDenied
+from django.core.management import call_command
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Count, Q
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
@@ -99,6 +101,417 @@ def _build_admin_filter_context(request):
         "current_filters": _build_current_filters(request),
     }
 
+
+
+
+def _get_active_records_queryset(model):
+    qs = model.objects.select_related("supervisor").all()
+    if _model_has_field(model, "is_active"):
+        qs = qs.filter(is_active=True)
+    return qs
+
+
+def _record_to_duplicate_row(record, record_type_label, record_type_code):
+    supervisor = getattr(record, "supervisor", None)
+    return {
+        "record": record,
+        "id": getattr(record, "id", None),
+        "record_type": record_type_code,
+        "record_type_code": record_type_code,
+        "record_type_label": record_type_label,
+        "full_name": getattr(record, "full_name", ""),
+        "national_id": getattr(record, "national_id", ""),
+        "mobile": getattr(record, "mobile", ""),
+        "role": getattr(record, "role", ""),
+        "school_name": getattr(record, "school_name", ""),
+        "sector": getattr(record, "sector", ""),
+        "stage": getattr(record, "stage", ""),
+        "school_gender": getattr(record, "school_gender", ""),
+        "assignment_status": getattr(record, "assignment_status", ""),
+        "supervisor_id": getattr(supervisor, "id", None) if supervisor else None,
+        "supervisor_name": getattr(supervisor, "full_name", "—") if supervisor else "—",
+        "created_at": getattr(record, "created_at", None),
+    }
+
+
+def _build_duplicate_groups_by_field(
+    model,
+    field_name,
+    record_type_label,
+    record_type_code,
+    category,
+    title,
+    severity="critical",
+):
+    if not _model_has_field(model, field_name):
+        return []
+
+    qs = _get_active_records_queryset(model)
+    qs = qs.exclude(**{f"{field_name}__isnull": True}).exclude(**{field_name: ""})
+
+    duplicate_values = (
+        qs.values(field_name)
+        .annotate(total=Count("id"))
+        .filter(total__gt=1)
+        .order_by(field_name)
+    )
+
+    groups = []
+    for item in duplicate_values:
+        value = item.get(field_name)
+        records = qs.filter(**{field_name: value}).order_by("full_name", "school_name", "id")
+        groups.append(
+            {
+                "category": category,
+                "title": title,
+                "severity": severity,
+                "key_label": field_name,
+                "key_value": value,
+                "count": item.get("total", 0),
+                "records": [
+                    _record_to_duplicate_row(record, record_type_label, record_type_code)
+                    for record in records
+                ],
+            }
+        )
+
+    return groups
+
+
+def _build_cross_role_duplicate_groups():
+    if not _model_has_field(PrincipalRecord, "national_id") or not _model_has_field(VicePrincipalRecord, "national_id"):
+        return []
+
+    principal_qs = _get_active_records_queryset(PrincipalRecord).exclude(national_id="").exclude(national_id__isnull=True)
+    vice_qs = _get_active_records_queryset(VicePrincipalRecord).exclude(national_id="").exclude(national_id__isnull=True)
+
+    principal_ids = set(principal_qs.values_list("national_id", flat=True))
+    vice_ids = set(vice_qs.values_list("national_id", flat=True))
+    duplicate_ids = sorted(principal_ids.intersection(vice_ids))
+
+    groups = []
+    for national_id in duplicate_ids:
+        principal_records = principal_qs.filter(national_id=national_id).order_by("full_name", "school_name", "id")
+        vice_records = vice_qs.filter(national_id=national_id).order_by("full_name", "school_name", "id")
+
+        rows = []
+        rows.extend(_record_to_duplicate_row(record, "مدير/مديرة", "principal") for record in principal_records)
+        rows.extend(_record_to_duplicate_row(record, "وكيل/وكيلة", "vice") for record in vice_records)
+
+        groups.append(
+            {
+                "category": "cross_national_id",
+                "title": "السجل المدني موجود في المديرين والوكلاء معًا",
+                "severity": "critical",
+                "key_label": "national_id",
+                "key_value": national_id,
+                "count": len(rows),
+                "records": rows,
+            }
+        )
+
+    return groups
+
+
+def _build_school_position_duplicate_groups(model, record_type_label, record_type_code):
+    required_fields = ["school_name", "stage", "school_gender", "role"]
+    if not all(_model_has_field(model, field_name) for field_name in required_fields):
+        return []
+
+    qs = _get_active_records_queryset(model)
+    qs = qs.exclude(school_name="").exclude(school_name__isnull=True)
+
+    duplicate_values = (
+        qs.values("school_name", "stage", "school_gender", "role")
+        .annotate(total=Count("id"))
+        .filter(total__gt=1)
+        .order_by("school_name", "stage", "school_gender", "role")
+    )
+
+    groups = []
+    for item in duplicate_values:
+        records = qs.filter(
+            school_name=item.get("school_name"),
+            stage=item.get("stage"),
+            school_gender=item.get("school_gender"),
+            role=item.get("role"),
+        ).order_by("full_name", "id")
+
+        key_parts = [
+            item.get("school_name") or "—",
+            item.get("stage") or "—",
+            item.get("school_gender") or "—",
+            item.get("role") or "—",
+        ]
+
+        groups.append(
+            {
+                "category": "school_position",
+                "title": f"تكرار نفس المدرسة والصفة في سجلات {record_type_label}",
+                "severity": "warning",
+                "key_label": "school_position",
+                "key_value": " / ".join(key_parts),
+                "count": item.get("total", 0),
+                "records": [
+                    _record_to_duplicate_row(record, record_type_label, record_type_code)
+                    for record in records
+                ],
+            }
+        )
+
+    return groups
+
+
+def _build_duplicates_report():
+    critical_groups = []
+    warning_groups = []
+
+    critical_groups.extend(
+        _build_duplicate_groups_by_field(
+            PrincipalRecord,
+            "national_id",
+            "مدير/مديرة",
+            "principal",
+            "principal_national_id",
+            "تكرار السجل المدني في سجلات المديرين/المديرات",
+            severity="critical",
+        )
+    )
+    critical_groups.extend(
+        _build_duplicate_groups_by_field(
+            VicePrincipalRecord,
+            "national_id",
+            "وكيل/وكيلة",
+            "vice",
+            "vice_national_id",
+            "تكرار السجل المدني في سجلات الوكلاء/الوكيلات",
+            severity="critical",
+        )
+    )
+    critical_groups.extend(_build_cross_role_duplicate_groups())
+
+    warning_groups.extend(
+        _build_duplicate_groups_by_field(
+            PrincipalRecord,
+            "mobile",
+            "مدير/مديرة",
+            "principal",
+            "principal_mobile",
+            "تكرار رقم الجوال في سجلات المديرين/المديرات",
+            severity="warning",
+        )
+    )
+    warning_groups.extend(
+        _build_duplicate_groups_by_field(
+            VicePrincipalRecord,
+            "mobile",
+            "وكيل/وكيلة",
+            "vice",
+            "vice_mobile",
+            "تكرار رقم الجوال في سجلات الوكلاء/الوكيلات",
+            severity="warning",
+        )
+    )
+    warning_groups.extend(_build_school_position_duplicate_groups(PrincipalRecord, "المديرين/المديرات", "principal"))
+    warning_groups.extend(_build_school_position_duplicate_groups(VicePrincipalRecord, "الوكلاء/الوكيلات", "vice"))
+
+    groups = critical_groups + warning_groups
+
+    return {
+        "critical_groups": critical_groups,
+        "warning_groups": warning_groups,
+        "groups": groups,
+        "critical_count": len(critical_groups),
+        "warning_count": len(warning_groups),
+        "total_count": len(groups),
+        "has_duplicates": bool(groups),
+    }
+
+
+def _build_duplicates_alert_context():
+    report = _build_duplicates_report()
+    return {
+        "duplicates_alert": {
+            "has_duplicates": report["has_duplicates"],
+            "critical_count": report["critical_count"],
+            "warning_count": report["warning_count"],
+            "total_count": report["total_count"],
+        }
+    }
+
+
+def _build_decision_readiness_context(
+    duplicate_report=None,
+    pending_corrections_count=None,
+    missing_attachments=None,
+    pending_account_reset_requests_count=None,
+):
+    duplicate_report = duplicate_report if duplicate_report is not None else _build_duplicates_report()
+
+    critical_duplicates = int(duplicate_report.get("critical_count", 0) or 0)
+    warning_duplicates = int(duplicate_report.get("warning_count", 0) or 0)
+
+    if pending_corrections_count is None:
+        pending_corrections_count = CorrectionRequest.objects.filter(
+            status=CorrectionRequest.STATUS_PENDING
+        ).count()
+
+    if missing_attachments is None:
+        principal_qs = PrincipalRecord.objects.all()
+        missing_attachments = max(principal_qs.count() - _count_attachments(principal_qs), 0)
+
+    if pending_account_reset_requests_count is None:
+        pending_account_reset_requests_count = AccountResetRequest.objects.filter(
+            status=AccountResetRequest.STATUS_PENDING
+        ).count()
+
+    blockers = []
+    warnings = []
+
+    if critical_duplicates > 0:
+        blockers.append(
+            {
+                "title": "تكرارات حرجة",
+                "count": critical_duplicates,
+                "note": "يلزم معالجة تكرارات السجل المدني أو التعارضات الحرجة قبل إصدار القرار.",
+                "url_name": "staffdata:admin_duplicates",
+            }
+        )
+
+    if pending_corrections_count > 0:
+        blockers.append(
+            {
+                "title": "طلبات تصحيح معلقة",
+                "count": pending_corrections_count,
+                "note": "توجد طلبات تصحيح لم تُراجع بعد وقد تؤثر على صحة البيانات النهائية.",
+                "url_name": "staffdata:admin_correction_requests",
+            }
+        )
+
+    if missing_attachments > 0:
+        blockers.append(
+            {
+                "title": "نواقص في المرفقات",
+                "count": missing_attachments,
+                "note": "توجد سجلات مديرين/مديرات لا تحتوي على مرفق الأداء المطلوب.",
+                "url_name": "staffdata:admin_principals_list",
+            }
+        )
+
+    if warning_duplicates > 0:
+        warnings.append(
+            {
+                "title": "تنبيهات تحتاج مراجعة",
+                "count": warning_duplicates,
+                "note": "توجد حالات اشتباه أو تكرار متوسط لا تمنع القرار بالضرورة لكنها تحتاج مراجعة.",
+                "url_name": "staffdata:admin_duplicates",
+            }
+        )
+
+    if pending_account_reset_requests_count > 0:
+        warnings.append(
+            {
+                "title": "طلبات إعادة تهيئة",
+                "count": pending_account_reset_requests_count,
+                "note": "توجد طلبات دعم حسابات معلقة وقد تؤثر على اكتمال إدخال بعض المشرفين.",
+                "url_name": "staffdata:admin_supervisors_list",
+            }
+        )
+
+    if blockers:
+        status_code = "blocked"
+        status_label = "غير جاهز للإصدار"
+        status_badge = "حرج"
+        summary = "لا يوصى بإصدار القرار قبل معالجة الموانع الحرجة الظاهرة أدناه."
+    elif warnings:
+        status_code = "warning"
+        status_label = "جاهز مع ملاحظات"
+        status_badge = "يحتاج مراجعة"
+        summary = "لا توجد موانع حرجة، لكن توجد ملاحظات يفضل مراجعتها قبل التصدير النهائي."
+    else:
+        status_code = "ready"
+        status_label = "جاهز للإصدار"
+        status_badge = "مكتمل"
+        summary = "لا توجد موانع حرجة أو ملاحظات بارزة، ويمكن الانتقال إلى التصدير النهائي."
+
+    approval_steps = [
+        {
+            "title": "أخذ نسخة احتياطية",
+            "state": "advised",
+            "state_label": "موصى به",
+            "note": "يفضل تنزيل نسخة ZIP كاملة قبل أي معالجة أو تصدير نهائي.",
+            "url_name": "staffdata:admin_backup_center",
+        },
+        {
+            "title": "معالجة التكرارات الحرجة",
+            "state": "done" if critical_duplicates == 0 else "blocked",
+            "state_label": "مكتمل" if critical_duplicates == 0 else f"{critical_duplicates} مانع",
+            "note": "التكرارات الحرجة يجب أن تكون صفرًا قبل الاعتماد.",
+            "url_name": "staffdata:admin_duplicates",
+        },
+        {
+            "title": "مراجعة طلبات التصحيح",
+            "state": "done" if pending_corrections_count == 0 else "blocked",
+            "state_label": "مكتمل" if pending_corrections_count == 0 else f"{pending_corrections_count} طلب",
+            "note": "طلبات التصحيح المعلقة قد تغير بيانات القرار.",
+            "url_name": "staffdata:admin_correction_requests",
+        },
+        {
+            "title": "استكمال المرفقات",
+            "state": "done" if missing_attachments == 0 else "blocked",
+            "state_label": "مكتمل" if missing_attachments == 0 else f"{missing_attachments} ناقص",
+            "note": "راجع سجلات المديرين/المديرات التي لا تحتوي على مرفق.",
+            "url_name": "staffdata:admin_principals_list",
+        },
+        {
+            "title": "التصدير النهائي",
+            "state": "ready" if not blockers else "waiting",
+            "state_label": "متاح" if not blockers else "ينتظر المعالجة",
+            "note": "بعد معالجة الموانع يمكن تصدير البيانات النهائية بأمان أكبر.",
+            "url_name": "staffdata:admin_export_supervisors_xlsx",
+        },
+    ]
+
+    return {
+        "decision_readiness": {
+            "status_code": status_code,
+            "status_label": status_label,
+            "status_badge": status_badge,
+            "summary": summary,
+            "blockers": blockers,
+            "warnings": warnings,
+            "blockers_count": len(blockers),
+            "warnings_count": len(warnings),
+            "critical_duplicates": critical_duplicates,
+            "warning_duplicates": warning_duplicates,
+            "pending_corrections_count": pending_corrections_count,
+            "missing_attachments": missing_attachments,
+            "pending_account_reset_requests_count": pending_account_reset_requests_count,
+            "approval_steps": approval_steps,
+        }
+    }
+
+
+def _build_duplicate_supervisor_group_counts(groups=None):
+    groups = groups if groups is not None else _build_duplicates_report()["groups"]
+    counts = defaultdict(lambda: {"critical": 0, "warning": 0, "total": 0})
+
+    for group in groups:
+        severity = group.get("severity") or "warning"
+        supervisor_ids = {
+            row.get("supervisor_id")
+            for row in group.get("records", [])
+            if row.get("supervisor_id")
+        }
+
+        for supervisor_id in supervisor_ids:
+            counts[supervisor_id]["total"] += 1
+            if severity == "critical":
+                counts[supervisor_id]["critical"] += 1
+            else:
+                counts[supervisor_id]["warning"] += 1
+
+    return counts
 
 def _build_correction_initial_from_record(record):
     return {
@@ -1266,10 +1679,758 @@ def admin_overview_view(request):
         "latest_correction_requests": latest_correction_requests,
         **_build_admin_filter_context(request),
         **_build_entry_window_context(),
+        **_build_duplicates_alert_context(),
+        **_build_decision_readiness_context(
+            pending_corrections_count=pending_corrections_count,
+            missing_attachments=missing_attachments,
+            pending_account_reset_requests_count=pending_account_reset_requests_count,
+        ),
     }
 
     return render(request, "staffdata/admin_overview.html", context)
 
+
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_duplicates_view(request):
+    report = _build_duplicates_report()
+    groups = report["groups"]
+
+    severity = request.GET.get("severity", "").strip()
+    category = request.GET.get("category", "").strip()
+    q = request.GET.get("q", "").strip()
+
+    if severity in {"critical", "warning"}:
+        groups = [group for group in groups if group.get("severity") == severity]
+
+    if category:
+        groups = [group for group in groups if group.get("category") == category]
+
+    if q:
+        groups = [
+            group
+            for group in groups
+            if q in str(group.get("key_value", ""))
+            or any(
+                q in str(row.get("full_name", ""))
+                or q in str(row.get("national_id", ""))
+                or q in str(row.get("mobile", ""))
+                or q in str(row.get("school_name", ""))
+                or q in str(row.get("supervisor_name", ""))
+                for row in group.get("records", [])
+            )
+        ]
+
+    paginator = Paginator(groups, 20)
+    page_obj = paginator.get_page(request.GET.get("page"))
+
+    return render(
+        request,
+        "staffdata/admin_duplicates.html",
+        {
+            "page_title": "تنبيهات تكرار البيانات",
+            "duplicate_report": report,
+            "page_obj": page_obj,
+            "duplicate_groups": page_obj.object_list,
+            "current_severity": severity,
+            "current_category": category,
+            "current_q": q,
+            "category_choices": [
+                ("principal_national_id", "تكرار سجل مدني - مدير/مديرة"),
+                ("vice_national_id", "تكرار سجل مدني - وكيل/وكيلة"),
+                ("cross_national_id", "السجل المدني بين المديرين والوكلاء"),
+                ("principal_mobile", "تكرار جوال - مدير/مديرة"),
+                ("vice_mobile", "تكرار جوال - وكيل/وكيلة"),
+                ("school_position", "تكرار المدرسة والصفة"),
+            ],
+            **_build_entry_window_context(),
+        },
+    )
+
+
+
+@staff_member_required(login_url="/admin/login/")
+@transaction.atomic
+def admin_duplicate_edit_record_view(request, record_type, pk):
+    model_map = {
+        "principal": (PrincipalRecord, PrincipalRecordForm, "مدير/مديرة"),
+        "vice": (VicePrincipalRecord, VicePrincipalRecordForm, "وكيل/وكيلة"),
+    }
+
+    model_info = model_map.get(record_type)
+    if not model_info:
+        messages.error(request, "نوع السجل المطلوب غير صحيح.")
+        return redirect("staffdata:admin_duplicates")
+
+    model, form_class, record_label = model_info
+    record = get_object_or_404(model.objects.select_related("supervisor"), pk=pk)
+    next_url = request.POST.get("next") or request.GET.get("next") or request.META.get("HTTP_REFERER") or ""
+
+    original_supervisor = getattr(record, "supervisor", None)
+    form = form_class(
+        request.POST or None,
+        request.FILES or None,
+        instance=record,
+    )
+
+    if request.method == "POST" and form.is_valid():
+        obj = form.save(commit=False)
+
+        if original_supervisor is not None and _model_has_field(model, "supervisor"):
+            obj.supervisor = original_supervisor
+
+        obj.save()
+
+        if hasattr(form, "save_m2m"):
+            form.save_m2m()
+
+        if _model_has_field(model, "notes"):
+            old_notes = getattr(obj, "notes", "") or ""
+            timestamp = timezone.localtime().strftime("%Y-%m-%d %H:%M")
+            admin_name = request.user.get_full_name() or request.user.get_username()
+            added_note = f"[{timestamp}] تصحيح بيانات السجل من مركز جودة البيانات بواسطة {admin_name}."
+            obj.notes = f"{old_notes}\n{added_note}".strip()
+            obj.save(update_fields=["notes"])
+
+        messages.success(
+            request,
+            f"تم تصحيح بيانات سجل {record_label} ({getattr(obj, 'full_name', '—')}) بنجاح.",
+        )
+
+        return redirect(next_url or "staffdata:admin_duplicates")
+
+    return render(
+        request,
+        "staffdata/admin_duplicate_record_form.html",
+        {
+            "page_title": f"تصحيح بيانات سجل {record_label}",
+            "form": form,
+            "record": record,
+            "record_type": record_type,
+            "record_label": record_label,
+            "next_url": next_url,
+            **_build_entry_window_context(),
+        },
+    )
+
+
+@staff_member_required(login_url="/admin/login/")
+@require_POST
+@transaction.atomic
+def admin_duplicate_deactivate_record_view(request, record_type, pk):
+    model_map = {
+        "principal": (PrincipalRecord, "مدير/مديرة"),
+        "vice": (VicePrincipalRecord, "وكيل/وكيلة"),
+    }
+
+    model_info = model_map.get(record_type)
+    if not model_info:
+        messages.error(request, "نوع السجل المطلوب غير صحيح.")
+        return redirect("staffdata:admin_duplicates")
+
+    model, record_label = model_info
+    record = get_object_or_404(model.objects.select_related("supervisor"), pk=pk)
+
+    if not _model_has_field(model, "is_active"):
+        messages.error(request, "لا يمكن تعطيل هذا السجل؛ لا يحتوي النموذج على حقل الحالة.")
+        return redirect(request.META.get("HTTP_REFERER") or "staffdata:admin_duplicates")
+
+    if not getattr(record, "is_active", True):
+        messages.info(request, "هذا السجل معطل مسبقًا.")
+        return redirect(request.META.get("HTTP_REFERER") or "staffdata:admin_duplicates")
+
+    reason_type = (request.POST.get("reason_type") or "").strip()
+    duplicate_title = (request.POST.get("duplicate_title") or "").strip()
+    duplicate_key = (request.POST.get("duplicate_key") or "").strip()
+    admin_note = (request.POST.get("admin_note") or "").strip()
+
+    reason_labels = {
+        "full_duplicate": "السجل مكرر بالكامل",
+        "wrong_entry": "إدخال خاطئ من المشرف/ة",
+        "test_entry": "سجل تجريبي أو غير معتمد",
+        "not_required": "السجل غير مطلوب ضمن القرار",
+        "other": "سبب آخر",
+    }
+
+    reason_label = reason_labels.get(reason_type)
+
+    # دعم النسخ السابقة من القالب التي كانت ترسل reason مباشرة.
+    legacy_reason = (request.POST.get("reason") or "").strip()
+
+    if not reason_label:
+        if legacy_reason:
+            reason_label = legacy_reason
+        else:
+            messages.error(request, "يرجى تحديد سبب التعطيل قبل تنفيذ الإجراء.")
+            return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER") or "staffdata:admin_duplicates")
+
+    reason_parts = [
+        f"تعطيل من مركز جودة البيانات: {reason_label}",
+    ]
+
+    if duplicate_title or duplicate_key:
+        reason_parts.append(
+            f"حالة التكرار: {duplicate_title or 'غير محددة'}"
+            f"{' - ' + duplicate_key if duplicate_key else ''}"
+        )
+
+    if admin_note:
+        reason_parts.append(f"ملاحظة الإدارة: {admin_note}")
+
+    reason = " | ".join(reason_parts)
+
+    record.is_active = False
+    update_fields = ["is_active"]
+
+    if _model_has_field(model, "notes"):
+        old_notes = getattr(record, "notes", "") or ""
+        timestamp = timezone.localtime().strftime("%Y-%m-%d %H:%M")
+        admin_name = request.user.get_full_name() or request.user.get_username()
+        added_note = f"[{timestamp}] {reason} بواسطة {admin_name}."
+        record.notes = f"{old_notes}\n{added_note}".strip()
+        update_fields.append("notes")
+
+    record.save(update_fields=update_fields)
+
+    messages.success(
+        request,
+        f"تم تعطيل سجل {record_label} ({getattr(record, 'full_name', '—')}) كمكرر. سبب التعطيل: {reason_label}",
+    )
+
+    return redirect(request.POST.get("next") or request.META.get("HTTP_REFERER") or "staffdata:admin_duplicates")
+
+
+def _backup_timestamp():
+    return timezone.localtime().strftime("%Y-%m-%d_%H-%M")
+
+
+def _safe_backup_value(value):
+    if value is None:
+        return ""
+
+    if hasattr(value, "strftime"):
+        try:
+            return timezone.localtime(value).strftime("%Y-%m-%d %H:%M")
+        except Exception:
+            try:
+                return value.strftime("%Y-%m-%d %H:%M")
+            except Exception:
+                return str(value)
+
+    if isinstance(value, bool):
+        return "نعم" if value else "لا"
+
+    return str(value)
+
+
+def _field_value(obj, field_name, default=""):
+    if not hasattr(obj, field_name):
+        return default
+    return _safe_backup_value(getattr(obj, field_name, default))
+
+
+def _append_sheet(wb, sheet_title, headers, rows):
+    ws = wb.create_sheet(title=(sheet_title or "Sheet")[:31])
+    ws.sheet_view.rightToLeft = True
+    ws.freeze_panes = "A2"
+
+    header_fill = PatternFill(fill_type="solid", fgColor="1F4D3A")
+    header_font = Font(color="FFFFFF", bold=True, size=11)
+    body_font = Font(color="1F1F1F", size=10)
+    thin_side = Side(style="thin", color="D9E3DC")
+    body_border = Border(bottom=thin_side)
+
+    for col_idx, header in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=col_idx, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.border = body_border
+
+    for row_idx, row in enumerate(rows, start=2):
+        for col_idx, value in enumerate(row, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=value)
+            cell.font = body_font
+            cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+            cell.border = body_border
+
+    ws.auto_filter.ref = ws.dimensions
+    ws.row_dimensions[1].height = 24
+
+    for col_idx, header in enumerate(headers, start=1):
+        max_width = len(str(header or ""))
+        for row in rows[:500]:
+            if col_idx <= len(row):
+                max_width = max(max_width, len(str(row[col_idx - 1] or "")))
+        ws.column_dimensions[get_column_letter(col_idx)].width = min(max(max_width + 4, 12), 38)
+
+    return ws
+
+
+def _supervisor_backup_rows():
+    qs = Supervisor.objects.all().order_by("full_name")
+    rows = []
+
+    for item in qs:
+        rows.append([
+            _field_value(item, "full_name"),
+            _field_value(item, "national_id"),
+            _field_value(item, "mobile"),
+            _field_value(item, "email"),
+            _field_value(item, "sector"),
+            _field_value(item, "is_active"),
+            _field_value(item, "can_add_records"),
+            _field_value(item, "can_edit_records"),
+            _field_value(item, "can_delete_records"),
+            _field_value(item, "is_activated"),
+            _field_value(item, "last_login_at"),
+            _field_value(item, "password_set_at"),
+        ])
+
+    return [
+        "اسم المشرف/ة",
+        "السجل المدني",
+        "الجوال",
+        "البريد الإلكتروني",
+        "القطاع",
+        "الحالة",
+        "صلاحية الإضافة",
+        "صلاحية التعديل",
+        "صلاحية الحذف",
+        "مفعل؟",
+        "آخر دخول",
+        "تاريخ تعيين كلمة المرور",
+    ], rows
+
+
+def _principal_backup_rows():
+    qs = PrincipalRecord.objects.select_related("supervisor").all().order_by("-created_at")
+    rows = []
+
+    for item in qs:
+        rows.append([
+            item.id,
+            _field_value(item, "full_name"),
+            _field_value(item, "national_id"),
+            _field_value(item, "mobile"),
+            _field_value(item, "role"),
+            _field_value(item, "assignment_status"),
+            _field_value(item, "school_name"),
+            _field_value(item, "sector"),
+            _field_value(item, "stage"),
+            _field_value(item, "school_gender"),
+            item.supervisor.full_name if getattr(item, "supervisor", None) else "",
+            _field_value(item, "is_active"),
+            Path(item.performance_file.name).name if getattr(item, "performance_file", None) else "",
+            _field_value(item, "notes"),
+            _field_value(item, "created_at"),
+            _field_value(item, "updated_at"),
+        ])
+
+    return [
+        "رقم السجل",
+        "الاسم",
+        "السجل المدني",
+        "الجوال",
+        "الصفة",
+        "الحالة الإدارية",
+        "المدرسة",
+        "القطاع",
+        "المرحلة",
+        "نوع المدرسة",
+        "المشرف/ة",
+        "نشط؟",
+        "اسم ملف الأداء",
+        "الملاحظات",
+        "تاريخ الإضافة",
+        "آخر تحديث",
+    ], rows
+
+
+def _vice_backup_rows():
+    qs = VicePrincipalRecord.objects.select_related("supervisor").all().order_by("-created_at")
+    rows = []
+
+    for item in qs:
+        rows.append([
+            item.id,
+            _field_value(item, "full_name"),
+            _field_value(item, "national_id"),
+            _field_value(item, "mobile"),
+            _field_value(item, "role"),
+            _field_value(item, "school_name"),
+            _field_value(item, "sector"),
+            _field_value(item, "stage"),
+            _field_value(item, "school_gender"),
+            item.supervisor.full_name if getattr(item, "supervisor", None) else "",
+            _field_value(item, "is_active"),
+            _field_value(item, "notes"),
+            _field_value(item, "created_at"),
+            _field_value(item, "updated_at"),
+        ])
+
+    return [
+        "رقم السجل",
+        "الاسم",
+        "السجل المدني",
+        "الجوال",
+        "الصفة",
+        "المدرسة",
+        "القطاع",
+        "المرحلة",
+        "نوع المدرسة",
+        "المشرف/ة",
+        "نشط؟",
+        "الملاحظات",
+        "تاريخ الإضافة",
+        "آخر تحديث",
+    ], rows
+
+
+def _correction_backup_rows():
+    qs = CorrectionRequest.objects.select_related(
+        "supervisor",
+        "principal_record",
+        "vice_record",
+        "reviewed_by",
+    ).all().order_by("-created_at")
+
+    rows = []
+
+    for item in qs:
+        rows.append([
+            item.id,
+            item.supervisor.full_name if getattr(item, "supervisor", None) else "",
+            item.get_target_type_display() if hasattr(item, "get_target_type_display") else _field_value(item, "target_type"),
+            item.get_status_display() if hasattr(item, "get_status_display") else _field_value(item, "status"),
+            _field_value(item, "requested_full_name"),
+            _field_value(item, "requested_national_id"),
+            _field_value(item, "requested_mobile"),
+            _field_value(item, "requested_school_name"),
+            _field_value(item, "requested_sector"),
+            _field_value(item, "requested_stage"),
+            _field_value(item, "requested_school_gender"),
+            _field_value(item, "requested_role"),
+            _field_value(item, "requested_notes"),
+            item.reviewed_by.get_username() if getattr(item, "reviewed_by", None) else "",
+            _field_value(item, "admin_note"),
+            _field_value(item, "created_at"),
+            _field_value(item, "reviewed_at"),
+        ])
+
+    return [
+        "رقم الطلب",
+        "المشرف/ة",
+        "نوع السجل",
+        "الحالة",
+        "الاسم المطلوب",
+        "السجل المدني المطلوب",
+        "الجوال المطلوب",
+        "المدرسة المطلوبة",
+        "القطاع المطلوب",
+        "المرحلة المطلوبة",
+        "نوع المدرسة المطلوب",
+        "الصفة المطلوبة",
+        "ملاحظات الطلب",
+        "راجعها",
+        "ملاحظة الإدارة",
+        "تاريخ الطلب",
+        "تاريخ المراجعة",
+    ], rows
+
+
+def _entry_window_backup_rows():
+    qs = DataEntryWindow.objects.all().order_by("-starts_at")
+    rows = []
+
+    for item in qs:
+        rows.append([
+            item.id,
+            _field_value(item, "title"),
+            _field_value(item, "is_active"),
+            _field_value(item, "starts_at"),
+            _field_value(item, "ends_at"),
+            _field_value(item, "allow_add"),
+            _field_value(item, "allow_edit"),
+            _field_value(item, "allow_delete"),
+            _field_value(item, "created_at"),
+            _field_value(item, "updated_at"),
+        ])
+
+    return [
+        "رقم الفترة",
+        "عنوان الفترة",
+        "مفعلة؟",
+        "تبدأ في",
+        "تنتهي في",
+        "السماح بالإضافة",
+        "السماح بالتعديل",
+        "السماح بالحذف",
+        "تاريخ الإنشاء",
+        "آخر تحديث",
+    ], rows
+
+
+def _account_reset_backup_rows():
+    qs = AccountResetRequest.objects.select_related("supervisor", "processed_by").all().order_by("-created_at")
+    rows = []
+
+    for item in qs:
+        rows.append([
+            item.id,
+            item.supervisor.full_name if getattr(item, "supervisor", None) else "",
+            item.get_status_display() if hasattr(item, "get_status_display") else _field_value(item, "status"),
+            item.processed_by.get_username() if getattr(item, "processed_by", None) else "",
+            _field_value(item, "created_at"),
+            _field_value(item, "processed_at"),
+        ])
+
+    return [
+        "رقم الطلب",
+        "المشرف/ة",
+        "الحالة",
+        "عولج بواسطة",
+        "تاريخ الطلب",
+        "تاريخ المعالجة",
+    ], rows
+
+
+def _current_duplicates_backup_rows():
+    groups = _build_duplicates_report().get("groups", [])
+    rows = []
+
+    for group in groups:
+        for record in group.get("records", []):
+            rows.append([
+                group.get("title", ""),
+                group.get("severity", ""),
+                group.get("key_value", ""),
+                group.get("count", ""),
+                record.get("record_type_label", ""),
+                record.get("full_name", ""),
+                record.get("national_id", ""),
+                record.get("mobile", ""),
+                record.get("school_name", ""),
+                record.get("sector", ""),
+                record.get("stage", ""),
+                record.get("school_gender", ""),
+                record.get("supervisor_name", ""),
+                _safe_backup_value(record.get("created_at", "")),
+            ])
+
+    return [
+        "نوع التكرار",
+        "درجة التكرار",
+        "مفتاح التكرار",
+        "عدد السجلات في المجموعة",
+        "نوع السجل",
+        "الاسم",
+        "السجل المدني",
+        "الجوال",
+        "المدرسة",
+        "القطاع",
+        "المرحلة",
+        "نوع المدرسة",
+        "المشرف/ة",
+        "تاريخ الإدخال",
+    ], rows
+
+
+def _build_full_backup_workbook_bytes():
+    wb = Workbook()
+    default_sheet = wb.active
+    wb.remove(default_sheet)
+
+    _append_sheet(wb, "المشرفون", *_supervisor_backup_rows())
+    _append_sheet(wb, "المديرون", *_principal_backup_rows())
+    _append_sheet(wb, "الوكلاء", *_vice_backup_rows())
+    _append_sheet(wb, "طلبات التصحيح", *_correction_backup_rows())
+    _append_sheet(wb, "فترات التسجيل", *_entry_window_backup_rows())
+    _append_sheet(wb, "طلبات إعادة التهيئة", *_account_reset_backup_rows())
+    _append_sheet(wb, "التكرارات الحالية", *_current_duplicates_backup_rows())
+
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+    return output.getvalue()
+
+
+def _build_dumpdata_json_text():
+    output = StringIO()
+    call_command(
+        "dumpdata",
+        "accounts",
+        "staffdata",
+        indent=2,
+        natural_foreign=True,
+        stdout=output,
+    )
+    return output.getvalue()
+
+
+def _backup_info_text():
+    now = timezone.localtime().strftime("%Y-%m-%d %H:%M")
+    return (
+        "نسخة احتياطية لنظام بيانات شاغلي المدارس\n"
+        f"تاريخ الإنشاء: {now}\n"
+        f"المستخدم المنفذ: احتفظ بسجل التنفيذ من النظام عند الحاجة\n"
+        "\n"
+        "محتويات النسخة:\n"
+        "- all_data.xlsx: نسخة إدارية مقروءة لجميع البيانات الأساسية.\n"
+        "- django_data.json: نسخة فنية بصيغة Django dumpdata للاسترجاع الفني.\n"
+        "- media/: نسخة من ملفات المرفقات الموجودة داخل مجلد media إن وجدت.\n"
+        "\n"
+        "تنبيه: تحتوي هذه النسخة على بيانات حساسة مثل السجل المدني وأرقام الجوال، ويجب حفظها في مكان آمن.\n"
+    )
+
+
+
+
+def _final_export_response(request, export_type):
+    export_type = (export_type or "").strip()
+
+    if export_type == "supervisors":
+        return admin_export_supervisors_xlsx(request)
+
+    if export_type == "principals":
+        return admin_export_principals_csv(request)
+
+    if export_type == "vices":
+        return admin_export_vice_csv(request)
+
+    messages.error(request, "نوع التصدير المطلوب غير صحيح.")
+    return redirect("staffdata:admin_final_export_gate")
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_final_export_gate_view(request):
+    readiness_context = _build_decision_readiness_context()
+    readiness = readiness_context["decision_readiness"]
+
+    return render(
+        request,
+        "staffdata/admin_final_export_gate.html",
+        {
+            "page_title": "بوابة التصدير النهائي",
+            "decision_readiness": readiness,
+            **_build_entry_window_context(),
+        },
+    )
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_final_export_download_view(request, export_type):
+    readiness = _build_decision_readiness_context()["decision_readiness"]
+    has_blockers = readiness.get("status_code") == "blocked"
+
+    if has_blockers and request.method != "POST":
+        messages.warning(
+            request,
+            "توجد موانع حرجة قبل التصدير النهائي. راجع بوابة التصدير أو استخدم تجاوزًا مسببًا عند الحاجة.",
+        )
+        return redirect("staffdata:admin_final_export_gate")
+
+    if has_blockers:
+        override_reason = (request.POST.get("override_reason") or "").strip()
+        override_confirm = request.POST.get("override_confirm") == "1"
+
+        if not override_confirm or not override_reason:
+            messages.error(request, "يلزم تأكيد التصدير وكتابة سبب التجاوز عند وجود موانع حرجة.")
+            return redirect("staffdata:admin_final_export_gate")
+
+    return _final_export_response(request, export_type)
+
+@staff_member_required(login_url="/admin/login/")
+def admin_backup_center_view(request):
+    backup_stats = {
+        "supervisors": Supervisor.objects.count(),
+        "principals": PrincipalRecord.objects.count(),
+        "vices": VicePrincipalRecord.objects.count(),
+        "corrections": CorrectionRequest.objects.count(),
+        "entry_windows": DataEntryWindow.objects.count(),
+        "reset_requests": AccountResetRequest.objects.count(),
+        "duplicates": _build_duplicates_report().get("total_count", 0),
+    }
+
+    return render(
+        request,
+        "staffdata/admin_backup_center.html",
+        {
+            "page_title": "مركز النسخ الاحتياطي",
+            "backup_stats": backup_stats,
+            **_build_entry_window_context(),
+        },
+    )
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_backup_excel_view(request):
+    timestamp = _backup_timestamp()
+    response = HttpResponse(
+        _build_full_backup_workbook_bytes(),
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    response["Content-Disposition"] = f'attachment; filename="school_staff_full_backup_{timestamp}.xlsx"'
+    return response
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_backup_json_view(request):
+    timestamp = _backup_timestamp()
+    response = HttpResponse(
+        _build_dumpdata_json_text(),
+        content_type="application/json; charset=utf-8",
+    )
+    response["Content-Disposition"] = f'attachment; filename="school_staff_django_data_{timestamp}.json"'
+    return response
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_backup_media_zip_view(request):
+    timestamp = _backup_timestamp()
+    buffer = BytesIO()
+
+    media_root = Path(settings.MEDIA_ROOT)
+
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        if media_root.exists():
+            for file_path in media_root.rglob("*"):
+                if file_path.is_file():
+                    archive_name = Path("media") / file_path.relative_to(media_root)
+                    zip_file.write(file_path, archive_name.as_posix())
+        else:
+            zip_file.writestr("media_not_found.txt", "لم يتم العثور على مجلد media في إعدادات النظام.")
+
+    buffer.seek(0)
+    response = HttpResponse(buffer.getvalue(), content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="school_staff_media_backup_{timestamp}.zip"'
+    return response
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_backup_zip_view(request):
+    timestamp = _backup_timestamp()
+    buffer = BytesIO()
+    media_root = Path(settings.MEDIA_ROOT)
+
+    with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as zip_file:
+        zip_file.writestr("backup_info.txt", _backup_info_text())
+        zip_file.writestr("all_data.xlsx", _build_full_backup_workbook_bytes())
+        zip_file.writestr("django_data.json", _build_dumpdata_json_text())
+
+        if media_root.exists():
+            for file_path in media_root.rglob("*"):
+                if file_path.is_file():
+                    archive_name = Path("media") / file_path.relative_to(media_root)
+                    zip_file.write(file_path, archive_name.as_posix())
+        else:
+            zip_file.writestr("media_not_found.txt", "لم يتم العثور على مجلد media في إعدادات النظام.")
+
+    buffer.seek(0)
+    response = HttpResponse(buffer.getvalue(), content_type="application/zip")
+    response["Content-Disposition"] = f'attachment; filename="school_staff_full_backup_{timestamp}.zip"'
+    return response
 
 @staff_member_required(login_url="/admin/login/")
 def admin_supervisors_list_view(request):
@@ -1813,6 +2974,233 @@ def admin_correction_request_review_view(request, pk):
         },
     )
 
+
+
+
+
+@staff_member_required(login_url="/admin/login/")
+def admin_export_supervisors_xlsx(request):
+    q = request.GET.get("q", "").strip()
+    sector = request.GET.get("sector", "").strip()
+    sort = request.GET.get("sort", "priority").strip()
+
+    supervisors_qs = Supervisor.objects.all().order_by("full_name")
+
+    if q:
+        search_q = Q()
+        if _model_has_field(Supervisor, "full_name"):
+            search_q |= Q(full_name__icontains=q)
+        if _model_has_field(Supervisor, "national_id"):
+            search_q |= Q(national_id__icontains=q)
+        if _model_has_field(Supervisor, "mobile"):
+            search_q |= Q(mobile__icontains=q)
+        if _model_has_field(Supervisor, "email"):
+            search_q |= Q(email__icontains=q)
+        supervisors_qs = supervisors_qs.filter(search_q)
+
+    if sector and _model_has_field(Supervisor, "sector"):
+        supervisors_qs = supervisors_qs.filter(sector=sector)
+
+    supervisors = list(supervisors_qs)
+    supervisor_ids = [item.id for item in supervisors]
+
+    principals = list(
+        PrincipalRecord.objects.filter(supervisor_id__in=supervisor_ids, is_active=True)
+        .select_related("supervisor")
+        .only("id", "supervisor_id", "created_at", "performance_file")
+    )
+
+    vices = list(
+        VicePrincipalRecord.objects.filter(supervisor_id__in=supervisor_ids, is_active=True)
+        .select_related("supervisor")
+        .only("id", "supervisor_id", "created_at")
+    )
+
+    pending_corrections = list(
+        CorrectionRequest.objects.filter(
+            supervisor_id__in=supervisor_ids,
+            status=CorrectionRequest.STATUS_PENDING,
+        )
+        .select_related("supervisor")
+        .only("id", "supervisor_id", "created_at", "status")
+    )
+
+    pending_reset_requests = list(
+        AccountResetRequest.objects.filter(
+            supervisor_id__in=supervisor_ids,
+            status=AccountResetRequest.STATUS_PENDING,
+        )
+        .select_related("supervisor")
+        .only("id", "supervisor_id", "created_at", "status")
+    )
+
+    duplicate_counts = _build_duplicate_supervisor_group_counts()
+
+    rows_map = defaultdict(
+        lambda: {
+            "principals_count": 0,
+            "vices_count": 0,
+            "total_count": 0,
+            "attachments_count": 0,
+            "missing_attachments": 0,
+            "pending_corrections_count": 0,
+            "pending_reset_requests_count": 0,
+            "last_activity": None,
+        }
+    )
+
+    for item in principals:
+        row = rows_map[item.supervisor_id]
+        row["principals_count"] += 1
+        row["total_count"] += 1
+        if getattr(item, "performance_file", None):
+            row["attachments_count"] += 1
+        else:
+            row["missing_attachments"] += 1
+        row["last_activity"] = _merge_latest_activity(row["last_activity"], item.created_at)
+
+    for item in vices:
+        row = rows_map[item.supervisor_id]
+        row["vices_count"] += 1
+        row["total_count"] += 1
+        row["last_activity"] = _merge_latest_activity(row["last_activity"], item.created_at)
+
+    for item in pending_corrections:
+        row = rows_map[item.supervisor_id]
+        row["pending_corrections_count"] += 1
+        row["last_activity"] = _merge_latest_activity(row["last_activity"], item.created_at)
+
+    for item in pending_reset_requests:
+        row = rows_map[item.supervisor_id]
+        row["pending_reset_requests_count"] += 1
+        row["last_activity"] = _merge_latest_activity(row["last_activity"], item.created_at)
+
+    supervisor_rows = []
+    for supervisor in supervisors:
+        stats = rows_map.get(supervisor.id, {})
+        dup = duplicate_counts.get(supervisor.id, {"critical": 0, "warning": 0, "total": 0})
+        status_label, status_class = _build_supervisor_status(
+            stats.get("total_count", 0),
+            stats.get("missing_attachments", 0),
+            stats.get("pending_corrections_count", 0),
+            stats.get("pending_reset_requests_count", 0),
+        )
+
+        quality_status = "يحتاج مراجعة" if dup.get("total", 0) else "مستقر"
+        if dup.get("critical", 0):
+            quality_status = "تكرار حرج"
+
+        supervisor_rows.append(
+            {
+                "full_name": _safe_supervisor_value(supervisor, "full_name", ""),
+                "national_id": _safe_supervisor_value(supervisor, "national_id", ""),
+                "mobile": _safe_supervisor_value(supervisor, "mobile", ""),
+                "email": _safe_supervisor_value(supervisor, "email", ""),
+                "sector": _safe_supervisor_value(supervisor, "sector", ""),
+                "is_active": "نشط" if getattr(supervisor, "is_active", True) else "غير نشط",
+                "can_add_records": "نعم" if getattr(supervisor, "can_add_records", True) else "لا",
+                "can_edit_records": "نعم" if getattr(supervisor, "can_edit_records", False) else "لا",
+                "can_delete_records": "نعم" if getattr(supervisor, "can_delete_records", False) else "لا",
+                "principals_count": stats.get("principals_count", 0),
+                "vices_count": stats.get("vices_count", 0),
+                "total_count": stats.get("total_count", 0),
+                "attachments_count": stats.get("attachments_count", 0),
+                "missing_attachments": stats.get("missing_attachments", 0),
+                "pending_corrections_count": stats.get("pending_corrections_count", 0),
+                "pending_reset_requests_count": stats.get("pending_reset_requests_count", 0),
+                "duplicate_total": dup.get("total", 0),
+                "duplicate_critical": dup.get("critical", 0),
+                "duplicate_warning": dup.get("warning", 0),
+                "quality_status": quality_status,
+                "status_label": status_label,
+                "last_activity": stats.get("last_activity"),
+            }
+        )
+
+    fallback_dt = _fallback_aware_datetime()
+    if sort == "latest":
+        supervisor_rows.sort(key=lambda row: row["last_activity"] or fallback_dt, reverse=True)
+    elif sort == "activity":
+        supervisor_rows.sort(key=lambda row: row["total_count"], reverse=True)
+    elif sort == "corrections":
+        supervisor_rows.sort(
+            key=lambda row: (row["pending_corrections_count"], row["missing_attachments"], row["total_count"]),
+            reverse=True,
+        )
+    else:
+        supervisor_rows.sort(
+            key=lambda row: (
+                row["duplicate_critical"],
+                row["duplicate_warning"],
+                row["pending_reset_requests_count"],
+                row["missing_attachments"],
+                row["pending_corrections_count"],
+                row["total_count"],
+            ),
+            reverse=True,
+        )
+
+    headers = [
+        "اسم المشرف/المشرفة",
+        "السجل المدني",
+        "الجوال",
+        "البريد الإلكتروني",
+        "القطاع",
+        "حالة الحساب",
+        "صلاحية الإضافة",
+        "صلاحية التعديل",
+        "صلاحية الحذف",
+        "عدد المديرين/المديرات",
+        "عدد الوكلاء/الوكيلات",
+        "إجمالي السجلات",
+        "المرفقات المكتملة",
+        "نواقص المرفقات",
+        "طلبات التصحيح المفتوحة",
+        "طلبات إعادة التهيئة المفتوحة",
+        "إجمالي تنبيهات التكرار المرتبطة",
+        "تكرارات حرجة مرتبطة",
+        "تكرارات تحتاج مراجعة مرتبطة",
+        "حالة جودة البيانات",
+        "حالة المتابعة",
+        "آخر نشاط",
+    ]
+
+    rows = []
+    for item in supervisor_rows:
+        last_activity = item["last_activity"]
+        rows.append(
+            [
+                item["full_name"],
+                item["national_id"],
+                item["mobile"],
+                item["email"],
+                item["sector"],
+                item["is_active"],
+                item["can_add_records"],
+                item["can_edit_records"],
+                item["can_delete_records"],
+                item["principals_count"],
+                item["vices_count"],
+                item["total_count"],
+                item["attachments_count"],
+                item["missing_attachments"],
+                item["pending_corrections_count"],
+                item["pending_reset_requests_count"],
+                item["duplicate_total"],
+                item["duplicate_critical"],
+                item["duplicate_warning"],
+                item["quality_status"],
+                item["status_label"],
+                last_activity.strftime("%Y-%m-%d %H:%M") if last_activity else "",
+            ]
+        )
+
+    return _build_xlsx_response(
+        filename="supervisors_followup_report.xlsx",
+        sheet_title="تقرير المشرفين",
+        headers=headers,
+        rows=rows,
+    )
 
 @staff_member_required(login_url="/admin/login/")
 def admin_export_principals_csv(request):

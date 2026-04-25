@@ -1,0 +1,1127 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title|default:"تصحيح بيانات السجل" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .page-hero,
+    .page-hero *,
+    .record-form-page,
+    .record-form-page *{
+        font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+    }
+
+    :root{
+        --rf-paper:#fffefb;
+        --rf-paper-2:#fbfcfa;
+        --rf-paper-3:#f6f8f6;
+
+        --rf-line:#d5dfd8;
+        --rf-line-2:#cad6cf;
+        --rf-line-soft:#e5ece7;
+
+        --rf-ink:#1f3128;
+        --rf-ink-soft:#5a6d63;
+        --rf-ink-faint:#798b81;
+
+        --rf-green:#1f4d3a;
+        --rf-green-2:#28684a;
+        --rf-green-3:#2f7353;
+
+        --rf-gold:#c5a765;
+        --rf-gold-soft:#e9ddc2;
+        --rf-gold-bg:#fbf7ef;
+
+        --rf-danger:#a64646;
+        --rf-danger-bg:#fff6f6;
+
+        --rf-good:#1f6a42;
+        --rf-good-bg:#edf7f0;
+    }
+
+    .page-hero{
+        position:relative;
+        overflow:hidden;
+        margin-bottom:18px;
+        border-radius:22px;
+        color:#fff;
+        background:
+            radial-gradient(circle at 18% 24%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 24%),
+            linear-gradient(135deg, #1d5a42 0%, #23684a 52%, #2b7354 100%);
+        box-shadow:0 14px 30px rgba(18, 47, 35, .10);
+        border:1px solid rgba(255,255,255,.05);
+    }
+
+    .page-hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:24px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(
+            90deg,
+            transparent 0%,
+            rgba(221,196,144,.20) 18%,
+            rgba(221,196,144,.74) 50%,
+            rgba(221,196,144,.20) 82%,
+            transparent 100%
+        );
+    }
+
+    .page-hero-inner{
+        position:relative;
+        z-index:1;
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:16px;
+        min-height:110px;
+        padding:20px 24px 18px;
+    }
+
+    .page-hero-main{
+        min-width:0;
+    }
+
+    .page-hero-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        margin-bottom:10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .page-hero-title{
+        margin:0;
+        font-size:19px;
+        font-weight:700;
+        line-height:1.6;
+        color:#fff;
+    }
+
+    .page-hero-text{
+        margin:7px 0 0;
+        max-width:860px;
+        font-size:12.35px;
+        font-weight:400;
+        line-height:1.9;
+        color:rgba(255,255,255,.91);
+    }
+
+    .page-hero-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+        margin-top:11px;
+    }
+
+    .page-hero-chip{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:27px;
+        padding:0 10px;
+        border-radius:999px;
+        background:rgba(255,255,255,.08);
+        border:1px solid rgba(255,255,255,.10);
+        color:rgba(255,255,255,.92);
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .page-hero-action{
+        flex:0 0 auto;
+        padding-top:2px;
+    }
+
+    .page-hero-back{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:11px;
+        border:1px solid rgba(255,255,255,.14);
+        background:rgba(255,255,255,.06);
+        color:#fff;
+        font-size:12.35px;
+        font-weight:500;
+        text-decoration:none;
+        transition:.2s ease;
+        box-shadow:inset 0 1px 0 rgba(255,255,255,.06);
+        backdrop-filter:blur(4px);
+        white-space:nowrap;
+    }
+
+    .page-hero-back:hover{
+        background:rgba(255,255,255,.10);
+        border-color:rgba(255,255,255,.20);
+        color:#fff;
+        transform:translateY(-1px);
+    }
+
+    .record-form-page{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+        color:var(--rf-ink);
+    }
+
+    .record-form-panel{
+        background:linear-gradient(180deg, var(--rf-paper) 0%, var(--rf-paper-2) 100%);
+        border:1px solid var(--rf-line-2);
+        border-radius:20px;
+        box-shadow:
+            0 18px 34px rgba(19, 39, 30, 0.05),
+            0 4px 10px rgba(19, 39, 30, 0.02);
+        overflow:hidden;
+    }
+
+    .record-form-body{
+        padding:24px;
+    }
+
+    .record-form-intro{
+        display:flex;
+        flex-direction:column;
+        gap:9px;
+        padding-bottom:14px;
+        margin-bottom:14px;
+        border-bottom:1px solid var(--rf-line-soft);
+    }
+
+    .record-form-intro-top{
+        display:flex;
+        align-items:center;
+        justify-content:flex-start;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .record-form-intro-title{
+        margin:0;
+        font-size:17.1px;
+        font-weight:700;
+        color:var(--rf-ink);
+        line-height:1.65;
+    }
+
+    .record-form-intro-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:linear-gradient(180deg, #f8faf8 0%, #f2f5f3 100%);
+        border:1px solid #dde5df;
+        color:#51665b;
+        font-size:11px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .record-form-intro-text{
+        margin:0;
+        max-width:860px;
+        font-size:12.1px;
+        font-weight:400;
+        color:var(--rf-ink-soft);
+        line-height:1.9;
+    }
+
+    .record-form-summary{
+        display:grid;
+        grid-template-columns:repeat(3, minmax(0, 1fr));
+        gap:10px;
+        margin-bottom:14px;
+    }
+
+    .record-form-summary-item{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        min-height:54px;
+        padding:10px 12px;
+        border:1px solid #dde5df;
+        border-radius:14px;
+        background:linear-gradient(180deg, #fdfefd 0%, #f7faf7 100%);
+    }
+
+    .record-form-summary-index{
+        width:28px;
+        height:28px;
+        flex:0 0 28px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:#eff4f0;
+        border:1px solid #d9e2dc;
+        color:#5b7166;
+        font-size:11px;
+        font-weight:700;
+    }
+
+    .record-form-summary-copy{
+        display:flex;
+        flex-direction:column;
+        gap:2px;
+        min-width:0;
+    }
+
+    .record-form-summary-copy strong{
+        font-size:12.25px;
+        font-weight:500;
+        color:var(--rf-ink);
+        line-height:1.55;
+    }
+
+    .record-form-summary-copy span{
+        font-size:11px;
+        font-weight:400;
+        color:var(--rf-ink-soft);
+        line-height:1.65;
+    }
+
+    .record-form-tip{
+        display:flex;
+        align-items:flex-start;
+        gap:10px;
+        padding:11px 13px;
+        margin-bottom:14px;
+        border-radius:12px;
+        border:1px solid var(--rf-gold-soft);
+        background:linear-gradient(180deg, var(--rf-gold-bg) 0%, #fffdfa 100%);
+        color:#6a5932;
+        font-size:11.9px;
+        line-height:1.82;
+    }
+
+    .record-form-tip-icon{
+        width:22px;
+        height:22px;
+        flex:0 0 22px;
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        border-radius:50%;
+        background:#fff8eb;
+        border:1px solid #ead9b4;
+        color:#8a703b;
+        font-size:11.2px;
+        font-weight:700;
+        margin-top:1px;
+    }
+
+    .record-form-tip strong{
+        font-weight:700;
+        color:#5f4f2f;
+    }
+
+    .record-form-alert{
+        padding:12px 13px;
+        margin-bottom:14px;
+        border-radius:12px;
+        border:1px solid #efd3d3;
+        background:linear-gradient(180deg, #fffdfd 0%, var(--rf-danger-bg) 100%);
+        color:#8b3c3c;
+        font-size:11.85px;
+        line-height:1.8;
+    }
+
+    .record-current-card{
+        margin-bottom:14px;
+        padding:14px;
+        border-radius:16px;
+        border:1px solid #d6e0d9;
+        background:linear-gradient(180deg, #ffffff 0%, #f9fbf9 100%);
+    }
+
+    .record-current-title{
+        margin:0 0 10px;
+        color:var(--rf-green);
+        font-size:14px;
+        line-height:1.6;
+        font-weight:700;
+    }
+
+    .record-current-grid{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:8px;
+    }
+
+    .record-current-item{
+        min-height:48px;
+        padding:8px 10px;
+        border-radius:12px;
+        border:1px solid #e0e8e2;
+        background:#fff;
+    }
+
+    .record-current-item span{
+        display:block;
+        color:var(--rf-ink-faint);
+        font-size:10.4px;
+        line-height:1.5;
+        margin-bottom:2px;
+    }
+
+    .record-current-item strong{
+        display:block;
+        color:var(--rf-ink);
+        font-size:12px;
+        line-height:1.6;
+        font-weight:600;
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+    }
+
+    .record-form-layout{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .record-form-section{
+        border:1px solid #d6e0d9;
+        border-radius:16px;
+        background:linear-gradient(180deg, #fffefc 0%, #fbfcfa 100%);
+        padding:16px;
+        box-shadow:0 2px 8px rgba(19, 39, 30, 0.012);
+    }
+
+    .record-form-section-head{
+        position:relative;
+        margin-bottom:11px;
+        padding-bottom:10px;
+        border-bottom:1px solid var(--rf-line-soft);
+    }
+
+    .record-form-section-head::before{
+        content:"";
+        position:absolute;
+        right:0;
+        top:0;
+        width:34px;
+        height:2px;
+        border-radius:999px;
+        background:linear-gradient(90deg, var(--rf-green) 0%, rgba(31,77,58,.24) 100%);
+    }
+
+    .record-form-section-no{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-width:34px;
+        height:22px;
+        padding:0 8px;
+        margin:0 0 7px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid #dde5df;
+        color:#697c72;
+        font-size:10.8px;
+        font-weight:700;
+    }
+
+    .record-form-section-title{
+        margin:0;
+        font-size:14.9px;
+        font-weight:700;
+        color:var(--rf-ink);
+        line-height:1.62;
+    }
+
+    .record-form-section-subtitle{
+        margin:4px 0 0;
+        font-size:11.5px;
+        font-weight:400;
+        color:var(--rf-ink-soft);
+        line-height:1.78;
+    }
+
+    .record-form-grid{
+        display:grid;
+        grid-template-columns:repeat(12, minmax(0, 1fr));
+        gap:12px 16px;
+    }
+
+    .record-form-row{
+        display:flex;
+        flex-direction:column;
+        gap:6px;
+        min-width:0;
+        grid-column:span 6;
+    }
+
+    .record-form-row.full{
+        grid-column:1 / -1;
+    }
+
+    .record-form-row.col-3{
+        grid-column:span 3;
+    }
+
+    .record-form-row.col-4{
+        grid-column:span 4;
+    }
+
+    .record-form-row.col-6{
+        grid-column:span 6;
+    }
+
+    .record-form-label{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        flex-wrap:wrap;
+    }
+
+    .record-form-label label{
+        margin:0;
+        font-size:12.35px;
+        font-weight:500;
+        color:#273e34;
+        line-height:1.6;
+    }
+
+    .record-form-tag{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:22px;
+        padding:0 8px;
+        border-radius:999px;
+        background:#f5f8f6;
+        border:1px solid #dde5df;
+        color:#62756b;
+        font-size:10.5px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .record-form-row input,
+    .record-form-row select,
+    .record-form-row textarea{
+        width:100%;
+        min-height:44px;
+        padding:10px 12px;
+        border:1px solid #c8d4cc;
+        border-radius:10px;
+        background:#fff;
+        color:var(--rf-ink);
+        font-size:12.9px;
+        font-weight:400;
+        line-height:1.65;
+        box-shadow:0 1px 2px rgba(17,32,24,.015);
+        transition:border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+    }
+
+    .record-form-row textarea{
+        min-height:108px;
+        resize:vertical;
+    }
+
+    .record-form-row input::placeholder,
+    .record-form-row textarea::placeholder{
+        color:#8fa198;
+        font-weight:300;
+    }
+
+    .record-form-row input:focus,
+    .record-form-row select:focus,
+    .record-form-row textarea:focus{
+        outline:none;
+        border-color:#9db4a8;
+        box-shadow:0 0 0 4px rgba(31,79,59,.06);
+        background:#fff;
+    }
+
+    .record-form-help{
+        font-size:11.1px;
+        font-weight:400;
+        color:var(--rf-ink-soft);
+        line-height:1.72;
+    }
+
+    .record-upload-box{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        border:1px dashed #ced8d1;
+        border-radius:13px;
+        background:linear-gradient(180deg, #fcfdfc 0%, #f7faf8 100%);
+        padding:13px;
+    }
+
+    .record-upload-head{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:12px;
+        flex-wrap:wrap;
+        padding-bottom:8px;
+        border-bottom:1px solid #e6ece7;
+    }
+
+    .record-upload-title{
+        margin:0;
+        font-size:12.45px;
+        font-weight:500;
+        color:var(--rf-ink);
+        line-height:1.6;
+    }
+
+    .record-upload-subtitle{
+        margin:3px 0 0;
+        font-size:11.15px;
+        color:var(--rf-ink-soft);
+        line-height:1.75;
+    }
+
+    .record-upload-badge{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:24px;
+        padding:0 9px;
+        border-radius:999px;
+        background:#fff7ea;
+        border:1px solid #eadabc;
+        color:#846b38;
+        font-size:10.75px;
+        font-weight:500;
+        white-space:nowrap;
+    }
+
+    .record-upload-box input[type="file"]{
+        min-height:auto;
+        padding:10px 11px;
+        border:1px solid #d1dbd4;
+        border-radius:10px;
+        background:#fff;
+        font-size:12.45px;
+        font-weight:400;
+    }
+
+    .record-upload-meta{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px 10px;
+    }
+
+    .record-upload-help{
+        font-size:11.15px;
+        font-weight:400;
+        color:var(--rf-ink-soft);
+        line-height:1.72;
+    }
+
+    .record-upload-chip{
+        padding:4px 9px;
+        border-radius:999px;
+        background:#f4f7f5;
+        border:1px solid #dde5e0;
+        color:#586b61;
+        font-size:10.9px;
+        font-weight:500;
+    }
+
+    .record-selected-file{
+        display:none;
+        align-items:center;
+        gap:8px;
+        padding:9px 10px;
+        border-radius:10px;
+        background:#f6f9f7;
+        border:1px solid #dde6df;
+        color:#54695d;
+        font-size:11.45px;
+        line-height:1.7;
+    }
+
+    .record-selected-file.show{
+        display:flex;
+    }
+
+    .record-selected-file strong{
+        color:var(--rf-ink);
+        font-weight:500;
+    }
+
+    .record-form-footer{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:14px;
+        margin-top:14px;
+        padding-top:14px;
+        border-top:1px solid var(--rf-line-soft);
+    }
+
+    .record-form-footer-meta{
+        display:flex;
+        flex-direction:column;
+        gap:10px;
+        min-width:0;
+        flex:1 1 auto;
+    }
+
+    .record-form-footer-note{
+        font-size:11.2px;
+        font-weight:400;
+        color:var(--rf-ink-soft);
+        line-height:1.82;
+    }
+
+    .record-form-actions{
+        display:flex;
+        align-items:center;
+        gap:10px;
+        flex-wrap:wrap;
+        justify-content:flex-end;
+        flex:0 0 auto;
+    }
+
+    .record-form-actions .btn{
+        min-height:42px;
+        padding:0 16px;
+        font-size:12.55px;
+    }
+
+    .record-form-actions .btn-primary{
+        box-shadow:0 8px 16px rgba(30,73,56,.10);
+    }
+
+    .errorlist{
+        margin:2px 0 0;
+        padding:0;
+        list-style:none;
+        color:var(--rf-danger);
+        font-size:11.45px;
+        font-weight:400;
+        line-height:1.7;
+    }
+
+    @media (max-width: 1100px){
+        .record-form-summary,
+        .record-current-grid{
+            grid-template-columns:1fr;
+        }
+    }
+
+    @media (max-width: 980px){
+        .record-form-row,
+        .record-form-row.col-3,
+        .record-form-row.col-4,
+        .record-form-row.col-6{
+            grid-column:span 6;
+        }
+
+        .record-current-grid{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width: 860px){
+        .page-hero-inner{
+            flex-direction:column;
+            align-items:flex-start;
+            min-height:auto;
+            padding:16px;
+            gap:11px;
+        }
+
+        .page-hero::after{
+            inset-inline:16px;
+        }
+
+        .page-hero-title{
+            font-size:17.2px;
+        }
+
+        .page-hero-text{
+            font-size:11.85px;
+        }
+
+        .record-form-body{
+            padding:16px;
+        }
+
+        .record-form-section{
+            padding:14px;
+            border-radius:14px;
+        }
+
+        .record-form-grid,
+        .record-current-grid{
+            grid-template-columns:1fr;
+            gap:11px;
+        }
+
+        .record-form-row,
+        .record-form-row.col-3,
+        .record-form-row.col-4,
+        .record-form-row.col-6,
+        .record-form-row.full{
+            grid-column:1 / -1;
+        }
+
+        .record-form-footer{
+            flex-direction:column;
+            align-items:stretch;
+        }
+
+        .record-form-actions{
+            justify-content:stretch;
+        }
+
+        .record-form-actions .btn,
+        .page-hero-back{
+            width:100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="page-hero">
+    <div class="page-hero-inner">
+        <div class="page-hero-main">
+            <div class="page-hero-kicker">مركز جودة البيانات</div>
+            <h1 class="page-hero-title">{{ page_title|default:"تصحيح بيانات السجل" }}</h1>
+            <p class="page-hero-text">
+                تستخدم هذه الصفحة لتصحيح سجل ظهر ضمن تنبيهات التكرار أو الاشتباه، دون الحاجة إلى تعطيل السجل إذا كان الخطأ في حقل محدد مثل السجل المدني أو المدرسة أو رقم الجوال.
+            </p>
+
+            <div class="page-hero-meta">
+                <span class="page-hero-chip">تصحيح إداري</span>
+                <span class="page-hero-chip">{{ record_type_label|default:"سجل" }}</span>
+                <span class="page-hero-chip">مركز جودة البيانات</span>
+            </div>
+        </div>
+
+        <div class="page-hero-action">
+            {% if next_url %}
+                <a href="{{ next_url }}" class="page-hero-back">العودة إلى التكرارات</a>
+            {% else %}
+                <a href="{% url 'staffdata:admin_duplicates' %}" class="page-hero-back">العودة إلى التكرارات</a>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="record-form-page">
+    <section class="record-form-panel">
+        <div class="record-form-body">
+            <div class="record-form-intro">
+                <div class="record-form-intro-top">
+                    <h2 class="record-form-intro-title">نموذج تصحيح بيانات السجل</h2>
+                    <span class="record-form-intro-badge">معالجة جودة بيانات</span>
+                </div>
+                <p class="record-form-intro-text">
+                    صحح الحقل الخاطئ فقط ثم احفظ التعديل. بعد الحفظ يعود النظام إلى مركز جودة البيانات، وإذا زال سبب التكرار ستختفي الحالة تلقائيًا من قائمة التنبيهات.
+                </p>
+            </div>
+
+            <div class="record-form-summary">
+                <div class="record-form-summary-item">
+                    <div class="record-form-summary-index">01</div>
+                    <div class="record-form-summary-copy">
+                        <strong>تحقق من سبب التكرار</strong>
+                        <span>راجع السجل المدني أو الجوال أو بيانات المدرسة قبل التعديل</span>
+                    </div>
+                </div>
+
+                <div class="record-form-summary-item">
+                    <div class="record-form-summary-index">02</div>
+                    <div class="record-form-summary-copy">
+                        <strong>صحح الحقل الخاطئ فقط</strong>
+                        <span>لا تغيّر البيانات الصحيحة حتى لا تنشأ حالة تعارض جديدة</span>
+                    </div>
+                </div>
+
+                <div class="record-form-summary-item">
+                    <div class="record-form-summary-index">03</div>
+                    <div class="record-form-summary-copy">
+                        <strong>حفظ ومراجعة الأثر</strong>
+                        <span>بعد الحفظ راجع مركز جودة البيانات للتأكد من اختفاء التنبيه</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="record-form-tip">
+                <div class="record-form-tip-icon">!</div>
+                <div>
+                    <strong>تنبيه إداري:</strong>
+                    استخدم التصحيح عندما يكون السجل صحيحًا لكن أحد الحقول أُدخل بصورة خاطئة، واستخدم التعطيل فقط إذا كان السجل مكررًا بالكامل أو زائدًا عن الحاجة.
+                </div>
+            </div>
+
+            {% if record %}
+            <div class="record-current-card">
+                <h3 class="record-current-title">ملخص السجل الحالي</h3>
+                <div class="record-current-grid">
+                    <div class="record-current-item">
+                        <span>الاسم</span>
+                        <strong>{{ record.full_name|default:"—" }}</strong>
+                    </div>
+                    <div class="record-current-item">
+                        <span>السجل المدني</span>
+                        <strong>{{ record.national_id|default:"—" }}</strong>
+                    </div>
+                    <div class="record-current-item">
+                        <span>الجوال</span>
+                        <strong>{{ record.mobile|default:"—" }}</strong>
+                    </div>
+                    <div class="record-current-item">
+                        <span>المدرسة</span>
+                        <strong>{{ record.school_name|default:"—" }}</strong>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if form.non_field_errors %}
+                <div class="record-form-alert">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% if next_url %}
+                    <input type="hidden" name="next" value="{{ next_url }}">
+                {% endif %}
+                <input type="hidden" name="is_active" value="1">
+
+                <div class="record-form-layout">
+                    <section class="record-form-section">
+                        <div class="record-form-section-head">
+                            <div class="record-form-section-no">01</div>
+                            <h3 class="record-form-section-title">البيانات الأساسية</h3>
+                            <p class="record-form-section-subtitle">البيانات الشخصية والوظيفية التي قد ينتج عنها تكرار أو تعارض.</p>
+                        </div>
+
+                        <div class="record-form-grid">
+                            <div class="record-form-row full">
+                                <div class="record-form-label">
+                                    <label>{{ form.full_name.label }}</label>
+                                    <span class="record-form-tag">بيان رئيسي</span>
+                                </div>
+                                {{ form.full_name }}
+                                <div class="record-form-help">يكتب الاسم كما هو معتمد في الوثائق الرسمية.</div>
+                                {{ form.full_name.errors }}
+                            </div>
+
+                            <div class="record-form-row col-3">
+                                <div class="record-form-label">
+                                    <label>{{ form.national_id.label }}</label>
+                                    <span class="record-form-tag">مطابقة رسمية</span>
+                                </div>
+                                {{ form.national_id }}
+                                <div class="record-form-help">صحح رقم الهوية إذا كان هو سبب التكرار.</div>
+                                {{ form.national_id.errors }}
+                            </div>
+
+                            <div class="record-form-row col-3">
+                                <div class="record-form-label">
+                                    <label>{{ form.mobile.label }}</label>
+                                    <span class="record-form-tag">تواصل</span>
+                                </div>
+                                {{ form.mobile }}
+                                <div class="record-form-help">يكتب رقم الجوال بصيغة صحيحة دون مسافات.</div>
+                                {{ form.mobile.errors }}
+                            </div>
+
+                            <div class="record-form-row col-3">
+                                <div class="record-form-label">
+                                    <label>{{ form.role.label }}</label>
+                                    <span class="record-form-tag">صفة وظيفية</span>
+                                </div>
+                                {{ form.role }}
+                                <div class="record-form-help">حدد الصفة الوظيفية وفق المعتمد.</div>
+                                {{ form.role.errors }}
+                            </div>
+
+                            {% if form.assignment_status %}
+                            <div class="record-form-row col-3">
+                                <div class="record-form-label">
+                                    <label>{{ form.assignment_status.label }}</label>
+                                    <span class="record-form-tag">تنظيم إداري</span>
+                                </div>
+                                {{ form.assignment_status }}
+                                <div class="record-form-help">يظهر هذا الحقل في سجلات المديرين/المديرات فقط.</div>
+                                {{ form.assignment_status.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </section>
+
+                    <section class="record-form-section">
+                        <div class="record-form-section-head">
+                            <div class="record-form-section-no">02</div>
+                            <h3 class="record-form-section-title">بيانات الجهة التعليمية</h3>
+                            <p class="record-form-section-subtitle">صحح بيانات المدرسة أو المرحلة أو القطاع إذا كانت سببًا في الاشتباه.</p>
+                        </div>
+
+                        <div class="record-form-grid">
+                            <div class="record-form-row col-4">
+                                <div class="record-form-label">
+                                    <label>{{ form.stage.label }}</label>
+                                    <span class="record-form-tag">مرحلة</span>
+                                </div>
+                                {{ form.stage }}
+                                <div class="record-form-help">اختر المرحلة التعليمية المرتبطة بالسجل.</div>
+                                {{ form.stage.errors }}
+                            </div>
+
+                            <div class="record-form-row col-4">
+                                <div class="record-form-label">
+                                    <label>{{ form.sector.label }}</label>
+                                    <span class="record-form-tag">قطاع</span>
+                                </div>
+                                {{ form.sector }}
+                                <div class="record-form-help">حدد القطاع التعليمي أو النطاق الإداري.</div>
+                                {{ form.sector.errors }}
+                            </div>
+
+                            <div class="record-form-row col-4">
+                                <div class="record-form-label">
+                                    <label>{{ form.school_gender.label }}</label>
+                                    <span class="record-form-tag">تصنيف</span>
+                                </div>
+                                {{ form.school_gender }}
+                                <div class="record-form-help">حدد جنس المدرسة حسب المعتمد رسميًا.</div>
+                                {{ form.school_gender.errors }}
+                            </div>
+
+                            <div class="record-form-row full">
+                                <div class="record-form-label">
+                                    <label>{{ form.school_name.label }}</label>
+                                    <span class="record-form-tag">جهة تعليمية</span>
+                                </div>
+                                {{ form.school_name }}
+                                <div class="record-form-help">يكتب اسم المدرسة كاملًا دون اختصار غير معتمد.</div>
+                                {{ form.school_name.errors }}
+                            </div>
+                        </div>
+                    </section>
+
+                    <section class="record-form-section">
+                        <div class="record-form-section-head">
+                            <div class="record-form-section-no">03</div>
+                            <h3 class="record-form-section-title">المرفقات والملاحظات</h3>
+                            <p class="record-form-section-subtitle">تحديث المرفق أو إضافة ملاحظة إدارية توضح سبب التصحيح عند الحاجة.</p>
+                        </div>
+
+                        <div class="record-form-grid">
+                            {% if form.performance_file %}
+                            <div class="record-form-row full">
+                                <div class="record-form-label">
+                                    <label>{{ form.performance_file.label }}</label>
+                                    <span class="record-form-tag">مرفق رسمي</span>
+                                </div>
+
+                                <div class="record-upload-box">
+                                    <div class="record-upload-head">
+                                        <div>
+                                            <p class="record-upload-title">إرفاق أو تحديث استمارة الأداء الوظيفي</p>
+                                            <p class="record-upload-subtitle">اترك الحقل كما هو إذا لم تكن بحاجة إلى تغيير المرفق الحالي.</p>
+                                        </div>
+                                        <span class="record-upload-badge">رفع مرفق</span>
+                                    </div>
+
+                                    {{ form.performance_file }}
+                                    {{ form.performance_file.errors }}
+
+                                    <div class="record-selected-file" id="selectedFileBox">
+                                        <strong>الملف المحدد:</strong>
+                                        <span id="selectedFileName">لم يتم اختيار ملف بعد</span>
+                                    </div>
+
+                                    <div class="record-upload-meta">
+                                        <div class="record-upload-help">تأكد من أن المرفق واضح ومقروء ويطابق السجل المراد تصحيحه.</div>
+                                        <div class="record-upload-chip">PDF / صورة</div>
+                                        <div class="record-upload-chip">وضوح عالٍ</div>
+                                        <div class="record-upload-chip">اعتماد رسمي</div>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endif %}
+
+                            {% if form.notes %}
+                            <div class="record-form-row full">
+                                <div class="record-form-label">
+                                    <label>{{ form.notes.label }}</label>
+                                    <span class="record-form-tag">ملاحظة إدارية</span>
+                                </div>
+                                {{ form.notes }}
+                                <div class="record-form-help">يمكن إضافة سبب مختصر للتصحيح أو توضيح الحالة للإدارة.</div>
+                                {{ form.notes.errors }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </section>
+                </div>
+
+                <div class="record-form-footer">
+                    <div class="record-form-footer-meta">
+                        <div class="record-form-footer-note">
+                            هذا التصحيح يتم بصلاحية الإدارة من مركز جودة البيانات، ولا يخضع لفترة إدخال المشرفين.
+                        </div>
+                    </div>
+
+                    <div class="record-form-actions">
+                        {% if next_url %}
+                            <a href="{{ next_url }}" class="btn btn-secondary">العودة دون حفظ</a>
+                        {% else %}
+                            <a href="{% url 'staffdata:admin_duplicates' %}" class="btn btn-secondary">العودة دون حفظ</a>
+                        {% endif %}
+                        <button type="submit" class="btn btn-primary">حفظ التصحيح</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+
+<script>
+    (function () {
+        const fileInput = document.querySelector('input[type="file"]');
+        const selectedFileBox = document.getElementById('selectedFileBox');
+        const selectedFileName = document.getElementById('selectedFileName');
+
+        function updateFileName() {
+            if (!fileInput || !selectedFileBox || !selectedFileName) return;
+
+            if (fileInput.files && fileInput.files.length > 0) {
+                selectedFileName.textContent = fileInput.files[0].name;
+                selectedFileBox.classList.add('show');
+            } else {
+                selectedFileName.textContent = 'لم يتم اختيار ملف بعد';
+                selectedFileBox.classList.remove('show');
+            }
+        }
+
+        if (fileInput) {
+            updateFileName();
+            fileInput.addEventListener('change', updateFileName);
+        }
+    })();
+</script>
+{% endblock %}

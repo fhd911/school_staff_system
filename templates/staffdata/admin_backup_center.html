@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title|default:"مركز النسخ الاحتياطي" }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .backup-page,
+    .backup-page *,
+    .backup-hero,
+    .backup-hero *{
+        font-family:"Tajawal","Segoe UI",Tahoma,Arial,sans-serif;
+    }
+
+    .backup-page{
+        --bk-paper:#fffefb;
+        --bk-paper-2:#fbfcfa;
+        --bk-paper-3:#f7faf8;
+        --bk-line:#d9e3dc;
+        --bk-line-2:#e8eeea;
+        --bk-ink:#1c2f27;
+        --bk-ink-2:#496055;
+        --bk-muted:#7a8b82;
+        --bk-primary:#164736;
+        --bk-primary-2:#235943;
+        --bk-primary-3:#2e6d54;
+        --bk-gold:#c6a25c;
+        --bk-gold-soft:#efe2bf;
+        --bk-warn:#8a6421;
+        --bk-warn-bg:#fcf5e7;
+        --bk-good:#1f6a42;
+        --bk-good-bg:#edf7f0;
+        --bk-shadow-sm:0 8px 18px rgba(18,34,27,.035);
+        --bk-shadow-md:0 18px 38px rgba(18,34,27,.08);
+        display:flex;
+        flex-direction:column;
+        gap:14px;
+        color:var(--bk-ink);
+    }
+
+    .backup-hero{
+        position:relative;
+        overflow:hidden;
+        margin-bottom:18px;
+        border-radius:26px;
+        color:#fff;
+        background:
+            radial-gradient(circle at 12% 18%, rgba(255,255,255,.05) 0%, rgba(255,255,255,0) 26%),
+            linear-gradient(135deg, var(--bk-primary) 0%, var(--bk-primary-2) 56%, var(--bk-primary-3) 100%);
+        box-shadow:var(--bk-shadow-md);
+    }
+
+    .backup-hero::after{
+        content:"";
+        position:absolute;
+        inset-inline:22px;
+        bottom:0;
+        height:2px;
+        background:linear-gradient(90deg, transparent 0%, rgba(221,196,144,.18) 18%, rgba(221,196,144,.7) 50%, rgba(221,196,144,.18) 82%, transparent 100%);
+    }
+
+    .backup-hero-inner{
+        position:relative;
+        z-index:1;
+        min-height:132px;
+        padding:22px 24px 20px;
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:18px;
+    }
+
+    .backup-kicker{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:28px;
+        padding:0 11px;
+        border-radius:999px;
+        background:rgba(255,255,255,.10);
+        border:1px solid rgba(255,255,255,.14);
+        color:rgba(255,255,255,.92);
+        font-size:10.9px;
+        font-weight:600;
+        margin-bottom:10px;
+    }
+
+    .backup-title{
+        margin:0 0 7px;
+        font-size:25px;
+        line-height:1.35;
+        font-weight:700;
+        color:#fff;
+    }
+
+    .backup-text{
+        margin:0;
+        max-width:880px;
+        font-size:12.45px;
+        line-height:1.9;
+        color:rgba(255,255,255,.88);
+        font-weight:400;
+    }
+
+    .backup-back{
+        flex:0 0 auto;
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:11px;
+        border:1px solid rgba(255,255,255,.14);
+        background:rgba(255,255,255,.06);
+        color:#fff;
+        font-size:12.35px;
+        font-weight:500;
+        text-decoration:none;
+        white-space:nowrap;
+    }
+
+    .backup-back:hover{
+        background:rgba(255,255,255,.10);
+        color:#fff;
+    }
+
+    .backup-stats{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .backup-stat{
+        min-height:88px;
+        padding:14px;
+        border-radius:18px;
+        border:1px solid var(--bk-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--bk-shadow-sm);
+        display:flex;
+        flex-direction:column;
+        justify-content:space-between;
+    }
+
+    .backup-stat span{
+        font-size:11px;
+        line-height:1.7;
+        color:var(--bk-muted);
+        font-weight:600;
+    }
+
+    .backup-stat strong{
+        font-size:26px;
+        line-height:1;
+        color:var(--bk-primary);
+        font-weight:700;
+    }
+
+    .backup-alert{
+        padding:14px 16px;
+        border-radius:18px;
+        border:1px solid var(--bk-gold-soft);
+        background:linear-gradient(180deg, #fffdf8 0%, var(--bk-warn-bg) 100%);
+        color:#6a5932;
+        box-shadow:var(--bk-shadow-sm);
+        font-size:12.1px;
+        line-height:1.95;
+    }
+
+    .backup-alert strong{
+        color:#5f4f2f;
+        font-weight:800;
+    }
+
+    .backup-grid{
+        display:grid;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:12px;
+    }
+
+    .backup-card{
+        padding:16px;
+        border-radius:20px;
+        border:1px solid var(--bk-line);
+        background:linear-gradient(180deg, #ffffff 0%, #fbfcfb 100%);
+        box-shadow:var(--bk-shadow-sm);
+    }
+
+    .backup-card h2{
+        margin:0 0 7px;
+        font-size:16px;
+        line-height:1.55;
+        color:var(--bk-ink);
+        font-weight:800;
+    }
+
+    .backup-card p{
+        margin:0 0 14px;
+        color:var(--bk-muted);
+        font-size:12px;
+        line-height:1.9;
+    }
+
+    .backup-card-actions{
+        display:flex;
+        flex-wrap:wrap;
+        gap:8px;
+    }
+
+    .backup-btn{
+        display:inline-flex;
+        align-items:center;
+        justify-content:center;
+        min-height:40px;
+        padding:0 14px;
+        border-radius:11px;
+        text-decoration:none;
+        border:1px solid transparent;
+        font-size:12px;
+        font-weight:700;
+        white-space:nowrap;
+    }
+
+    .backup-btn.primary{
+        background:var(--bk-primary);
+        color:#fff;
+    }
+
+    .backup-btn.primary:hover{
+        background:#103b2b;
+        color:#fff;
+    }
+
+    .backup-btn.soft{
+        background:#f4f7f5;
+        border-color:var(--bk-line-2);
+        color:var(--bk-primary);
+    }
+
+    .backup-btn.soft:hover{
+        background:#edf3ef;
+        color:var(--bk-primary);
+    }
+
+    .backup-note{
+        padding:13px 14px;
+        border-radius:16px;
+        background:#f7faf8;
+        border:1px solid var(--bk-line);
+        color:var(--bk-muted);
+        font-size:11.5px;
+        line-height:1.9;
+    }
+
+    @media (max-width:1100px){
+        .backup-stats,
+        .backup-grid{
+            grid-template-columns:repeat(2, minmax(0, 1fr));
+        }
+    }
+
+    @media (max-width:760px){
+        .backup-hero-inner{
+            flex-direction:column;
+            min-height:auto;
+            padding:16px;
+        }
+
+        .backup-stats,
+        .backup-grid{
+            grid-template-columns:1fr;
+        }
+
+        .backup-back,
+        .backup-btn{
+            width:100%;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block hero %}
+<section class="backup-hero">
+    <div class="backup-hero-inner">
+        <div>
+            <span class="backup-kicker">مركز النسخ الاحتياطي</span>
+            <h1 class="backup-title">{{ page_title }}</h1>
+            <p class="backup-text">
+                أنشئ نسخة آمنة من بيانات النظام قبل عمليات التصحيح أو التعطيل أو إصدار القرارات. تتضمن النسخ بيانات المشرفين والسجلات وطلبات التصحيح والمرفقات بحسب نوع النسخة.
+            </p>
+        </div>
+
+        <a href="{% url 'staffdata:admin_overview' %}" class="backup-back">العودة للوحة الإدارة</a>
+    </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="backup-page">
+
+    <section class="backup-stats">
+        <div class="backup-stat">
+            <span>المشرفون</span>
+            <strong>{{ backup_stats.supervisors|default:0 }}</strong>
+        </div>
+        <div class="backup-stat">
+            <span>المديرون/المديرات</span>
+            <strong>{{ backup_stats.principals|default:0 }}</strong>
+        </div>
+        <div class="backup-stat">
+            <span>الوكلاء/الوكيلات</span>
+            <strong>{{ backup_stats.vices|default:0 }}</strong>
+        </div>
+        <div class="backup-stat">
+            <span>التكرارات الحالية</span>
+            <strong>{{ backup_stats.duplicates|default:0 }}</strong>
+        </div>
+    </section>
+
+    <section class="backup-alert">
+        <strong>تنبيه أمان:</strong>
+        تحتوي النسخ الاحتياطية على بيانات حساسة مثل السجل المدني وأرقام الجوال والمرفقات، لذلك يجب حفظها في مكان آمن وعدم تداولها إلا وفق الصلاحيات النظامية.
+    </section>
+
+    <section class="backup-grid">
+        <div class="backup-card">
+            <h2>نسخة Excel شاملة</h2>
+            <p>ملف Excel واحد بعدة أوراق عمل، مناسب للمراجعة الإدارية والتدقيق قبل إصدار القرار.</p>
+            <div class="backup-card-actions">
+                <a href="{% url 'staffdata:admin_backup_excel' %}" class="backup-btn primary">تحميل Excel شامل</a>
+            </div>
+        </div>
+
+        <div class="backup-card">
+            <h2>نسخة ZIP كاملة</h2>
+            <p>ملف مضغوط يحتوي على نسخة Excel شاملة، ونسخة JSON فنية، والمرفقات الموجودة في مجلد media.</p>
+            <div class="backup-card-actions">
+                <a href="{% url 'staffdata:admin_backup_zip' %}" class="backup-btn primary">تحميل ZIP كامل</a>
+            </div>
+        </div>
+
+        <div class="backup-card">
+            <h2>نسخة JSON فنية</h2>
+            <p>نسخة بصيغة Django dumpdata، مناسبة للاسترجاع الفني أو النقل بين بيئات النظام.</p>
+            <div class="backup-card-actions">
+                <a href="{% url 'staffdata:admin_backup_json' %}" class="backup-btn soft">تحميل JSON</a>
+            </div>
+        </div>
+
+        <div class="backup-card">
+            <h2>نسخة المرفقات فقط</h2>
+            <p>ملف ZIP يحتوي على ملفات المرفقات من مجلد media دون بيانات Excel أو JSON.</p>
+            <div class="backup-card-actions">
+                <a href="{% url 'staffdata:admin_backup_media_zip' %}" class="backup-btn soft">تحميل المرفقات</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="backup-note">
+        يفضل أخذ نسخة ZIP كاملة قبل تنفيذ عمليات معالجة كبيرة في مركز جودة البيانات، ثم الاحتفاظ بنسخة Excel للمراجعة الإدارية ونسخة JSON للاسترجاع الفني عند الحاجة.
+    </section>
+
+</div>
+{% endblock %}
